@@ -1,0 +1,136 @@
+<UserControl x:Class="GoodGovernanceApp.Views.DepartmentManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+    
+    <UserControl.DataContext>
+        <viewmodels:DepartmentManagementViewModel />
+    </UserControl.DataContext>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Department &amp; Role Management" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" MinWidth="300"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Departments List -->
+            <materialDesign:Card Grid.Column="0" Margin="0 0 12 0" VerticalAlignment="Stretch">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Departments" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Departments}" SelectedItem="{Binding SelectedDepartment}" DisplayMemberPath="Name" Margin="0 0 0 12"/>
+
+                    <StackPanel Grid.Row="2">
+                        <TextBox materialDesign:HintAssist.Hint="New Department Name" Text="{Binding NewDepartmentName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 8"/>
+                        <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding NewDepartmentDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"/>
+                        <Button Content="Add Department" Command="{Binding AddDepartmentCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
+                    </StackPanel>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- Roles Detail Area -->
+            <Grid Grid.Column="1" Margin="12 0 0 0">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedDepartment}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <materialDesign:Card Padding="16" Margin="0 0 0 16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedDepartment.Name}" FontSize="24" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SelectedDepartment.Description}" FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 4 0 0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Delete Department" Command="{Binding DeleteDepartmentCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="Red" BorderBrush="Red" VerticalAlignment="Bottom"/>
+                    </Grid>
+                </materialDesign:Card>
+
+                <materialDesign:Card Grid.Row="1" VerticalAlignment="Stretch">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Department Roles" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
+
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedDepartmentRoles}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Role Name" Binding="{Binding Name}" Width="*"/>
+                                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel Grid.Row="2" Margin="0 16 0 0">
+                            <TextBlock Text="Add New Role" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Role Name" Text="{Binding NewRoleName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 8 0"/>
+                                <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Description" Text="{Binding NewRoleDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 8 0"/>
+                                <Button Grid.Column="2" Content="Add Role" Command="{Binding AddRoleCommand}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+
+            <!-- Empty State -->
+            <materialDesign:Card Grid.Column="1" Margin="12 0 0 0" Padding="32">
+                <materialDesign:Card.Style>
+                    <Style TargetType="materialDesign:Card">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedDepartment}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </materialDesign:Card.Style>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="OfficeBuilding" Width="64" Height="64" HorizontalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    <TextBlock Text="Select a department to view or manage its roles." FontSize="18" Margin="0 16 0 0" Foreground="{DynamicResource MaterialDesignBodyLight}" TextAlignment="Center"/>
+                </StackPanel>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>

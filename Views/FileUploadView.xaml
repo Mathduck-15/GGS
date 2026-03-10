@@ -1,0 +1,96 @@
+<UserControl x:Class="GoodGovernanceApp.Views.FileUploadView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+
+    <UserControl.DataContext>
+        <viewmodels:FileUploadViewModel />
+    </UserControl.DataContext>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="File Upload Center" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" MinWidth="350"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Upload Section -->
+            <materialDesign:Card Grid.Column="0" Margin="0 0 12 0" VerticalAlignment="Top">
+                <StackPanel Margin="16">
+                    <TextBlock Text="New File Upload" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"/>
+
+                    <Grid Margin="0 0 0 16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox materialDesign:HintAssist.Hint="Selected File" Text="{Binding SelectedFilePath}" IsReadOnly="True" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="..." Command="{Binding SelectFileCommand}" Margin="8 0 0 0" Padding="8 0"/>
+                    </Grid>
+
+                    <TextBox materialDesign:HintAssist.Hint="Friendly File Name" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 16"/>
+
+                    <ComboBox materialDesign:HintAssist.Hint="Associate Department" 
+                              ItemsSource="{Binding Departments}" 
+                              SelectedItem="{Binding SelectedDepartment}" 
+                              DisplayMemberPath="Name"
+                              Margin="0 0 0 16"/>
+
+                    <ComboBox materialDesign:HintAssist.Hint="Associate Parameter" 
+                              ItemsSource="{Binding Parameters}" 
+                              SelectedItem="{Binding SelectedParameter}" 
+                              DisplayMemberPath="Name"
+                              Margin="0 0 0 24"/>
+
+                    <Button Content="Upload File" Command="{Binding UploadFileCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- File List Section -->
+            <materialDesign:Card Grid.Column="1" Margin="12 0 0 0">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Recently Uploaded" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding UploadedFiles}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="*"/>
+                            <DataGridTextColumn Header="Department" Binding="{Binding Department.Name}" Width="Auto"/>
+                            <DataGridTextColumn Header="Parameter" Binding="{Binding Parameter.Name}" Width="Auto"/>
+                            <DataGridTextColumn Header="Extension" Binding="{Binding FileType}" Width="Auto"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding UploadDate, StringFormat={}{0:g}}" Width="Auto"/>
+                            <DataGridTemplateColumn Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignToolButton}" 
+                                                Command="{Binding DataContext.DeleteFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}"
+                                                Padding="4">
+                                            <materialDesign:PackIcon Kind="Delete" Foreground="Red"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>

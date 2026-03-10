@@ -1,0 +1,145 @@
+<UserControl x:Class="GoodGovernanceApp.Views.BudgetTransactionsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:GoodGovernanceApp.Views"
+             xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1000">
+
+    <UserControl.DataContext>
+        <viewmodels:BudgetTransactionsViewModel />
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Section: Budgets -->
+        <materialDesign:Card Grid.Row="0" Margin="8" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Allocated Budgets" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Budgets}" AutoGenerateColumns="False" 
+                              SelectedItem="{Binding SelectedBudget}" IsReadOnly="True" CanUserAddRows="False" Margin="0 0 16 0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Year" Binding="{Binding Year}" />
+                            <DataGridTextColumn Header="Category" Binding="{Binding Category.Name}" />
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:C}}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Budget Details" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 16"/>
+                    
+                    <ComboBox materialDesign:HintAssist.Hint="Category" ItemsSource="{Binding Categories}" DisplayMemberPath="Name" SelectedValuePath="Id"
+                              SelectedValue="{Binding SelectedBudget.CategoryId}" IsEnabled="{Binding IsEditingBudget}" Margin="0 0 0 16" />
+                              
+                    <TextBox materialDesign:HintAssist.Hint="Amount" Text="{Binding SelectedBudget.Amount}" 
+                             IsEnabled="{Binding IsEditingBudget}" Margin="0 0 0 16" />
+                             
+                    <TextBox materialDesign:HintAssist.Hint="Year" Text="{Binding SelectedBudget.Year}" 
+                             IsEnabled="{Binding IsEditingBudget}" Margin="0 0 0 16" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="ADD" Command="{Binding AddBudgetCommand}" Margin="0 0 4 0" 
+                                Visibility="{Binding IsNotEditingBudget, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <Button Content="EDIT" Command="{Binding AddBudgetCommand}" Margin="0 0 4 0" 
+                                Visibility="{Binding IsNotEditingBudget, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <Button Content="DEL" Command="{Binding DeleteBudgetCommand}" Margin="0 0 4 0" Foreground="Red"
+                                Visibility="{Binding IsNotEditingBudget, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <Button Content="SAVE" Command="{Binding SaveBudgetCommand}" Margin="0 0 4 0" 
+                                Visibility="{Binding IsEditingBudget, Converter={StaticResource BoolToVis}}"/>
+                        <Button Content="CANCEL" Command="{Binding CancelBudgetCommand}" Style="{StaticResource MaterialDesignFlatButton}" 
+                                Visibility="{Binding IsEditingBudget, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Bottom Section: Transactions -->
+        <materialDesign:Card Grid.Row="1" Margin="8" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="Transactions" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
+                    
+                    <TextBox Grid.Row="1" materialDesign:HintAssist.Hint="Search Transactions..." 
+                             Text="{Binding TransactionSearchText, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 16 16" />
+
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding Transactions}" AutoGenerateColumns="False" 
+                              SelectedItem="{Binding SelectedTransaction}" IsReadOnly="True" CanUserAddRows="False" Margin="0 0 16 0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat={}{0:d}}" />
+                            <DataGridTextColumn Header="Type" Binding="{Binding TransactionType}" />
+                            <DataGridTextColumn Header="Category" Binding="{Binding Category.Name}" />
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:C}}" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Transaction Details" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 16"/>
+                    
+                    <DatePicker materialDesign:HintAssist.Hint="Date" SelectedDate="{Binding SelectedTransaction.Date}" 
+                                IsEnabled="{Binding IsEditingTransaction}" Margin="0 0 0 16" />
+                    
+                    <ComboBox materialDesign:HintAssist.Hint="Type" ItemsSource="{Binding TransactionTypes}" 
+                              SelectedItem="{Binding SelectedTransaction.TransactionType}" IsEnabled="{Binding IsEditingTransaction}" Margin="0 0 0 16" />
+                              
+                    <ComboBox materialDesign:HintAssist.Hint="Category" ItemsSource="{Binding Categories}" DisplayMemberPath="Name" SelectedValuePath="Id"
+                              SelectedValue="{Binding SelectedTransaction.CategoryId}" IsEnabled="{Binding IsEditingTransaction}" Margin="0 0 0 16" />
+                              
+                    <TextBox materialDesign:HintAssist.Hint="Amount" Text="{Binding SelectedTransaction.Amount}" 
+                             IsEnabled="{Binding IsEditingTransaction}" Margin="0 0 0 16" />
+                             
+                    <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding SelectedTransaction.Description}" 
+                             IsEnabled="{Binding IsEditingTransaction}" Margin="0 0 0 16" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="ADD" Command="{Binding AddTransactionCommand}" Margin="0 0 4 0" 
+                                Visibility="{Binding IsNotEditingTransaction, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <Button Content="EDIT" Command="{Binding AddTransactionCommand}" Margin="0 0 4 0" 
+                                Visibility="{Binding IsNotEditingTransaction, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <Button Content="DEL" Command="{Binding DeleteTransactionCommand}" Margin="0 0 4 0" Foreground="Red"
+                                Visibility="{Binding IsNotEditingTransaction, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <Button Content="SAVE" Command="{Binding SaveTransactionCommand}" Margin="0 0 4 0" 
+                                Visibility="{Binding IsEditingTransaction, Converter={StaticResource BoolToVis}}"/>
+                        <Button Content="CANCEL" Command="{Binding CancelTransactionCommand}" Style="{StaticResource MaterialDesignFlatButton}" 
+                                Visibility="{Binding IsEditingTransaction, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

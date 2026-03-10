@@ -1,0 +1,103 @@
+<UserControl x:Class="GoodGovernanceApp.Views.UserManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:GoodGovernanceApp.Views"
+             xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <viewmodels:UserManagementViewModel />
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Side: List & Search -->
+        <materialDesign:Card Grid.Column="0" Margin="8" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Search Bar -->
+                <TextBox Grid.Row="0" materialDesign:HintAssist.Hint="Search Users..." 
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+
+                <!-- Users DataGrid -->
+                <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" AutoGenerateColumns="False" 
+                          SelectedItem="{Binding SelectedUser}" IsReadOnly="True" 
+                          CanUserAddRows="False" materialDesign:DataGridAssist.CellPadding="12 8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" />
+                        <DataGridTextColumn Header="Username" Binding="{Binding Username}" />
+                        <DataGridTextColumn Header="Dept" Binding="{Binding Department.Name}" Width="Auto" />
+                        <DataGridTextColumn Header="Specific Role" Binding="{Binding DepartmentRole.Name}" Width="Auto" />
+                        <DataGridTextColumn Header="System Role" Binding="{Binding Role}" />
+                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- Right Side: Edit/Add Form -->
+        <materialDesign:Card Grid.Column="1" Margin="8" Padding="16">
+            <StackPanel>
+                <TextBlock Text="User Details" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
+
+                <TextBox materialDesign:HintAssist.Hint="Username" Text="{Binding SelectedUser.Username}" 
+                         IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                
+                <PasswordBox materialDesign:HintAssist.Hint="Password (Leave blank to keep)" 
+                             IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                
+                <ComboBox materialDesign:HintAssist.Hint="System Role" ItemsSource="{Binding Roles}" 
+                          SelectedItem="{Binding SelectedUser.Role}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                <ComboBox materialDesign:HintAssist.Hint="Department" ItemsSource="{Binding Departments}" 
+                          DisplayMemberPath="Name" SelectedValuePath="Id"
+                          SelectedValue="{Binding SelectedDepartmentId}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                <ComboBox materialDesign:HintAssist.Hint="Specific Role (Head/Sec/etc)" ItemsSource="{Binding DepartmentRoles}" 
+                          DisplayMemberPath="Name" SelectedValuePath="Id"
+                          SelectedValue="{Binding SelectedUser.DepartmentRoleId}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                <CheckBox Content="Is Active" IsChecked="{Binding SelectedUser.IsActive}" 
+                          IsEnabled="{Binding IsEditing}" Margin="0 0 0 24" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="ADD NEW" Command="{Binding AddCommand}" Margin="0 0 8 0" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+                    
+                    <Button Content="EDIT" Command="{Binding AddCommand}" Margin="0 0 8 0" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+
+                    <Button Content="DELETE" Command="{Binding DeleteCommand}" Margin="0 0 8 0" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="Red" 
+                            Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+
+                    <Button Content="SAVE" Command="{Binding SaveCommand}" Margin="0 0 8 0" 
+                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
+                    
+                    <Button Content="CANCEL" Command="{Binding CancelCommand}" Style="{StaticResource MaterialDesignFlatButton}" 
+                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+            </StackPanel>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

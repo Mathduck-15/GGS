@@ -1,0 +1,105 @@
+<UserControl x:Class="GoodGovernanceApp.Views.ProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+
+    <UserControl.DataContext>
+        <viewmodels:ProfileViewModel />
+    </UserControl.DataContext>
+
+    <Grid Margin="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="User Profile &amp; Account" FontSize="36" FontWeight="Light" Margin="0 0 0 32"/>
+
+        <materialDesign:Card Grid.Row="1" VerticalAlignment="Top" Padding="32">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="350"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Column: Primary Identity -->
+                <StackPanel Grid.Column="0" Margin="0 0 48 0">
+                    <materialDesign:PackIcon Kind="AccountCircle" Width="160" Height="160" 
+                                            Foreground="{DynamicResource PrimaryHueMidBrush}" 
+                                            HorizontalAlignment="Center" Margin="0 0 0 24"/>
+                    
+                    <TextBlock Text="{Binding Username}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="{Binding Role}" FontSize="20" Foreground="{DynamicResource MaterialDesignBodyLight}" HorizontalAlignment="Center" Margin="0 4 0 0"/>
+                    
+                    <Border Background="{DynamicResource PrimaryHueLightBrush}" CornerRadius="20" HorizontalAlignment="Center" Margin="0 16 0 0" Padding="12 4">
+                        <TextBlock Text="{Binding DepartmentName}" Foreground="{DynamicResource PrimaryHueLightForegroundBrush}" FontWeight="SemiBold"/>
+                    </Border>
+                    
+                    <materialDesign:Card Margin="0 48 0 0" Background="{DynamicResource MaterialDesignSelection}" Padding="16" UniformCornerRadius="8">
+                        <TextBlock Text="Manage your account settings, update your username, or secure your profile with a new password." 
+                                   FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center" Opacity="0.7"/>
+                    </materialDesign:Card>
+                </StackPanel>
+
+                <!-- Vertical Divider -->
+                <Separator Grid.Column="1" HorizontalAlignment="Left" Width="1" Visibility="Visible" Background="{DynamicResource MaterialDesignDivider}">
+                    <Separator.LayoutTransform>
+                        <RotateTransform Angle="90" />
+                    </Separator.LayoutTransform>
+                </Separator>
+
+                <!-- Right Column: Editing Form -->
+                <StackPanel Grid.Column="1" Margin="24 0 0 0">
+                    <TextBlock Text="Edit Profile Information" FontSize="24" FontWeight="SemiBold" Margin="0 0 0 24"/>
+
+                    <Grid Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="Account" VerticalAlignment="Center" Margin="0 0 12 0"/>
+                        <TextBox materialDesign:HintAssist.Hint="Display Name / Username" 
+                                 Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" 
+                                 FontSize="18"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                 Margin="32 0 0 0"/>
+                    </Grid>
+
+                    <Separator Margin="0 32 0 32"/>
+
+                    <TextBlock Text="Security Update" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 16"/>
+                    <TextBlock Text="Leave these blank if you do not wish to change your password." 
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="14" Margin="0 0 0 16"/>
+
+                    <Grid Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="Lock" VerticalAlignment="Center" Margin="0 0 12 0"/>
+                        <PasswordBox materialDesign:HintAssist.Hint="New Password" 
+                                     x:Name="NewPasswordBox"
+                                     FontSize="18"
+                                     PasswordChanged="NewPasswordBox_PasswordChanged"
+                                     Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
+                                     Margin="32 0 0 0"/>
+                    </Grid>
+
+                    <Grid Margin="0 0 0 32">
+                        <materialDesign:PackIcon Kind="LockCheck" VerticalAlignment="Center" Margin="0 0 12 0"/>
+                        <PasswordBox materialDesign:HintAssist.Hint="Confirm New Password" 
+                                     x:Name="ConfirmPasswordBox"
+                                     FontSize="18"
+                                     PasswordChanged="ConfirmPasswordBox_PasswordChanged"
+                                     Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
+                                     Margin="32 0 0 0"/>
+                    </Grid>
+
+                    <Button Content="SAVE ALL CHANGES" 
+                            Command="{Binding SaveChangesCommand}" 
+                            FontSize="18" Height="50"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            materialDesign:ButtonAssist.CornerRadius="25"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>
