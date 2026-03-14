@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +15,7 @@ public class LoginViewModel : ViewModelBase
     private string _errorMessage = string.Empty;
     private readonly AppDbContext _context;
     private readonly GoodGovernanceApp.Services.SessionService _sessionService;
+
 
     public string Username
     {
@@ -36,6 +37,7 @@ public class LoginViewModel : ViewModelBase
 
     public ICommand LoginCommand { get; }
     public ICommand OpenDbSettingsCommand { get; }
+    public ICommand CheatCommand { get; }
 
     public LoginViewModel(AppDbContext context, GoodGovernanceApp.Services.SessionService sessionService)
     {
@@ -43,6 +45,7 @@ public class LoginViewModel : ViewModelBase
         _sessionService = sessionService;
         LoginCommand = new RelayCommand(ExecuteLogin, CanExecuteLogin);
         OpenDbSettingsCommand = new RelayCommand(ExecuteOpenDbSettings);
+        CheatCommand = new RelayCommand(p => MessageBox.Show("username = admin and password = admin", "password = admin", MessageBoxButton.OK, MessageBoxImage.Information));  
     }
 
     private void ExecuteOpenDbSettings(object? parameter)

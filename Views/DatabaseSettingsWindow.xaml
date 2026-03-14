@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
-        Title="Database Connection Settings" Height="540" Width="560"
+        Title="Database Connection Settings" Height="650" Width="600"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -20,28 +20,61 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Database Configuration" FontSize="24" FontWeight="Light" Margin="0 0 0 16"/>
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0 0 0 16">
+            <TextBlock Text="Database Configuration" FontSize="24" FontWeight="Light"/>
+            <TextBlock Text="Quickly fix database connection issues to access the system." 
+                       FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 4 0 0"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <materialDesign:Card Margin="0 0 0 16" Padding="16">
+                <!-- Database Connection Settings - Synchronized with Dashboard Settings -->
+                <materialDesign:Card Margin="0 0 0 16" Padding="20">
                     <StackPanel>
-                        <TextBlock Text="Connections" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 12"/>
-                        
-                        <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
-                            <TextBlock Text="Use Remote Database:" VerticalAlignment="Center" Margin="0 0 16 0"/>
-                            <ToggleButton IsChecked="{Binding UseRemoteDatabase}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                            <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
+                                                     VerticalAlignment="Center" Margin="0 0 8 0"
+                                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            <TextBlock Text="Database Connection" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Select Connection Type" FontSize="13" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 12"/>
+
+                        <!-- Connection Type Selection -->
+                        <StackPanel Orientation="Horizontal" Margin="0 20 0 20">
+                            <RadioButton Content="Local" GroupName="ConnectionType" 
+                                         IsChecked="{Binding IsLocal}"
+                                         Style="{StaticResource MaterialDesignRadioButton}"
+                                         Margin="0 0 24 0"/>
+
+                            <RadioButton Content="LAN" GroupName="ConnectionType" 
+                                         IsChecked="{Binding IsLan}"
+                                         Style="{StaticResource MaterialDesignRadioButton}"
+                                         Margin="0 0 24 0"/>
+
+                            <RadioButton Content="Online (Hostinger)" GroupName="ConnectionType" 
+                                         IsChecked="{Binding IsRemote}"
+                                         Style="{StaticResource MaterialDesignRadioButton}"/>
                         </StackPanel>
 
                         <TextBox materialDesign:HintAssist.Hint="Local Connection String" 
                                  Text="{Binding LocalConnectionString}" 
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 12" />
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                                 Margin="0 0 0 12"/>
 
-                        <TextBox materialDesign:HintAssist.Hint="Remote Connection String" 
+                        <TextBox materialDesign:HintAssist.Hint="LAN Connection String" 
+                                 Text="{Binding LanConnectionString}" 
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                                 Margin="0 0 0 12"/>
+
+                        <TextBox materialDesign:HintAssist.Hint="Online Connection String (Hostinger)" 
                                  Text="{Binding RemoteConnectionString}" 
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16" />
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                                 Margin="0 0 0 20"/>
 
-                        <!-- Test Connection Row -->
+                        <!-- Test Connection Section (Window Specific) -->
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 4">
                             <Button x:Name="TestConnectionBtn" Content="🔌 TEST REMOTE CONNECTION"
                                     Click="TestConnection_Click"
@@ -53,20 +86,25 @@
                                          Visibility="Collapsed" VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Connection Status Result -->
                         <Border x:Name="StatusPanel" Visibility="Collapsed" 
                                 CornerRadius="4" Padding="12 8" Margin="0 8 0 0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="StatusIcon" FontSize="16" Margin="0 0 8 0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="StatusText" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="380"/>
+                                <TextBlock x:Name="StatusText" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="480"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </materialDesign:Card>
 
+                <!-- Advanced Settings -->
                 <materialDesign:Card Padding="16">
                     <StackPanel>
-                        <TextBlock Text="Backup Utility" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 12"/>
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                            <materialDesign:PackIcon Kind="Settings" Width="20" Height="20" 
+                                                     VerticalAlignment="Center" Margin="0 0 8 0"
+                                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            <TextBlock Text="Advanced" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <TextBox materialDesign:HintAssist.Hint="mysqldump.exe Path" 
                                  Text="{Binding MySqlDumpPath}" 
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
@@ -75,9 +113,11 @@
             </StackPanel>
         </ScrollViewer>
 
+        <!-- Footer -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 16 0 0">
             <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Margin="0 0 16 0" Foreground="Green"/>
-            <Button Content="SAVE &amp; CLOSE" Command="{Binding SaveSettingsCommand}" Click="SaveButton_Click" />
+            <Button Content="SAVE &amp; CLOSE" Command="{Binding SaveSettingsCommand}" Click="SaveButton_Click" 
+                    Style="{StaticResource MaterialDesignFlatButton}"/>
         </StackPanel>
     </Grid>
 </Window>

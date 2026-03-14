@@ -56,11 +56,10 @@
                                   CanUserAddRows="False" materialDesign:DataGridAssist.CellPadding="12 8">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" />
-                                <DataGridTextColumn Header="Username" Binding="{Binding Username}" />
-                                <DataGridTextColumn Header="Dept" Binding="{Binding Office.Name}" Width="Auto" />
-                                <DataGridTextColumn Header="Specific Role" Binding="{Binding DepartmentRole.Name}" Width="Auto" />
+                                <DataGridTextColumn Header="Username" Binding="{Binding Name}" />
+                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" />
                                 <DataGridTextColumn Header="System Role" Binding="{Binding Role}" />
-                                <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
@@ -71,42 +70,51 @@
                     <StackPanel>
                         <TextBlock Text="User Details" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
 
-                        <TextBox materialDesign:HintAssist.Hint="Username" Text="{Binding SelectedUser.Username}" 
-                                 IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
-                        
+                        <TextBox materialDesign:HintAssist.Hint="Username" 
+             Text="{Binding SelectedUser.Name}" 
+             IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                        <TextBox materialDesign:HintAssist.Hint="Email" 
+             Text="{Binding SelectedUser.Email}" 
+             IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
                         <PasswordBox materialDesign:HintAssist.Hint="Password (Leave blank to keep)" 
-                                     IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
-                        
-                        <ComboBox materialDesign:HintAssist.Hint="System Role" ItemsSource="{Binding Roles}" 
-                                  SelectedItem="{Binding SelectedUser.Role}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                 IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
 
-                        <ComboBox materialDesign:HintAssist.Hint="Department" ItemsSource="{Binding Offices}" 
-                                  DisplayMemberPath="Name" SelectedValuePath="Id"
-                                  SelectedValue="{Binding SelectedOfficeId}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                        <ComboBox materialDesign:HintAssist.Hint="System Role" 
+              ItemsSource="{Binding Roles}" 
+              SelectedItem="{Binding SelectedUser.Role}" 
+              IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
 
-                        <ComboBox materialDesign:HintAssist.Hint="Specific Role (Head/Sec/etc)" ItemsSource="{Binding OfficeRoles}" 
-                                  DisplayMemberPath="Name" SelectedValuePath="Id"
-                                  SelectedValue="{Binding SelectedUser.DepartmentRoleId}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                        <ComboBox materialDesign:HintAssist.Hint="Department" 
+              ItemsSource="{Binding Offices}" 
+              DisplayMemberPath="Name" SelectedValuePath="Id"
+              SelectedValue="{Binding SelectedOfficeId}" 
+              IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
 
-                        <CheckBox Content="Is Active" IsChecked="{Binding SelectedUser.IsActive}" 
-                                  IsEnabled="{Binding IsEditing}" Margin="0 0 0 24" />
+                        <CheckBox Content="Is Active" 
+              IsChecked="{Binding SelectedUser.IsActive}" 
+              IsEnabled="{Binding IsEditing}" Margin="0 0 0 24" />
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Content="ADD NEW" Command="{Binding AddCommand}" Margin="0 0 8 0" 
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
-                            
+                Style="{StaticResource MaterialDesignOutlinedButton}" 
+                Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+
                             <Button Content="EDIT" Command="{Binding EditCommand}" Margin="0 0 8 0" 
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+                Style="{StaticResource MaterialDesignOutlinedButton}" 
+                Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
 
                             <Button Content="DELETE" Command="{Binding DeleteCommand}" Margin="0 0 8 0" 
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="Red" 
-                                    Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="Red" 
+                Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
 
                             <Button Content="SAVE" Command="{Binding SaveCommand}" Margin="0 0 8 0" 
-                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
-                            
-                            <Button Content="CANCEL" Command="{Binding CancelCommand}" Style="{StaticResource MaterialDesignFlatButton}" 
-                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
+                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
+
+                            <Button Content="CANCEL" Command="{Binding CancelCommand}" 
+                Style="{StaticResource MaterialDesignFlatButton}" 
+                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
                         </StackPanel>
                     </StackPanel>
                 </materialDesign:Card>

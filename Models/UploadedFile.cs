@@ -33,4 +33,11 @@ public class UploadedFile
 
     [ForeignKey("ParameterId")]
     public virtual Parameter? Parameter { get; set; }
+
+
+    public int? CategoryId { get; set; }       // ← add this
+    [ForeignKey("CategoryId")]
+    public virtual Category? Category { get; set; }  // ← add this
+
+
 }

@@ -103,6 +103,9 @@ public class ParametersViewModel : ViewModelBase
 
             _context.Categories.Load();
             Categories = _context.Categories.Local.ToObservableCollection();
+
+
+            Console.WriteLine($"Loaded {Parameters.Count} parameters and {Categories.Count} categories.");
         }
         catch { }
     }

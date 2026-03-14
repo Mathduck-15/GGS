@@ -161,8 +161,10 @@ public class UserManagementViewModel : ViewModelBase
             _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
             LoadData();
         }
-        catch
+        catch (Exception ex)
         {
+
+
             _context = null!;
         }
 
@@ -184,7 +186,6 @@ public class UserManagementViewModel : ViewModelBase
         {
             _context.Users
                 .Include(u => u.Office)
-                .Include(u => u.DepartmentRole)
                 .Include(u => u.ValidationInfo)
                 .Load();
 
@@ -206,7 +207,10 @@ public class UserManagementViewModel : ViewModelBase
             RefreshFilteredRoles();
             LoadValidateUsers();
         }
-        catch { }
+         catch 
+        {
+
+        }
     }
 
     private void LoadValidateUsers()

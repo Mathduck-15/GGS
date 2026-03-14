@@ -22,7 +22,6 @@ public partial class App : Application
         Thread.CurrentThread.CurrentCulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
 
-        // Ensure WPF UI elements respect this culture
         FrameworkElement.LanguageProperty.OverrideMetadata(
             typeof(FrameworkElement),
             new FrameworkPropertyMetadata(System.Windows.Markup.XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
@@ -35,20 +34,23 @@ public partial class App : Application
             })
             .ConfigureServices((context, services) =>
             {
-                // Retrieve Configuration
                 IConfiguration config = context.Configuration;
-                bool useRemote = config.GetValue<bool>("AppSettings:UseRemoteDatabase");
 
-                // Configure DbContext based on selection
+                // ── Read DatabaseMode (Local / LAN / Remote) ──────────────────
+                string dbMode = config["AppSettings:DatabaseMode"] ?? "Local";
+
+                string connStr = dbMode switch
+                {
+                    "Remote" => config.GetConnectionString("RemoteConnection") ?? "",
+                    "LAN" => config.GetConnectionString("LanConnection") ?? "",
+                    _ => config.GetConnectionString("LocalConnection") ?? ""
+                };
+
+                // Configure DbContext
                 services.AddDbContext<AppDbContext>(options =>
                 {
-                    string connStr = useRemote 
-                        ? (config.GetConnectionString("RemoteConnection") ?? "")
-                        : (config.GetConnectionString("LocalConnection") ?? "");
-
                     if (string.IsNullOrEmpty(connStr) || connStr.Contains("YOUR_HOSTINGER_IP"))
                     {
-                        // Use a default version if it's a placeholder to avoid pre-startup crash
                         options.UseMySql(connStr, new MySqlServerVersion(new Version(8, 0, 31)),
                             mysqlOptions => mysqlOptions.EnableRetryOnFailure());
                     }
@@ -61,7 +63,6 @@ public partial class App : Application
                         }
                         catch
                         {
-                            // Fallback to a common version if AutoDetect fails due to network/firewall
                             options.UseMySql(connStr, new MySqlServerVersion(new Version(8, 0, 31)),
                                 mysqlOptions => mysqlOptions.EnableRetryOnFailure());
                         }
@@ -87,31 +88,24 @@ public partial class App : Application
     {
         await AppHost!.StartAsync();
 
-        // Connect to existing database and seed if needed
         using (var scope = AppHost.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
             try
             {
                 var dbContext = services.GetRequiredService<AppDbContext>();
-                
-                // Validate if connection works
-                if (!dbContext.Database.CanConnect())
-                {
-                    throw new Exception("Could not establish a connection to the database.");
-                }
 
-                try { dbContext.Database.EnsureCreated(); } catch { /* tables may already exist */ }
-                
-                // Patch: Ensure the office_code column exists since EF migrations are out of sync with EnsureCreated
+                if (!dbContext.Database.CanConnect())
+                    throw new Exception("Could not establish a connection to the database.");
+
+                try { dbContext.Database.EnsureCreated(); } catch { }
+
+                // Patches
                 try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
-                
-                // Patch: Ensure the active column has a default value so inserts don't fail
                 try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
 
-                // Patch: Ensure officeallocations table exists and has the correct schema (no SpentAmount)
-                try {
-                    // Force refresh by disabling FK checks during drop/create
+                try
+                {
                     dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 0;");
                     dbContext.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS officeallocations;");
                     dbContext.Database.ExecuteSqlRaw(@"
@@ -125,31 +119,37 @@ public partial class App : Application
                         ) CHARACTER SET=utf8mb4;
                     ");
                     dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;");
-                } catch { 
-                    try { dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;"); } catch {}
                 }
-                
-                // Seed data if empty
+                catch
+                {
+                    try { dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;"); } catch { }
+                }
+
                 try { DatabaseSeeder.SeedData(dbContext); } catch { }
             }
             catch (Exception ex)
             {
                 var config = services.GetRequiredService<IConfiguration>();
-                bool isRemote = config.GetValue<bool>("AppSettings:UseRemoteDatabase");
+                string dbMode = config["AppSettings:DatabaseMode"] ?? "Local";
 
                 string errorMsg = $"Database Connection Failed!\n\nDetails: {ex.Message}";
-                if (isRemote)
+
+                if (dbMode == "Remote")
                 {
                     errorMsg += "\n\nTroubleshooting for Hostinger:\n" +
                                 "1. Check appsettings.json for correct IP, User, and Password.\n" +
                                 "2. ADD YOUR CURRENT IP to 'Remote MySQL' in Hostinger hPanel.\n" +
                                 "3. Ensure you aren't using placeholders (YOUR_HOSTINGER_IP).";
                 }
+                else if (dbMode == "LAN")
+                {
+                    errorMsg += "\n\nTroubleshooting for LAN:\n" +
+                                "1. Make sure you are connected to the same network.\n" +
+                                "2. Check the LAN server IP address in settings.\n" +
+                                "3. Make sure MySQL is running on the host machine.";
+                }
 
                 MessageBox.Show(errorMsg, "Database Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                
-                // Optional: Decide if app should continue or close. 
-                // For now, we allow it to reach Login so the user can see the error.
             }
         }
 
@@ -163,8 +163,6 @@ public partial class App : Application
     {
         await AppHost!.StopAsync();
         AppHost.Dispose();
-
         base.OnExit(e);
     }
 }
-

@@ -33,7 +33,9 @@
                 
                 <Button Content="LOGIN" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=LoginWin}" 
                         Style="{StaticResource MaterialDesignRaisedButton}" Margin="0 8 0 0"/>
-                
+                <Button Content="Cheat" Command="{Binding CheatCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0 8 0 0"/>
+
                 <Button Content="Database Connection Settings" Command="{Binding OpenDbSettingsCommand}" 
                         Style="{StaticResource MaterialDesignFlatButton}" Margin="0 16 0 0" 
                         Foreground="{DynamicResource PrimaryHueMidBrush}" />

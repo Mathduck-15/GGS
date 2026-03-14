@@ -12,64 +12,120 @@
         <viewmodels:SettingsViewModel />
     </UserControl.DataContext>
 
-    <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="System Settings &amp; Configuration" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
-
-        <!-- Database Connection Settings -->
-        <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="16">
-            <StackPanel>
-                <TextBlock Text="Database Connections" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 16"/>
-
-                <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
-                    <TextBlock Text="Use Remote (Hostinger) Database:" VerticalAlignment="Center" Margin="0 0 16 0"/>
-                    <ToggleButton IsChecked="{Binding UseRemoteDatabase}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
-                </StackPanel>
-
-                <TextBox materialDesign:HintAssist.Hint="Local Connection String (MySQL)" 
-                         Text="{Binding LocalConnectionString}" 
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16" />
-
-                <TextBox materialDesign:HintAssist.Hint="Remote Connection String (Hostinger MySQL)" 
-                         Text="{Binding RemoteConnectionString}" 
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 24" />
-
-                <Button Content="SAVE SETTINGS (REQUIRES RESTART)" Command="{Binding SaveSettingsCommand}" 
-                        HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Foreground="{DynamicResource PrimaryHueMidBrush}" />
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0 0 0 24">
+                <TextBlock Text="System Settings" FontSize="28" FontWeight="Light"/>
+                <TextBlock Text="Configure database connections and backup options" 
+                           FontSize="13" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 4 0 0"/>
             </StackPanel>
-        </materialDesign:Card>
 
-        <!-- Backup Settings -->
-        <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="16">
-            <StackPanel>
-                <TextBlock Text="Database Backup" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 16"/>
-                <TextBlock Text="Specify the path to 'mysqldump.exe' (usually in MySQL Server/bin)." FontStyle="Italic" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 8"/>
+            <!-- Database Connection Settings -->
+            <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
+                        <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        <TextBlock Text="Database Connection" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
 
-                <TextBox materialDesign:HintAssist.Hint="mysqldump.exe Path" 
-                         Text="{Binding MySqlDumpPath}" 
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16" />
+                    <!-- Connection Type Selection -->
+                    <TextBlock Text="Select Connection Type" FontSize="13" 
+           Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 12"/>
 
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
+                        <RadioButton Content="Local" GroupName="ConnectionType" 
+                 IsChecked="{Binding IsLocal}"
+                 Style="{StaticResource MaterialDesignRadioButton}"
+                 Margin="0 0 24 0"/>
+
+                        <RadioButton Content="LAN" GroupName="ConnectionType" 
+                 IsChecked="{Binding IsLan}"
+                 Style="{StaticResource MaterialDesignRadioButton}"
+                 Margin="0 0 24 0"/>
+
+                        <RadioButton Content="Online (Hostinger)" GroupName="ConnectionType" 
+                 IsChecked="{Binding IsRemote}"
+                 Style="{StaticResource MaterialDesignRadioButton}"/>
+                    </StackPanel>
+
+                    <!-- Connection Strings -->
+                    <TextBox materialDesign:HintAssist.Hint="Local Connection String" 
+                             Text="{Binding LocalConnectionString}" 
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                             Margin="0 0 0 16"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="LAN Connection String" 
+                             Text="{Binding LanConnectionString}" 
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                             Margin="0 0 0 16"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="Online Connection String (Hostinger)" 
+                             Text="{Binding RemoteConnectionString}" 
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                             Margin="0 0 0 24"/>
+
+                    <Button Content="SAVE SETTINGS (REQUIRES RESTART)" 
+                            Command="{Binding SaveSettingsCommand}" 
+                            HorizontalAlignment="Left" 
+                            Style="{StaticResource MaterialDesignRaisedButton}"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Backup Settings -->
+            <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
+                        <materialDesign:PackIcon Kind="Backup" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        <TextBlock Text="Database Backup" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Specify the path to 'mysqldump.exe' (usually in MySQL Server/bin)." 
+                               FontStyle="Italic" Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                               Margin="0 0 0 16"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="mysqldump.exe Path" 
+                             Text="{Binding MySqlDumpPath}" 
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                             Margin="0 0 0 24"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="FULL BACKUP" Command="{Binding FullBackupCommand}" 
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 12 0"/>
+                        <Button Content="DIFFERENTIAL BACKUP" Command="{Binding DifferentialBackupCommand}" 
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 12 0"/>
+                        <Button Content="INCREMENTAL BACKUP" Command="{Binding IncrementalBackupCommand}" 
+                                Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Status Message -->
+            <materialDesign:Card Grid.Row="3" Padding="16" Margin="0 0 0 16"
+                                 Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="RUN FULL BACKUP" Command="{Binding FullBackupCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 16 0" />
-                            
-                    <Button Content="RUN DIFFERENTIAL BACKUP" Command="{Binding DifferentialBackupCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 16 0" />
-
-                    <Button Content="RUN INCREMENTAL BACKUP" Command="{Binding IncrementalBackupCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    <materialDesign:PackIcon Kind="InformationOutline" Width="20" Height="20" 
+                                             VerticalAlignment="Center" Margin="0 0 8 0"
+                                             Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" FontSize="14" 
+                        Foreground="Green" FontWeight="Medium" 
+                        Margin="0 8 0 0"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                 </StackPanel>
-            </StackPanel>
-        </materialDesign:Card>
+            </materialDesign:Card>
 
-        <!-- Status Message -->
-        <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" FontSize="16" Foreground="Green" FontWeight="Medium" VerticalAlignment="Top"/>
-        
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

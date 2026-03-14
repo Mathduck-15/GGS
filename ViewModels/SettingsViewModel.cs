@@ -11,18 +11,42 @@ public class SettingsViewModel : ViewModelBase
     private readonly BackupService _backupService;
     private readonly string _appSettingsPath = System.IO.Path.Combine(AppContext.BaseDirectory, "appsettings.json");
 
-    private bool _useRemoteDatabase;
-    public bool UseRemoteDatabase
+    // Connection mode
+    private bool _isLocal = true;
+    private bool _isLan;
+    private bool _isRemote;
+
+    public bool IsLocal
     {
-        get => _useRemoteDatabase;
-        set { _useRemoteDatabase = value; OnPropertyChanged(); }
+        get => _isLocal;
+        set { _isLocal = value; OnPropertyChanged(); }
     }
 
+    public bool IsLan
+    {
+        get => _isLan;
+        set { _isLan = value; OnPropertyChanged(); }
+    }
+
+    public bool IsRemote
+    {
+        get => _isRemote;
+        set { _isRemote = value; OnPropertyChanged(); }
+    }
+
+    // Connection strings
     private string _localConnectionString = string.Empty;
     public string LocalConnectionString
     {
         get => _localConnectionString;
         set { _localConnectionString = value; OnPropertyChanged(); }
+    }
+
+    private string _lanConnectionString = string.Empty;
+    public string LanConnectionString
+    {
+        get => _lanConnectionString;
+        set { _lanConnectionString = value; OnPropertyChanged(); }
     }
 
     private string _remoteConnectionString = string.Empty;
@@ -73,23 +97,32 @@ public class SettingsViewModel : ViewModelBase
                 using var document = JsonDocument.Parse(json);
                 var root = document.RootElement;
 
-                if (root.TryGetProperty("AppSettings", out var appSettings) && appSettings.TryGetProperty("UseRemoteDatabase", out var useRemote))
+                // Load connection mode
+                if (root.TryGetProperty("AppSettings", out var appSettings))
                 {
-                    UseRemoteDatabase = useRemote.GetBoolean();
+                    if (appSettings.TryGetProperty("DatabaseMode", out var mode))
+                    {
+                        string dbMode = mode.GetString() ?? "Local";
+                        IsLocal = dbMode == "Local";
+                        IsLan = dbMode == "LAN";
+                        IsRemote = dbMode == "Remote";
+                    }
+
+                    if (appSettings.TryGetProperty("MySqlDumpPath", out var dumpPath))
+                        MySqlDumpPath = dumpPath.GetString() ?? "mysqldump";
                 }
 
+                // Load connection strings
                 if (root.TryGetProperty("ConnectionStrings", out var connStrings))
                 {
                     if (connStrings.TryGetProperty("LocalConnection", out var localConn))
                         LocalConnectionString = localConn.GetString() ?? "";
-                    
+
+                    if (connStrings.TryGetProperty("LanConnection", out var lanConn))
+                        LanConnectionString = lanConn.GetString() ?? "";
+
                     if (connStrings.TryGetProperty("RemoteConnection", out var remoteConn))
                         RemoteConnectionString = remoteConn.GetString() ?? "";
-                }
-
-                if (root.TryGetProperty("AppSettings", out var appSettingsProp) && appSettingsProp.TryGetProperty("MySqlDumpPath", out var dumpPath))
-                {
-                    MySqlDumpPath = dumpPath.GetString() ?? "mysqldump";
                 }
             }
         }
@@ -100,23 +133,27 @@ public class SettingsViewModel : ViewModelBase
     {
         try
         {
+            string dbMode = IsLocal ? "Local" : IsLan ? "LAN" : "Remote";
+
             var config = new
             {
                 ConnectionStrings = new
                 {
                     LocalConnection = LocalConnectionString,
+                    LanConnection = LanConnectionString,
                     RemoteConnection = RemoteConnectionString
                 },
                 AppSettings = new
                 {
-                    UseRemoteDatabase = UseRemoteDatabase,
+                    DatabaseMode = dbMode,
+                    UseRemoteDatabase = IsRemote,
                     MySqlDumpPath = MySqlDumpPath
                 }
             };
 
             string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_appSettingsPath, json);
-            
+
             StatusMessage = "Settings saved. Restart application to apply connection changes.";
         }
         catch { StatusMessage = "Error saving settings."; }
@@ -126,7 +163,11 @@ public class SettingsViewModel : ViewModelBase
     {
         StatusMessage = $"Starting {type} backup...";
         string backupDir = Path.Combine(Directory.GetCurrentDirectory(), "Backups");
-        string connStr = UseRemoteDatabase ? RemoteConnectionString : LocalConnectionString;
+
+        // Pick connection string based on mode
+        string connStr = IsRemote ? RemoteConnectionString
+                       : IsLan ? LanConnectionString
+                       : LocalConnectionString;
 
         _backupService.MySqlDumpPath = MySqlDumpPath;
 
@@ -144,6 +185,8 @@ public class SettingsViewModel : ViewModelBase
                 break;
         }
 
-        StatusMessage = success ? $"{type} backup completed successfully in ./Backups/" : $"Failed to create {type} backup. Check if mysqldump is installed.";
+        StatusMessage = success
+            ? $"{type} backup completed successfully in ./Backups/"
+            : $"Failed to create {type} backup. Check if mysqldump is installed.";
     }
 }

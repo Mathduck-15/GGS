@@ -49,8 +49,8 @@
                               Margin="0 0 0 16"/>
 
                     <ComboBox materialDesign:HintAssist.Hint="Associate Parameter" 
-                              ItemsSource="{Binding Parameters}" 
-                              SelectedItem="{Binding SelectedParameter}" 
+                              ItemsSource="{Binding Categories}" 
+                              SelectedItem="{Binding SelectedCategory}" 
                               DisplayMemberPath="Name"
                               Margin="0 0 0 24"/>
 
@@ -71,8 +71,8 @@
                     <DataGrid Grid.Row="1" ItemsSource="{Binding UploadedFiles}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="*"/>
-                            <DataGridTextColumn Header="Department" Binding="{Binding Department.Name}" Width="Auto"/>
-                            <DataGridTextColumn Header="Parameter" Binding="{Binding Parameter.Name}" Width="Auto"/>
+                            <DataGridTextColumn Header="Office" Binding="{Binding Office.Name}" Width="Auto"/>
+                            <DataGridTextColumn Header="Parameter" Binding="{Binding Category.Name}" Width="Auto"/>
                             <DataGridTextColumn Header="Extension" Binding="{Binding FileType}" Width="Auto"/>
                             <DataGridTextColumn Header="Date" Binding="{Binding UploadDate, StringFormat={}{0:g}}" Width="Auto"/>
                             <DataGridTemplateColumn Width="Auto">
