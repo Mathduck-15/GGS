@@ -19,7 +19,7 @@ public class MainViewModel : ViewModelBase
     private NavigationItem _selectedNavItem = null!;
     private object _currentView = null!;
 
-    public string CurrentUserName => _sessionService.CurrentUser?.Username ?? "Guest";
+    public string CurrentUserName => _sessionService.CurrentUser?.Name ?? "Guest";
     public string CurrentUserRole => _sessionService.CurrentUser?.Role ?? "None";
 
     public ObservableCollection<NavigationItem> NavigationItems { get; }

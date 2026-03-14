@@ -22,7 +22,7 @@ public class ReportsViewModel : ViewModelBase
         "Budget Summary by Category",
         "Transaction History",
         "Parameters List",
-        "Departmental Budget Allocation",
+        "Office Budget Allocation",
         "System Overview"
     };
 
@@ -86,7 +86,7 @@ public class ReportsViewModel : ViewModelBase
     public bool IsBudgetSummaryVisible => SelectedReportType == "Budget Summary by Category";
     public bool IsTransactionHistoryVisible => SelectedReportType == "Transaction History";
     public bool IsParametersListVisible => SelectedReportType == "Parameters List";
-    public bool IsDepartmentalBudgetVisible => SelectedReportType == "Departmental Budget Allocation";
+    public bool IsDepartmentalBudgetVisible => SelectedReportType == "Office Budget Allocation";
     public bool IsSystemOverviewVisible => SelectedReportType == "System Overview";
 
     public ICommand GenerateReportCommand { get; }
@@ -101,7 +101,6 @@ public class ReportsViewModel : ViewModelBase
         catch { }
 
         GenerateReportCommand = new RelayCommand(async p => await GenerateReportAsync());
-        // Print/Export functionality is a placeholder
         PrintExportCommand = new RelayCommand(p => { /* Implement PDF/Excel export later */ });
 
         SelectedReportType = ReportTypes[0]; // Default selection
@@ -148,27 +147,23 @@ public class ReportsViewModel : ViewModelBase
                     ParametersList = new ObservableCollection<Parameter>(@params);
                     break;
 
-                case "Departmental Budget Allocation":
-                    var allocations = await _context.DepartmentAllocations
-                        .Include(a => a.Department)
+                case "Office Budget Allocation":
+                    var allocations = await _context.OfficeAllocations
+                        .Include(a => a.Office)
                         .Include(a => a.YearlyBudget)
-                        .OrderBy(a => a.Department.Name)
+                        .OrderBy(a => a.Office!.Name)
                         .ToListAsync();
 
-                    var deptSummaries = allocations.Select(a => new
+                    var officeSummaries = allocations.Select(a => new
                     {
-                        DepartmentName = a.Department?.Name ?? "Unknown",
+                        DepartmentName = a.Office?.Name ?? "Unknown",
                         Year = a.YearlyBudget?.Year.ToString() ?? "N/A",
                         Allocated = a.AllocatedAmount,
-                        Spent = a.SpentAmount,
-                        Remaining = a.AllocatedAmount - a.SpentAmount,
-                        Utilization = a.AllocatedAmount > 0 ? (double)(a.SpentAmount / a.AllocatedAmount) * 100 : 0
                     }).ToList();
-                    DepartmentalBudgets = new ObservableCollection<object>(deptSummaries);
+                    DepartmentalBudgets = new ObservableCollection<object>(officeSummaries);
                     break;
 
                 case "System Overview":
-                    // Simple KPI collection for the DataGrid
                     var totalUsers = await _context.Users.CountAsync();
                     var totalBudgets = await _context.Budgets.SumAsync(b => b.Amount);
                     var totalExp = await _context.Transactions.Where(t => t.TransactionType == "Expense").SumAsync(t => t.Amount);
@@ -178,14 +173,13 @@ public class ReportsViewModel : ViewModelBase
                         new { Metric = "Total Registered Users", Value = totalUsers.ToString() },
                         new { Metric = "Total Budget Allocated", Value = totalBudgets.ToString("C") },
                         new { Metric = "Total Expenses", Value = totalExp.ToString("C") },
-                        new { Metric = "Total Transactions", Value = await _context.Transactions.CountAsync() }
+                        new { Metric = "Total Transactions", Value = (await _context.Transactions.CountAsync()).ToString() }
                     };
                     break;
             }
         }
         catch
         {
-            // Database might not be populated or available
         }
     }
 }

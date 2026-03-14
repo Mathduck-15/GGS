@@ -26,7 +26,7 @@ public class BudgetAllocationViewModel : ViewModelBase
     private decimal _allocationPercent;
 
     public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
-    public ObservableCollection<DepartmentAllocationViewModel> DepartmentAllocations { get; } = new();
+    public ObservableCollection<OfficeAllocationItemViewModel> DepartmentAllocations { get; } = new();
 
     public int NewBudgetYear
     {
@@ -100,17 +100,19 @@ public class BudgetAllocationViewModel : ViewModelBase
             return;
         }
 
-        var departments = await _context.Departments.ToListAsync();
-        var existingAllocations = await _context.DepartmentAllocations
+        var offices = await _context.Offices.ToListAsync();
+        var existingAllocations = await _context.OfficeAllocations
             .Where(a => a.YearlyBudgetId == SelectedYearlyBudget.Id)
             .ToListAsync();
 
-        foreach (var dept in departments)
+        foreach (var office in offices)
         {
-            var allocation = existingAllocations.FirstOrDefault(a => a.DepartmentId == dept.Id) 
-                             ?? new DepartmentAllocation { DepartmentId = dept.Id, YearlyBudgetId = SelectedYearlyBudget.Id };
+            if (string.IsNullOrEmpty(office.OfficeCode)) continue;
+
+            var allocation = existingAllocations.FirstOrDefault(a => a.OfficeCode == office.OfficeCode) 
+                             ?? new OfficeAllocation { OfficeCode = office.OfficeCode, YearlyBudgetId = SelectedYearlyBudget.Id };
             
-            var vm = new DepartmentAllocationViewModel(allocation, dept.Name);
+            var vm = new OfficeAllocationItemViewModel(allocation, office.Name, office.OfficeCode);
             vm.AmountChanged += (s, e) => CalculateUnallocated();
             DepartmentAllocations.Add(vm);
         }
@@ -172,7 +174,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             if (vm.Model.Id == 0 && vm.Amount > 0)
             {
                 vm.Model.AllocatedAmount = vm.Amount;
-                _context.DepartmentAllocations.Add(vm.Model);
+                _context.OfficeAllocations.Add(vm.Model);
             }
             else if (vm.Model.Id != 0)
             {
@@ -186,10 +188,12 @@ public class BudgetAllocationViewModel : ViewModelBase
     }
 }
 
-public class DepartmentAllocationViewModel : ViewModelBase
+// Renamed from DepartmentAllocationViewModel to OfficeAllocationItemViewModel
+public class OfficeAllocationItemViewModel : ViewModelBase
 {
-    public DepartmentAllocation Model { get; }
+    public OfficeAllocation Model { get; }
     public string DepartmentName { get; }
+    public string? OfficeCode { get; }
     private decimal _amount;
 
     public decimal Amount
@@ -205,10 +209,17 @@ public class DepartmentAllocationViewModel : ViewModelBase
 
     public event EventHandler? AmountChanged;
 
-    public DepartmentAllocationViewModel(DepartmentAllocation model, string deptName)
+    public OfficeAllocationItemViewModel(OfficeAllocation model, string officeName, string? officeCode)
     {
         Model = model;
-        DepartmentName = deptName;
+        DepartmentName = officeName;
+        OfficeCode = officeCode;
         _amount = model.AllocatedAmount;
     }
+}
+
+// Keep old name as alias for XAML compatibility
+public class DepartmentAllocationViewModel : OfficeAllocationItemViewModel
+{
+    public DepartmentAllocationViewModel(OfficeAllocation model, string officeName, string? officeCode) : base(model, officeName, officeCode) { }
 }

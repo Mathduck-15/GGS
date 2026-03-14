@@ -17,5 +17,5 @@ public class YearlyBudget
     [StringLength(255)]
     public string? Description { get; set; }
 
-    public virtual ICollection<DepartmentAllocation> Allocations { get; set; } = new List<DepartmentAllocation>();
+    public virtual ICollection<OfficeAllocation> Allocations { get; set; } = new List<OfficeAllocation>();
 }

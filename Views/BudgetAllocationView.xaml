@@ -108,6 +108,7 @@
 
                     <DataGrid Grid.Row="2" ItemsSource="{Binding DepartmentAllocations}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single">
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="Office Code" Binding="{Binding OfficeCode}" IsReadOnly="True" Width="180" FontFamily="Consolas"/>
                             <DataGridTextColumn Header="Department" Binding="{Binding DepartmentName}" IsReadOnly="True" Width="*"/>
                             <DataGridTemplateColumn Header="Allocated Amount" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>

@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
-public class DepartmentAllocation
+[Table("officeallocations")]
+public class OfficeAllocation
 {
     [Key]
     public int Id { get; set; }
@@ -15,10 +16,11 @@ public class DepartmentAllocation
     public virtual YearlyBudget? YearlyBudget { get; set; }
 
     [Required]
-    public int DepartmentId { get; set; }
+    [Column("office_code")]
+    public string OfficeCode { get; set; } = string.Empty;
 
-    [ForeignKey("DepartmentId")]
-    public virtual Department? Department { get; set; }
+    [ForeignKey("OfficeCode")]
+    public virtual Office? Office { get; set; }
 
     [Required]
     public decimal AllocatedAmount { get; set; }

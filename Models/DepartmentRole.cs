@@ -15,9 +15,9 @@ public class DepartmentRole
     [StringLength(255)]
     public string Description { get; set; } = string.Empty;
 
-    [Required]
-    public int DepartmentId { get; set; }
+    // Office linkage (replacing Department)
+    public long? OfficeId { get; set; }
 
-    [ForeignKey("DepartmentId")]
-    public virtual Department? Department { get; set; }
+    [ForeignKey("OfficeId")]
+    public virtual Office? Office { get; set; }
 }

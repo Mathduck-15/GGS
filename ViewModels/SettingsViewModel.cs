@@ -9,7 +9,7 @@ namespace GoodGovernanceApp.ViewModels;
 public class SettingsViewModel : ViewModelBase
 {
     private readonly BackupService _backupService;
-    private readonly string _appSettingsPath = "appsettings.json";
+    private readonly string _appSettingsPath = System.IO.Path.Combine(AppContext.BaseDirectory, "appsettings.json");
 
     private bool _useRemoteDatabase;
     public bool UseRemoteDatabase

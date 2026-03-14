@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using GoodGovernanceApp.Models;
+using GoodGovernanceApp.Utilities;
 
 namespace GoodGovernanceApp.Data;
 
@@ -8,64 +9,20 @@ public static class DatabaseSeeder
 {
     public static void SeedData(AppDbContext context)
     {
-        // 0. Seed Departments
-        var standardDepts = new[]
-        {
-            new Department { Name = "Engineering", Description = "Technical and construction works" },
-            new Department { Name = "Health Services", Description = "Medical and clinical operations" },
-            new Department { Name = "Finance", Description = "Accounting and budget management" }
-        };
-
-        foreach (var d in standardDepts)
-        {
-            if (!context.Departments.Any(dbD => dbD.Name == d.Name))
-                context.Departments.Add(d);
-        }
-        context.SaveChanges();
-
-        var engineering = context.Departments.FirstOrDefault(d => d.Name == "Engineering");
-        var health = context.Departments.FirstOrDefault(d => d.Name == "Health Services");
-
-        // 0.1 Seed DepartmentRoles (only for departments we just ensured exist)
-        if (engineering != null)
-        {
-            var roles = new[] { "Department Head", "Secretary", "Worker" };
-            foreach (var r in roles)
-            {
-                if (!context.DepartmentRoles.Any(dbR => dbR.DepartmentId == engineering.Id && dbR.Name == r))
-                    context.DepartmentRoles.Add(new DepartmentRole { Name = r, DepartmentId = engineering.Id });
-            }
-        }
-        if (health != null)
-        {
-            var roles = new[] { "Department Head", "Secretary" };
-            foreach (var r in roles)
-            {
-                if (!context.DepartmentRoles.Any(dbR => dbR.DepartmentId == health.Id && dbR.Name == r))
-                    context.DepartmentRoles.Add(new DepartmentRole { Name = r, DepartmentId = health.Id });
-            }
-        }
-        context.SaveChanges();
-
-        // 1. Seed Users (Check individually)
-        var engineeringDept = context.Departments.FirstOrDefault(d => d.Name == "Engineering");
-        var engHeadRole = context.DepartmentRoles.FirstOrDefault(r => r.DepartmentId == engineeringDept!.Id && r.Name == "Department Head");
-        var engSecRole = context.DepartmentRoles.FirstOrDefault(r => r.DepartmentId == engineeringDept!.Id && r.Name == "Secretary");
-        var engWorkerRole = context.DepartmentRoles.FirstOrDefault(r => r.DepartmentId == engineeringDept!.Id && r.Name == "Worker");
-
+        // 1. Seed Users
         var usersToSeed = new[]
         {
-            new User { Username = "superadmin", PasswordHash = "admin", Role = "SuperAdmin", IsActive = true },
-            new User { Username = "admin", PasswordHash = "admin", Role = "Admin", IsActive = true },
-            new User { Username = "evaluator", PasswordHash = "password", Role = "Evaluator", IsActive = true },
-            new User { Username = "eng_head", PasswordHash = "password", Role = "User", IsActive = true, DepartmentId = engineeringDept?.Id, DepartmentRoleId = engHeadRole?.Id },
-            new User { Username = "eng_sec", PasswordHash = "password", Role = "User", IsActive = true, DepartmentId = engineeringDept?.Id, DepartmentRoleId = engSecRole?.Id },
-            new User { Username = "eng_worker1", PasswordHash = "password", Role = "User", IsActive = true, DepartmentId = engineeringDept?.Id, DepartmentRoleId = engWorkerRole?.Id }
+            new User { Name = "superadmin", Email = "superadmin@ggs.local", Password = PasswordHasher.HashPassword("admin"), Role = "SuperAdmin", Status = "active" },
+            new User { Name = "admin", Email = "admin@ggs.local", Password = PasswordHasher.HashPassword("admin"), Role = "Admin", Status = "active" },
+            new User { Name = "evaluator", Email = "evaluator@ggs.local", Password = PasswordHasher.HashPassword("password"), Role = "Evaluator", Status = "active" },
+            new User { Name = "eng_head", Email = "eng_head@ggs.local", Password = PasswordHasher.HashPassword("password"), Role = "User", Status = "active" },
+            new User { Name = "eng_sec", Email = "eng_sec@ggs.local", Password = PasswordHasher.HashPassword("password"), Role = "User", Status = "active" },
+            new User { Name = "eng_worker1", Email = "eng_worker@ggs.local", Password = PasswordHasher.HashPassword("password"), Role = "User", Status = "active" }
         };
 
         foreach (var u in usersToSeed)
         {
-            if (!context.Users.Any(dbU => dbU.Username == u.Username))
+            if (!context.Users.Any(dbU => dbU.Name == u.Name))
                 context.Users.Add(u);
         }
         context.SaveChanges();
@@ -78,7 +35,7 @@ public static class DatabaseSeeder
                 new Parameter { Name = "AppName", Value = "Good Governance System", Description = "System Name" },
                 new Parameter { Name = "Version", Value = "1.0", Description = "Current Release" },
                 new Parameter { Name = "MaxLoginAttempts", Value = "5", Description = "Maximum failed logins" },
-                new Parameter { Name = "Currency", Value = "USD", Description = "System currency" },
+                new Parameter { Name = "Currency", Value = "PHP", Description = "System currency" },
                 new Parameter { Name = "FiscalYearStart", Value = "Jan", Description = "Start of fiscal year" }
             };
             context.Parameters.AddRange(parameters);
@@ -116,7 +73,7 @@ public static class DatabaseSeeder
             context.SaveChanges();
         }
 
-        // 5. Seed Transactions (Only if users and categories exist)
+        // 5. Seed Transactions
         if (context.Transactions.Count() < 10)
         {
             var users = context.Users.ToList();
@@ -134,7 +91,7 @@ public static class DatabaseSeeder
                 context.Transactions.Add(new Transaction
                 {
                     CategoryId = categories[random.Next(categories.Count)].Id,
-                    UserId = users[random.Next(users.Count)].Id,
+                    UserId = (int)users[random.Next(users.Count)].Id,
                     Amount = random.Next(1000, 50000),
                     Date = DateTime.Now.AddDays(-random.Next(1, 365)),
                     TransactionType = types[random.Next(types.Length)],
@@ -143,7 +100,6 @@ public static class DatabaseSeeder
             }
             context.SaveChanges();
         }
-        context.SaveChanges();
 
         // 6. Seed System Logs
         var adminUser = context.Users.FirstOrDefault(u => u.Role == "SuperAdmin" || u.Role == "Admin");
@@ -151,7 +107,7 @@ public static class DatabaseSeeder
         {
             context.SystemLogs.Add(new SystemLog
             {
-                UserId = adminUser.Id,
+                UserId = (int)adminUser.Id,
                 Timestamp = DateTime.Now,
                 Action = "System Initialization",
                 Details = "Database seeded with initial transactions and required parameters."

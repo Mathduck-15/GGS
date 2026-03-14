@@ -16,7 +16,7 @@ public class Evaluation
     public virtual UploadedFile? UploadedFile { get; set; }
 
     [Required]
-    public int EvaluatorId { get; set; }
+    public long EvaluatorId { get; set; }
 
     [ForeignKey("EvaluatorId")]
     public virtual User? Evaluator { get; set; }

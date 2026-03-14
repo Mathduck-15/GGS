@@ -5,6 +5,7 @@ using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Services;
+using GoodGovernanceApp.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,7 +20,7 @@ public class ProfileViewModel : ViewModelBase
     private string _newPassword = string.Empty;
     private string _confirmPassword = string.Empty;
     private string _role = string.Empty;
-    private string _departmentName = "None";
+    private string _officeName = "None";
 
     public string Username
     {
@@ -45,10 +46,17 @@ public class ProfileViewModel : ViewModelBase
         set { _role = value; OnPropertyChanged(); }
     }
 
+    public string OfficeName
+    {
+        get => _officeName;
+        set { _officeName = value; OnPropertyChanged(); }
+    }
+
+    // Keep for XAML compatibility
     public string DepartmentName
     {
-        get => _departmentName;
-        set { _departmentName = value; OnPropertyChanged(); }
+        get => _officeName;
+        set { _officeName = value; OnPropertyChanged(); }
     }
 
     public ICommand SaveChangesCommand { get; }
@@ -68,9 +76,9 @@ public class ProfileViewModel : ViewModelBase
         var currentUser = _sessionService.CurrentUser;
         if (currentUser != null)
         {
-            Username = currentUser.Username;
+            Username = currentUser.Name;
             Role = currentUser.Role;
-            DepartmentName = currentUser.Department?.Name ?? "General / Unassigned";
+            OfficeName = currentUser.Office?.Name ?? "General / Unassigned";
         }
     }
 
@@ -95,17 +103,17 @@ public class ProfileViewModel : ViewModelBase
                 return;
             }
 
-            user.Username = Username;
+            user.Name = Username;
             if (!string.IsNullOrEmpty(NewPassword))
             {
-                user.PasswordHash = NewPassword; // In a real app we'd hash it
+                user.Password = PasswordHasher.HashPassword(NewPassword);
             }
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
             // Update session
-            sessionUser.Username = Username;
+            sessionUser.Name = Username;
             
             NewPassword = string.Empty;
             ConfirmPassword = string.Empty;

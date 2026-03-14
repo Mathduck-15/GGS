@@ -37,9 +37,39 @@
 
                     <TextBlock Text="Departments" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
 
-                    <ListBox Grid.Row="1" ItemsSource="{Binding Departments}" SelectedItem="{Binding SelectedDepartment}" DisplayMemberPath="Name" Margin="0 0 0 12"/>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Departments}" SelectedItem="{Binding SelectedDepartment}" Margin="0 0 0 12">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="4 2">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding OfficeCode}" FontFamily="Consolas" FontSize="11"
+                                               Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
 
                     <StackPanel Grid.Row="2">
+                        <!-- Auto-generated Office Code -->  
+                        <TextBlock Text="Office ID" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 2"/>
+                        <Grid Margin="0 0 0 8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding NewOfficeCode, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Office Code (auto-generated)"
+                                     IsReadOnly="True"
+                                     FontFamily="Consolas"
+                                     Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                     FontWeight="Bold"/>
+                            <Button Grid.Column="1" Content="↻" ToolTip="Generate new code"
+                                    Command="{Binding RegenerateCodeCommand}"
+                                    Style="{StaticResource MaterialDesignToolButton}"
+                                    Margin="4 0 0 0"/>
+                        </Grid>
+
                         <TextBox materialDesign:HintAssist.Hint="New Department Name" Text="{Binding NewDepartmentName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 8"/>
                         <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding NewDepartmentDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"/>
                         <Button Content="Add Department" Command="{Binding AddDepartmentCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>

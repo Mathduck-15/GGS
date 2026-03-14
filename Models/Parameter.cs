@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
@@ -16,4 +17,9 @@ public class Parameter
     
     [StringLength(255)]
     public string? Description { get; set; }
+
+    public int? CategoryId { get; set; }
+
+    [ForeignKey("CategoryId")]
+    public virtual Category? Category { get; set; }
 }

@@ -6,27 +6,30 @@ using Microsoft.EntityFrameworkCore;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace GoodGovernanceApp.ViewModels;
 
 public class DepartmentManagementViewModel : ViewModelBase
 {
     private readonly AppDbContext _context;
-    private Department? _selectedDepartment;
+    private Office? _selectedOffice;
     private string _newDepartmentName = string.Empty;
     private string _newDepartmentDescription = string.Empty;
+    private string _newOfficeCode = string.Empty;
     private string _newRoleName = string.Empty;
     private string _newRoleDescription = string.Empty;
 
-    public ObservableCollection<Department> Departments { get; } = new();
+    // XAML binds to "Departments" — keep the name for compatibility
+    public ObservableCollection<Office> Departments { get; } = new();
     public ObservableCollection<DepartmentRole> SelectedDepartmentRoles { get; } = new();
 
-    public Department? SelectedDepartment
+    public Office? SelectedDepartment
     {
-        get => _selectedDepartment;
+        get => _selectedOffice;
         set
         {
-            _selectedDepartment = value;
+            _selectedOffice = value;
             OnPropertyChanged();
             _ = LoadRolesAsync();
         }
@@ -35,7 +38,21 @@ public class DepartmentManagementViewModel : ViewModelBase
     public string NewDepartmentName
     {
         get => _newDepartmentName;
-        set { _newDepartmentName = value; OnPropertyChanged(); }
+        set 
+        { 
+            _newDepartmentName = value; 
+            OnPropertyChanged();
+            // Auto-generate a code whenever the name changes (if none yet)
+            if (string.IsNullOrWhiteSpace(NewOfficeCode))
+                NewOfficeCode = GenerateOfficeCode();
+        }
+    }
+
+    /// <summary>Auto-generated unique Office ID shown in the Add form.</summary>
+    public string NewOfficeCode
+    {
+        get => _newOfficeCode;
+        set { _newOfficeCode = value; OnPropertyChanged(); }
     }
 
     public string NewDepartmentDescription
@@ -59,25 +76,24 @@ public class DepartmentManagementViewModel : ViewModelBase
     public ICommand AddDepartmentCommand { get; }
     public ICommand AddRoleCommand { get; }
     public ICommand DeleteDepartmentCommand { get; }
+    public ICommand RegenerateCodeCommand { get; }
 
     public DepartmentManagementViewModel()
     {
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
-        AddDepartmentCommand = new RelayCommand(async _ => await AddDepartmentAsync());
+        AddDepartmentCommand = new RelayCommand(async _ => await AddOfficeAsync());
         AddRoleCommand = new RelayCommand(async _ => await AddRoleAsync(), _ => SelectedDepartment != null);
-        DeleteDepartmentCommand = new RelayCommand(async _ => await DeleteDepartmentAsync(), _ => SelectedDepartment != null);
+        DeleteDepartmentCommand = new RelayCommand(async _ => await DeleteOfficeAsync(), _ => SelectedDepartment != null);
+        RegenerateCodeCommand = new RelayCommand(_ => NewOfficeCode = GenerateOfficeCode());
 
-        _ = LoadDepartmentsAsync();
+        _ = LoadOfficesAsync();
     }
 
-    private async Task LoadDepartmentsAsync()
+    private async Task LoadOfficesAsync()
     {
-        var departments = await _context.Departments.ToListAsync();
+        var offices = await _context.Offices.ToListAsync();
         Departments.Clear();
-        foreach (var dept in departments)
-        {
-            Departments.Add(dept);
-        }
+        foreach (var o in offices) Departments.Add(o);
     }
 
     private async Task LoadRolesAsync()
@@ -86,31 +102,56 @@ public class DepartmentManagementViewModel : ViewModelBase
         if (SelectedDepartment != null)
         {
             var roles = await _context.DepartmentRoles
-                .Where(r => r.DepartmentId == SelectedDepartment.Id)
+                .Where(r => r.OfficeId == SelectedDepartment.Id)
                 .ToListAsync();
-            foreach (var role in roles)
-            {
-                SelectedDepartmentRoles.Add(role);
-            }
+            foreach (var role in roles) SelectedDepartmentRoles.Add(role);
         }
     }
 
-    private async Task AddDepartmentAsync()
+    private string GenerateOfficeCode()
+    {
+        int year = DateTime.Now.Year;
+        // Find the highest sequence number used this year
+        int nextSeq = 1;
+        var existing = Departments
+            .Where(o => o.OfficeCode != null && o.OfficeCode.StartsWith($"OFF-{year}-"))
+            .Select(o =>
+            {
+                var parts = o.OfficeCode!.Split('-');
+                return parts.Length == 3 && int.TryParse(parts[2], out int n) ? n : 0;
+            })
+            .ToList();
+
+        if (existing.Count > 0)
+            nextSeq = existing.Max() + 1;
+
+        return $"OFF-{year}-{nextSeq:D4}";
+    }
+
+    private async Task AddOfficeAsync()
     {
         if (string.IsNullOrWhiteSpace(NewDepartmentName)) return;
 
-        var dept = new Department
+        // Ensure code is generated even if name was pasted without triggering setter
+        if (string.IsNullOrWhiteSpace(NewOfficeCode))
+            NewOfficeCode = GenerateOfficeCode();
+
+        var office = new Office
         {
-            Name = NewDepartmentName,
-            Description = NewDepartmentDescription
+            Name        = NewDepartmentName,
+            Description = NewDepartmentDescription,
+            OfficeCode  = NewOfficeCode,
+            CreatedAt   = DateTime.Now,
+            UpdatedAt   = DateTime.Now
         };
 
-        _context.Departments.Add(dept);
+        _context.Offices.Add(office);
         await _context.SaveChangesAsync();
-        
-        Departments.Add(dept);
+
+        Departments.Add(office);
         NewDepartmentName = string.Empty;
         NewDepartmentDescription = string.Empty;
+        NewOfficeCode = string.Empty;
     }
 
     private async Task AddRoleAsync()
@@ -121,7 +162,7 @@ public class DepartmentManagementViewModel : ViewModelBase
         {
             Name = NewRoleName,
             Description = NewRoleDescription,
-            DepartmentId = SelectedDepartment.Id
+            OfficeId = SelectedDepartment.Id
         };
 
         _context.DepartmentRoles.Add(role);
@@ -132,11 +173,11 @@ public class DepartmentManagementViewModel : ViewModelBase
         NewRoleDescription = string.Empty;
     }
 
-    private async Task DeleteDepartmentAsync()
+    private async Task DeleteOfficeAsync()
     {
         if (SelectedDepartment == null) return;
         
-        _context.Departments.Remove(SelectedDepartment);
+        _context.Offices.Remove(SelectedDepartment);
         await _context.SaveChangesAsync();
         
         Departments.Remove(SelectedDepartment);

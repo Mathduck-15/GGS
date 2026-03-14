@@ -3,6 +3,8 @@ using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using Microsoft.EntityFrameworkCore;
 using GoodGovernanceApp.Views;
+using GoodGovernanceApp.Utilities;
+using System.Linq;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -56,15 +58,16 @@ public class LoginViewModel : ViewModelBase
 
     private void ExecuteLogin(object? parameter)
     {
-        // Simple logic since database seeder is not yet called, we mock admin logic or check DB
-        var user = _context.Users.FirstOrDefault(u => u.Username == Username && u.PasswordHash == Password);
+        string hashedInput = PasswordHasher.HashPassword(Password);
+        
+        var user = _context.Users.FirstOrDefault(u => u.Name == Username && u.Password == hashedInput);
         
         if (user != null || (Username == "admin" && Password == "admin")) // admin override
         {
             if (user == null && Username == "admin")
             {
                 // Ensure we have a dummy admin in session if using override
-                user = new Models.User { Username = "admin", Role = "SuperAdmin" };
+                user = new Models.User { Name = "admin", Role = "SuperAdmin" };
             }
 
             _sessionService.CurrentUser = user;

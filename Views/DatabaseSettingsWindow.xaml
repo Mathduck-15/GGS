@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
-        Title="Database Connection Settings" Height="450" Width="500"
+        Title="Database Connection Settings" Height="540" Width="560"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -39,7 +39,28 @@
 
                         <TextBox materialDesign:HintAssist.Hint="Remote Connection String" 
                                  Text="{Binding RemoteConnectionString}" 
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 12" />
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16" />
+
+                        <!-- Test Connection Row -->
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 4">
+                            <Button x:Name="TestConnectionBtn" Content="🔌 TEST REMOTE CONNECTION"
+                                    Click="TestConnection_Click"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0 0 12 0"/>
+                            <ProgressBar x:Name="TestProgress" IsIndeterminate="True"
+                                         Width="24" Height="24"
+                                         Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                         Visibility="Collapsed" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Connection Status Result -->
+                        <Border x:Name="StatusPanel" Visibility="Collapsed" 
+                                CornerRadius="4" Padding="12 8" Margin="0 8 0 0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="StatusIcon" FontSize="16" Margin="0 0 8 0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="StatusText" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="380"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </materialDesign:Card>
 
@@ -60,3 +81,4 @@
         </StackPanel>
     </Grid>
 </Window>
+

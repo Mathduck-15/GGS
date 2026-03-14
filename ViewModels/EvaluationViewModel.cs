@@ -74,7 +74,7 @@ public class EvaluationViewModel : ViewModelBase
             var evaluatedFileIds = await _context.Evaluations.Select(e => e.UploadedFileId).ToListAsync();
             
             var files = await _context.UploadedFiles
-                .Include(f => f.Department)
+                .Include(f => f.Office)
                 .Include(f => f.Parameter)
                 .Where(f => !evaluatedFileIds.Contains(f.Id))
                 .ToListAsync();

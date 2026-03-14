@@ -94,17 +94,17 @@ public class DashboardViewModel : ViewModelBase
                                          .SumAsync(t => t.Amount);
 
             ActiveUsersCount = await _context.Users
-                                             .CountAsync(u => u.IsActive);
+                                             .CountAsync(u => u.Status == "active");
 
-            var deptData = await _context.DepartmentAllocations
-                .Include(a => a.Department)
-                .GroupBy(a => a.Department.Name)
+            var officeData = await _context.OfficeAllocations
+                .Include(a => a.Office)
+                .GroupBy(a => a.Office!.Name)
                 .Select(g => new DeptAllocationData { Name = g.Key, Amount = (double)g.Sum(a => a.AllocatedAmount) })
                 .ToListAsync();
 
-            if (deptData.Count > 0)
+            if (officeData.Count > 0)
             {
-                DeptAllocations = deptData;
+                DeptAllocations = officeData;
             }
             else
             {

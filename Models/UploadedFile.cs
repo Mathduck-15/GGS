@@ -23,11 +23,11 @@ public class UploadedFile
 
     public DateTime UploadDate { get; set; } = DateTime.Now;
 
-    // Relations
-    public int DepartmentId { get; set; }
-    
-    [ForeignKey("DepartmentId")]
-    public virtual Department? Department { get; set; }
+    // Relations — now use Office instead of Department
+    public long OfficeId { get; set; }
+
+    [ForeignKey("OfficeId")]
+    public virtual Office? Office { get; set; }
 
     public int ParameterId { get; set; }
 

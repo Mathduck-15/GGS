@@ -1,8 +1,12 @@
+using GoodGovernanceApp.Migrations;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
+
+[Table("transactions")]
 public class Transaction
 {
     [Key]
@@ -21,10 +25,22 @@ public class Transaction
     [StringLength(255)]
     public string? Description { get; set; }
     
-    public int? UserId { get; set; }
+    public long? UserId { get; set; }
     public User? User { get; set; }
-    
+
+    [Column("office_code")]
+    [StringLength(20)]
+    public string? OfficeCode { get; set; }
+
+
     [Required]
     [StringLength(20)]
     public string TransactionType { get; set; } = "Expense"; // Income, Expense
+
+
+
+    [Required]
+    [StringLength(20)]
+    public string Status { get; set; } = "Active";
+
 }
