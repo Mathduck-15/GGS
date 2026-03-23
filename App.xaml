@@ -13,6 +13,8 @@
 
             <localConverters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
             <localConverters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <localConverters:InvertBooleanConverter x:Key="InvertBooleanConverter" />
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

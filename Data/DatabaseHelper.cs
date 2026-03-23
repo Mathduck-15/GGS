@@ -18,8 +18,13 @@ namespace GoodGovernanceApp.Data
 
         private string GetConnectionString()
         {
-            bool useRemote = _configuration.GetValue<bool>("AppSettings:UseRemoteDatabase");
-            string connectionStringName = useRemote ? "RemoteConnection" : "LocalConnection";
+            string dbMode = _configuration["AppSettings:DatabaseMode"] ?? "Local";
+            string connectionStringName = dbMode switch
+            {
+                "Remote" => "RemoteConnection",
+                "LAN" => "LanConnection",
+                _ => "LocalConnection"
+            };
             return _configuration.GetConnectionString(connectionStringName) ?? throw new InvalidOperationException($"Connection string '{connectionStringName}' not found.");
         }
 

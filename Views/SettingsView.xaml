@@ -6,7 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="800">
+             d:DesignHeight="900" d:DesignWidth="850">
 
     <UserControl.DataContext>
         <viewmodels:SettingsViewModel />
@@ -19,7 +19,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
@@ -29,63 +29,140 @@
                            FontSize="13" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 4 0 0"/>
             </StackPanel>
 
-            <!-- Database Connection Settings -->
+            <!-- GGMS Database Connection -->
             <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
                                                  VerticalAlignment="Center" Margin="0 0 8 0"
                                                  Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                        <TextBlock Text="Database Connection" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock Text="GGMS Database Connection" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Connection Type Selection -->
-                    <TextBlock Text="Select Connection Type" FontSize="13" 
-           Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 12"/>
-
+                    <!-- Preset Buttons -->
+                    <TextBlock Text="Quick Presets — fills both GGMS and CRS simultaneously:" FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 10"/>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
-                        <RadioButton Content="Local" GroupName="ConnectionType" 
-                 IsChecked="{Binding IsLocal}"
-                 Style="{StaticResource MaterialDesignRadioButton}"
-                 Margin="0 0 24 0"/>
-
-                        <RadioButton Content="LAN" GroupName="ConnectionType" 
-                 IsChecked="{Binding IsLan}"
-                 Style="{StaticResource MaterialDesignRadioButton}"
-                 Margin="0 0 24 0"/>
-
-                        <RadioButton Content="Online (Hostinger)" GroupName="ConnectionType" 
-                 IsChecked="{Binding IsRemote}"
-                 Style="{StaticResource MaterialDesignRadioButton}"/>
+                        <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 10 0" Width="110"/>
+                        <Button Content="🌐 NETWORK (LAN)" Command="{Binding PresetNetworkCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 10 0" Width="160"/>
+                        <Button Content="☁ REMOTE (Hostinger)" Command="{Binding PresetRemoteCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" Width="190"/>
                     </StackPanel>
 
-                    <!-- Connection Strings -->
-                    <TextBox materialDesign:HintAssist.Hint="Local Connection String" 
-                             Text="{Binding LocalConnectionString}" 
-                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                    <!-- LAN IP Field -->
+                    <TextBox materialDesign:HintAssist.Hint="LAN / Network IP (editable — changes per demo)"
+                             Text="{Binding LanIp, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="0 0 0 16"/>
 
-                    <TextBox materialDesign:HintAssist.Hint="LAN Connection String" 
-                             Text="{Binding LanConnectionString}" 
-                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                             Margin="0 0 0 16"/>
+                    <TextBox materialDesign:HintAssist.Hint="Local Connection String"
+                             Text="{Binding LocalConnectionString}"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 12"/>
 
-                    <TextBox materialDesign:HintAssist.Hint="Online Connection String (Hostinger)" 
-                             Text="{Binding RemoteConnectionString}" 
-                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                             Margin="0 0 0 24"/>
+                    <TextBox materialDesign:HintAssist.Hint="LAN Connection String"
+                             Text="{Binding LanConnectionString}"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 12"/>
 
-                    <Button Content="SAVE SETTINGS (REQUIRES RESTART)" 
-                            Command="{Binding SaveSettingsCommand}" 
-                            HorizontalAlignment="Left" 
+                    <TextBox materialDesign:HintAssist.Hint="Remote Connection String (Hostinger)"
+                             Text="{Binding RemoteConnectionString}"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 0"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- CRS Database Connection -->
+            <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="DatabaseSearch" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="DarkOrange"/>
+                        <TextBlock Text="CRS Database Connection (Read Only)" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="⚠ CRS is read-only for GGMS. All 4 fields are manually editable." 
+                               FontSize="12" FontStyle="Italic"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 16"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="CRS Server / IP"
+                                 Text="{Binding CrsServer, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                 Margin="0 0 0 12"/>
+                        <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="Port"
+                                 Text="{Binding CrsPort, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                 Margin="0 0 0 12"/>
+                    </Grid>
+
+                    <TextBox materialDesign:HintAssist.Hint="CRS Database Name"
+                             Text="{Binding CrsDatabase, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 12"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="CRS Username"
+                                 Text="{Binding CrsUser, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="CRS Password"
+                                 Text="{Binding CrsPassword, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                    </Grid>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Test + Save -->
+            <materialDesign:Card Grid.Row="3" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="CheckNetwork" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        <TextBlock Text="Test &amp; Save" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <Button Content="🔌 TEST BOTH CONNECTIONS" Command="{Binding TestBothCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0 0 12 0"/>
+                        <ProgressBar IsIndeterminate="True" Width="24" Height="24"
+                                     Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                     VerticalAlignment="Center"
+                                     Visibility="{Binding IsTesting, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding GgmsTestResult}" FontSize="13" FontWeight="Medium" Margin="0 0 0 4"
+                               Foreground="{DynamicResource MaterialDesignBody}"/>
+                    <TextBlock Text="{Binding CrsTestResult}" FontSize="13" FontWeight="Medium" Margin="0 0 0 16"
+                               Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                    <Button Content="💾 SAVE SETTINGS (REQUIRES RESTART)"
+                            Command="{Binding SaveSettingsCommand}"
+                            HorizontalAlignment="Left"
                             Style="{StaticResource MaterialDesignRaisedButton}"/>
+
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="13" FontWeight="Medium"
+                               Foreground="Green" Margin="0 12 0 0"/>
                 </StackPanel>
             </materialDesign:Card>
 
             <!-- Backup Settings -->
-            <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="24">
+            <materialDesign:Card Grid.Row="4" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="Backup" Width="22" Height="22" 
                                                  VerticalAlignment="Center" Margin="0 0 8 0"
                                                  Foreground="{DynamicResource PrimaryHueMidBrush}"/>
@@ -99,30 +176,16 @@
                     <TextBox materialDesign:HintAssist.Hint="mysqldump.exe Path" 
                              Text="{Binding MySqlDumpPath}" 
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                             Margin="0 0 0 24"/>
+                             Margin="0 0 0 20"/>
 
                     <StackPanel Orientation="Horizontal">
                         <Button Content="FULL BACKUP" Command="{Binding FullBackupCommand}" 
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 12 0"/>
-                        <Button Content="DIFFERENTIAL BACKUP" Command="{Binding DifferentialBackupCommand}" 
+                        <Button Content="DIFFERENTIAL" Command="{Binding DifferentialBackupCommand}" 
                                 Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 12 0"/>
-                        <Button Content="INCREMENTAL BACKUP" Command="{Binding IncrementalBackupCommand}" 
+                        <Button Content="INCREMENTAL" Command="{Binding IncrementalBackupCommand}" 
                                 Style="{StaticResource MaterialDesignOutlinedButton}"/>
                     </StackPanel>
-                </StackPanel>
-            </materialDesign:Card>
-
-            <!-- Status Message -->
-            <materialDesign:Card Grid.Row="3" Padding="16" Margin="0 0 0 16"
-                                 Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibilityConverter}}">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="InformationOutline" Width="20" Height="20" 
-                                             VerticalAlignment="Center" Margin="0 0 8 0"
-                                             Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                    <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" FontSize="14" 
-                        Foreground="Green" FontWeight="Medium" 
-                        Margin="0 8 0 0"
-                        Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                 </StackPanel>
             </materialDesign:Card>
 

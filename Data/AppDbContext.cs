@@ -191,7 +191,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProjectDetail>(entity => { entity.ToTable("project_details"); entity.HasKey(p => p.Id); });
 
         // ── Legacy Retained Relations ─────────────────────────────────────────
+        modelBuilder.Entity<Parameter>().ToTable("parameters");
         modelBuilder.Entity<Category>().ToTable("categories");  // ← add this
+        modelBuilder.Entity<YearlyBudget>().ToTable("yearlybudgets");
         modelBuilder.Entity<Budget>().HasOne(b => b.Category).WithMany(c => c.Budgets).HasForeignKey(b => b.CategoryId);
         modelBuilder.Entity<Budget>().HasOne(b => b.Office).WithMany().HasForeignKey(b => b.OfficeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<Transaction>().HasOne(t => t.Category).WithMany(c => c.Transactions).HasForeignKey(t => t.CategoryId);

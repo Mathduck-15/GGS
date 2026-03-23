@@ -1,9 +1,14 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
+[Table("categories")]
+
 public class Category
 {
+   
+
     [Key]
     public int Id { get; set; }
     

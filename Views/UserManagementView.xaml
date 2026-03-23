@@ -46,9 +46,6 @@
                         <TextBox Grid.Row="0" materialDesign:HintAssist.Hint="Search Users..." 
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
-                            </TextBox.InputBindings>
                         </TextBox>
 
                         <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" AutoGenerateColumns="False" 
@@ -163,11 +160,12 @@
                               SelectedItem="{Binding SelectedValidateUser}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID"       Binding="{Binding Id}"            Width="50"/>
+                            <DataGridTextColumn Header="Civil ID" Binding="{Binding  CivilRegistryId }"  Width="120"/>
                             <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}"      Width="*"/>
                             <DataGridTextColumn Header="Email"    Binding="{Binding Email}"          Width="*"/>
                             <DataGridTextColumn Header="Phone"    Binding="{Binding Phone}"          Width="120"/>
                             <DataGridTextColumn Header="Address"  Binding="{Binding Address}"        Width="*"/>
-                            <DataGridTextColumn Header="Category" Binding="{Binding Category.Name}"  Width="120"/>
+                        
                             <DataGridTextColumn Header="Submitted" Binding="{Binding CreatedAt, StringFormat=\{0:MM/dd/yyyy\}}" Width="110"/>
 
                             <!-- Status column with colour-coded badge -->

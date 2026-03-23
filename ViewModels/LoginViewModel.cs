@@ -1,10 +1,11 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using Microsoft.EntityFrameworkCore;
 using GoodGovernanceApp.Views;
 using GoodGovernanceApp.Utilities;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -13,7 +14,6 @@ public class LoginViewModel : ViewModelBase
     private string _username = string.Empty;
     private string _password = string.Empty;
     private string _errorMessage = string.Empty;
-    private readonly AppDbContext _context;
     private readonly GoodGovernanceApp.Services.SessionService _sessionService;
 
 
@@ -39,9 +39,8 @@ public class LoginViewModel : ViewModelBase
     public ICommand OpenDbSettingsCommand { get; }
     public ICommand CheatCommand { get; }
 
-    public LoginViewModel(AppDbContext context, GoodGovernanceApp.Services.SessionService sessionService)
+    public LoginViewModel(GoodGovernanceApp.Services.SessionService sessionService)
     {
-        _context = context;
         _sessionService = sessionService;
         LoginCommand = new RelayCommand(ExecuteLogin, CanExecuteLogin);
         OpenDbSettingsCommand = new RelayCommand(ExecuteOpenDbSettings);
@@ -63,7 +62,10 @@ public class LoginViewModel : ViewModelBase
     {
         string hashedInput = PasswordHasher.HashPassword(Password);
         
-        var user = _context.Users.FirstOrDefault(u => u.Name == Username && u.Password == hashedInput);
+        using var scope = App.AppHost!.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var user = context.Users.FirstOrDefault(u => u.Name == Username && u.Password == hashedInput);
         
         if (user != null || (Username == "admin" && Password == "admin")) // admin override
         {

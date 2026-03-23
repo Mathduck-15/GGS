@@ -19,10 +19,18 @@ public class DepartmentManagementViewModel : ViewModelBase
     private string _newOfficeCode = string.Empty;
     private string _newRoleName = string.Empty;
     private string _newRoleDescription = string.Empty;
+    private ProjectDetail? _selectedRole;
 
     // XAML binds to "Departments" — keep the name for compatibility
     public ObservableCollection<Office> Departments { get; } = new();
     public ObservableCollection<DepartmentRole> SelectedDepartmentRoles { get; } = new();
+    public ObservableCollection<ProjectDetail> ProjectDetails { get; } = new();
+
+    public ProjectDetail? SelectedRole
+    {
+        get => _selectedRole;
+        set { _selectedRole = value; OnPropertyChanged(); }
+    }
 
     public Office? SelectedDepartment
     {
@@ -99,12 +107,26 @@ public class DepartmentManagementViewModel : ViewModelBase
     private async Task LoadRolesAsync()
     {
         SelectedDepartmentRoles.Clear();
+        ProjectDetails.Clear();
+
         if (SelectedDepartment != null)
         {
-            var roles = await _context.DepartmentRoles
-                .Where(r => r.OfficeId == SelectedDepartment.Id)
-                .ToListAsync();
-            foreach (var role in roles) SelectedDepartmentRoles.Add(role);
+            System.Diagnostics.Debug.WriteLine($"=== Selected Office ===");
+            System.Diagnostics.Debug.WriteLine($"Name: {SelectedDepartment.Name}");
+            System.Diagnostics.Debug.WriteLine($"OfficeCode: '{SelectedDepartment.OfficeCode}'");
+
+            var allProjects = await _context.ProjectDetails.ToListAsync();
+            System.Diagnostics.Debug.WriteLine($"=== All Projects in DB ({allProjects.Count}) ===");
+            foreach (var p in allProjects)
+                System.Diagnostics.Debug.WriteLine($"  Project: {p.Name} | OfficeCode: '{p.OfficeCode}'");
+
+            var filtered = allProjects
+                .Where(p => p.OfficeCode == SelectedDepartment.OfficeCode)
+                .ToList();
+
+            System.Diagnostics.Debug.WriteLine($"=== Filtered: {filtered.Count} matches ===");
+
+            foreach (var project in filtered) ProjectDetails.Add(project);
         }
     }
 

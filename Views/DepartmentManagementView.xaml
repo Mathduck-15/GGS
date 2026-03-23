@@ -120,10 +120,18 @@
 
                         <TextBlock Text="Department Roles" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
 
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedDepartmentRoles}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding ProjectDetails}"
+                        SelectedItem="{Binding SelectedRole}"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Role Name" Binding="{Binding Name}" Width="*"/>
-                                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
+                                <DataGridTextColumn Header="Project ID"      Binding="{Binding ProjectDetailsID}" Width="130"/>
+                                <DataGridTextColumn Header="Project"         Binding="{Binding Name}"             Width="200"/>
+                                <DataGridTextColumn Header="Description"     Binding="{Binding Description}"      Width="200"/>
+                                <DataGridTextColumn Header="Office Code"     Binding="{Binding OfficeCode}"        Width="200"/>
+                                <DataGridTextColumn Header="Total Budget"    Binding="{Binding Budget, StringFormat='{}{0:C}'}" Width="200"/>
+                                <DataGridTextColumn Header="Contact Person"  Binding="{Binding ContactPerson}"    Width="150"/>
                             </DataGrid.Columns>
                         </DataGrid>
 

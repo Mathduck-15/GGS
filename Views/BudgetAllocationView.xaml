@@ -7,7 +7,7 @@
              xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
              xmlns:converters="clr-namespace:GoodGovernanceApp.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1000">
+             d:DesignHeight="800" d:DesignWidth="1200">
 
     <UserControl.Resources>
         <converters:AllocationColorConverter x:Key="AllocationColorConverter" />
@@ -28,36 +28,36 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" MinWidth="350"/>
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="320" MinWidth="280"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Yearly Budgets Management -->
+            <!-- LEFT: Yearly Budgets -->
             <StackPanel Grid.Column="0" Margin="0 0 12 0">
                 <materialDesign:Card Padding="16" Margin="0 0 0 16">
                     <StackPanel>
-                        <TextBlock Text="New Yearly Budget" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"/>
+                        <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="2*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Year" Text="{Binding NewBudgetYear}" Margin="0 0 8 16"/>
-                            <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Total Amount" Text="{Binding NewBudgetAmount}" Margin="0 0 0 16"/>
+                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Year"
+                                     Text="{Binding NewBudgetYear}" Margin="0 0 8 12"/>
+                            <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Total Amount"
+                                     Text="{Binding NewBudgetAmount}" Margin="0 0 0 12"/>
                         </Grid>
-                        <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding NewBudgetDescription}" Margin="0 0 0 16"/>
-                        <Button Content="Set Yearly Budget" Command="{Binding AddYearlyBudgetCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
+                        <TextBox materialDesign:HintAssist.Hint="Description"
+                                 Text="{Binding NewBudgetDescription}" Margin="0 0 0 14"/>
+                        <Button Content="Set Yearly Budget" Command="{Binding AddYearlyBudgetCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"/>
                     </StackPanel>
                 </materialDesign:Card>
 
-                <materialDesign:Card VerticalAlignment="Stretch">
-                    <Grid Margin="16">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Text="Available Budgets" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding YearlyBudgets}" SelectedItem="{Binding SelectedYearlyBudget}" MinHeight="200">
+                <materialDesign:Card Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10"/>
+                        <ListBox ItemsSource="{Binding YearlyBudgets}" SelectedItem="{Binding SelectedYearlyBudget}" MinHeight="150">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0 4">
@@ -65,68 +65,141 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Year}" FontSize="16" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding TotalAmount, StringFormat={}{0:C}}" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                        <TextBlock Text="{Binding Year}" FontSize="16" FontWeight="SemiBold" Margin="0 0 8 0"/>
+                                       
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding TotalAmount, StringFormat=₱{0:N2}}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                    </Grid>
+                    </StackPanel>
                 </materialDesign:Card>
             </StackPanel>
 
-            <!-- Department Allocations -->
-            <materialDesign:Card Grid.Column="1" Margin="12 0 0 0">
-                <Grid Margin="16">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+            <!-- RIGHT: Allocations + Transactions -->
+            <Grid Grid.Column="1" Margin="12 0 0 0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                    <TextBlock Text="Budget Distribution" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
+                <!-- Allocations Card -->
+                <materialDesign:Card Grid.Row="0" Margin="0 0 0 12">
+                    <Grid Margin="16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <!-- Summary Stats -->
-                    <Grid Grid.Row="1" Margin="0 0 0 24">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Total Yearly Budget" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                            <TextBlock Text="{Binding SelectedYearlyBudget.TotalAmount, StringFormat={}{0:C}}" FontSize="24" FontWeight="SemiBold"/>
-                        </StackPanel>
+                        <TextBlock Text="Budget Distribution" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
 
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="Remaining to Allocate" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                            <TextBlock Text="{Binding UnallocatedAmount, StringFormat={}{0:C}}" FontSize="24" FontWeight="SemiBold" 
-                                       Foreground="{Binding UnallocatedAmount, Converter={StaticResource AllocationColorConverter}}"/>
+                        <!-- Summary Stats -->
+                        <Grid Grid.Row="1" Margin="0 0 0 16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Total Budget" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                <TextBlock Text="{Binding SelectedYearlyBudget.TotalAmount, StringFormat=₱{0:N2}}"
+                                           FontSize="20" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Unallocated" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                <TextBlock Text="{Binding UnallocatedAmount, StringFormat=₱{0:N2}}"
+                                           FontSize="20" FontWeight="SemiBold"
+                                           Foreground="{Binding UnallocatedAmount, Converter={StaticResource AllocationColorConverter}}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Allocated %" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                <TextBlock Text="{Binding AllocationPercent, StringFormat={}{0:N1}%}"
+                                           FontSize="20" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Allocations DataGrid -->
+                        <DataGrid Grid.Row="2"
+                                  ItemsSource="{Binding DepartmentAllocations}"
+                                  SelectedItem="{Binding SelectedOffice}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  SelectionMode="Single"
+                                  IsReadOnly="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Office Code"
+                                                    Binding="{Binding OfficeCode}"
+                                                    IsReadOnly="True" Width="150" FontFamily="Consolas"/>
+                                <DataGridTextColumn Header="Department"
+                                                    Binding="{Binding DepartmentName}"
+                                                    IsReadOnly="True" Width="*"/>
+                                <DataGridTemplateColumn Header="Allocated (₱)" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}"
+                                                     VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Spent (₱)"
+                                                    Binding="{Binding SpentDisplay}"
+                                                    IsReadOnly="True" Width="120"/>
+                                <DataGridTextColumn Header="Remaining (₱)"
+                                                    Binding="{Binding RemainingDisplay}"
+                                                    IsReadOnly="True" Width="120"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Footer -->
+                        <StackPanel Grid.Row="3" Margin="0 12 0 0">
+                            <ProgressBar Value="{Binding AllocationPercent}" Height="8" Margin="0 0 0 12"
+                                         Foreground="{Binding UnallocatedAmount, Converter={StaticResource ProgressColorConverter}}"/>
+                            <Button Content="💾 Save Allocations" Command="{Binding SaveAllocationsCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </Grid>
+                </materialDesign:Card>
 
-                    <DataGrid Grid.Row="2" ItemsSource="{Binding DepartmentAllocations}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Office Code" Binding="{Binding OfficeCode}" IsReadOnly="True" Width="180" FontFamily="Consolas"/>
-                            <DataGridTextColumn Header="Department" Binding="{Binding DepartmentName}" IsReadOnly="True" Width="*"/>
-                            <DataGridTemplateColumn Header="Allocated Amount" Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBox Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <StackPanel Grid.Row="3" Margin="0 16 0 0">
-                        <ProgressBar Value="{Binding AllocationPercent}" Height="10" Margin="0 0 0 16" 
-                                     Foreground="{Binding UnallocatedAmount, Converter={StaticResource ProgressColorConverter}}"/>
-                        <Button Content="Save Allocations" Command="{Binding SaveAllocationsCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
+                <!-- Transactions Sub-panel (shown when an office is selected) -->
+                <materialDesign:Card Grid.Row="1" Padding="16"
+                                     Visibility="{Binding SelectedOffice, Converter={StaticResource NullToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding TransactionPanelHeader}" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 10"/>
+                        <DataGrid ItemsSource="{Binding OfficeTransactions}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  MaxHeight="200">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID"          Binding="{Binding Id}"              Width="60"/>
+                                <DataGridTextColumn Header="Amount (₱)"  Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="120"/>
+                                <DataGridTextColumn Header="Description" Binding="{Binding Description}"    Width="*"/>
+                                <DataGridTextColumn Header="Date"        Binding="{Binding TransactionDate, StringFormat={}{0:MMM dd, yyyy}}"  Width="120"/>
+                                <DataGridTextColumn Header="Created"     Binding="{Binding CreatedAt, StringFormat={}{0:MMM dd, yyyy HH:mm}}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="No transactions recorded yet for this office."
+                                   FontStyle="Italic" Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   Margin="0 8 0 0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OfficeTransactions.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
-                </Grid>
-            </materialDesign:Card>
+                </materialDesign:Card>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

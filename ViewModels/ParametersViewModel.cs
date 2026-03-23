@@ -76,13 +76,6 @@ public class ParametersViewModel : ViewModelBase
 
     public ParametersViewModel()
     {
-        try
-        {
-             _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
-             LoadData();
-        }
-        catch { }
-
         AddParameterCommand = new RelayCommand(p => { SelectedParameter = new Parameter(); IsEditingParameter = true; });
         CancelParameterCommand = new RelayCommand(p => { CancelChanges(); IsEditingParameter = false; SelectedParameter = new Parameter(); });
         SaveParameterCommand = new RelayCommand(ExecuteSaveParameter, p => IsEditingParameter && !string.IsNullOrWhiteSpace(SelectedParameter.Name));
@@ -92,6 +85,28 @@ public class ParametersViewModel : ViewModelBase
         CancelCategoryCommand = new RelayCommand(p => { CancelChanges(); IsEditingCategory = false; SelectedCategory = new Category(); });
         SaveCategoryCommand = new RelayCommand(ExecuteSaveCategory, p => IsEditingCategory && !string.IsNullOrWhiteSpace(SelectedCategory.Name));
         DeleteCategoryCommand = new RelayCommand(ExecuteDeleteCategory, p => SelectedCategory.Id != 0 && !IsEditingCategory);
+
+
+
+
+        try
+        {
+            _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+            _context.Parameters.Load();
+            Parameters = _context.Parameters.Local.ToObservableCollection();
+
+            _context.Categories.Load();
+            Categories = _context.Categories.Local.ToObservableCollection();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"LoadData error: {ex.Message}");
+            // or
+            System.Windows.MessageBox.Show($"Error loading data: {ex.Message}");
+
+        }
+
+
     }
 
     private void LoadData()

@@ -36,38 +36,24 @@ public partial class App : Application
             {
                 IConfiguration config = context.Configuration;
 
-                // ── Read DatabaseMode (Local / LAN / Remote) ──────────────────
-                string dbMode = config["AppSettings:DatabaseMode"] ?? "Local";
-
-                string connStr = dbMode switch
-                {
-                    "Remote" => config.GetConnectionString("RemoteConnection") ?? "",
-                    "LAN" => config.GetConnectionString("LanConnection") ?? "",
-                    _ => config.GetConnectionString("LocalConnection") ?? ""
-                };
+                // We now read from GgmsConfig.txt inside the options builder
+                // so it fetches the latest connection string every time a DbContext is created.
 
                 // Configure DbContext
                 services.AddDbContext<AppDbContext>(options =>
                 {
-                    if (string.IsNullOrEmpty(connStr) || connStr.Contains("YOUR_HOSTINGER_IP"))
+                    string dynamicConnStr = GoodGovernanceApp.Utilities.ConfigHelper.BuildConnectionString("GgmsConfig.txt");
+                    
+                    if (string.IsNullOrEmpty(dynamicConnStr))
                     {
-                        options.UseMySql(connStr, new MySqlServerVersion(new Version(8, 0, 31)),
-                            mysqlOptions => mysqlOptions.EnableRetryOnFailure());
+                        // Fallback if config doesn't exist yet
+                        dynamicConnStr = "Server=localhost;Port=3306;Database=governance;User=root;Password=root;AllowZeroDateTime=True;ConvertZeroDateTime=True;";
                     }
-                    else
-                    {
-                        try
-                        {
-                            options.UseMySql(connStr, ServerVersion.AutoDetect(connStr),
-                                mysqlOptions => mysqlOptions.EnableRetryOnFailure());
-                        }
-                        catch
-                        {
-                            options.UseMySql(connStr, new MySqlServerVersion(new Version(8, 0, 31)),
-                                mysqlOptions => mysqlOptions.EnableRetryOnFailure());
-                        }
-                    }
-                });
+
+                    // Use explicit version to avoid performance hit of AutoDetect on every context spawn
+                    options.UseMySql(dynamicConnStr, new MySqlServerVersion(new Version(8, 0, 31)),
+                        mysqlOptions => mysqlOptions.EnableRetryOnFailure());
+                }, ServiceLifetime.Transient, ServiceLifetime.Transient);
 
                 // Register Services
                 services.AddSingleton<DatabaseHelper>();

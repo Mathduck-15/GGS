@@ -1,8 +1,5 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
-namespace GoodGovernanceApp.Models;
 
 [Table("project_details")]
 public class ProjectDetail
@@ -11,19 +8,25 @@ public class ProjectDetail
     [Column("id")]
     public long Id { get; set; }
 
-    [Column("name")]
+    [Column("project_details_id")]
+    public string? ProjectDetailsID { get; set; }
+
+    [Column("project")]
     public string Name { get; set; } = string.Empty;
 
     [Column("description")]
     public string? Description { get; set; }
 
-    [Column("budget")]
+    [Column("office_code")]
+    public string? OfficeCode { get; set; }
+
+    [Column("total_budget")]
     public decimal? Budget { get; set; }
 
-    [Column("status")]
-    public string? Status { get; set; }
+    [Column("contact_person")]
+    public string? ContactPerson { get; set; }
 
-    [Column("created_at")]
+    [Column("create_at")]
     public DateTime? CreatedAt { get; set; }
 
     [Column("updated_at")]

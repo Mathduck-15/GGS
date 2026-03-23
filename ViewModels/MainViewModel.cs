@@ -59,6 +59,7 @@ public class MainViewModel : ViewModelBase
             new NavigationItem { Name = "Parameters", Icon = "CogBox", ViewToken = "Parameters" },
             new NavigationItem { Name = "Budget & Transactions", Icon = "Finance", ViewToken = "Transactions" },
             new NavigationItem { Name = "Budget Allocation", Icon = "ScaleBalance", ViewToken = "BudgetAllocation" },
+            new NavigationItem { Name = "CRS Beneficiaries", Icon = "AccountMultiple", ViewToken = "CrsBeneficiary" },
             new NavigationItem { Name = "Reports", Icon = "FileChart", ViewToken = "Reports" },
             new NavigationItem { Name = "Departments", Icon = "OfficeBuilding", ViewToken = "Departments" },
             new NavigationItem { Name = "File Center", Icon = "CloudUpload", ViewToken = "FileUpload" },
@@ -115,6 +116,9 @@ public class MainViewModel : ViewModelBase
                 break;
             case "BudgetAllocation":
                 CurrentView = new Views.BudgetAllocationView();
+                break;
+            case "CrsBeneficiary":
+                CurrentView = new Views.CrsBeneficiaryView();
                 break;
             case "Settings":
                 CurrentView = new Views.SettingsView();
