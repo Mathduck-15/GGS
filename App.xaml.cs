@@ -74,75 +74,92 @@ public partial class App : Application
     {
         await AppHost!.StartAsync();
 
-        using (var scope = AppHost.Services.CreateScope())
-        {
-            var services = scope.ServiceProvider;
-            try
-            {
-                var dbContext = services.GetRequiredService<AppDbContext>();
-
-                if (!dbContext.Database.CanConnect())
-                    throw new Exception("Could not establish a connection to the database.");
-
-                try { dbContext.Database.EnsureCreated(); } catch { }
-
-                // Patches
-                try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
-                try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
-
-                try
-                {
-                    dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 0;");
-                    dbContext.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS officeallocations;");
-                    dbContext.Database.ExecuteSqlRaw(@"
-                        CREATE TABLE officeallocations (
-                            Id INT AUTO_INCREMENT PRIMARY KEY,
-                            YearlyBudgetId INT NOT NULL,
-                            office_code VARCHAR(30) NOT NULL,
-                            AllocatedAmount DECIMAL(65,30) NOT NULL,
-                            CONSTRAINT FK_officeallocations_YearlyBudgets FOREIGN KEY (YearlyBudgetId) REFERENCES YearlyBudgets (Id) ON DELETE CASCADE,
-                            CONSTRAINT FK_officeallocations_tbl_offices FOREIGN KEY (office_code) REFERENCES tbl_offices (office_code) ON DELETE CASCADE
-                        ) CHARACTER SET=utf8mb4;
-                    ");
-                    dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;");
-                }
-                catch
-                {
-                    try { dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;"); } catch { }
-                }
-
-                try { DatabaseSeeder.SeedData(dbContext); } catch { }
-            }
-            catch (Exception ex)
-            {
-                var config = services.GetRequiredService<IConfiguration>();
-                string dbMode = config["AppSettings:DatabaseMode"] ?? "Local";
-
-                string errorMsg = $"Database Connection Failed!\n\nDetails: {ex.Message}";
-
-                if (dbMode == "Remote")
-                {
-                    errorMsg += "\n\nTroubleshooting for Hostinger:\n" +
-                                "1. Check appsettings.json for correct IP, User, and Password.\n" +
-                                "2. ADD YOUR CURRENT IP to 'Remote MySQL' in Hostinger hPanel.\n" +
-                                "3. Ensure you aren't using placeholders (YOUR_HOSTINGER_IP).";
-                }
-                else if (dbMode == "LAN")
-                {
-                    errorMsg += "\n\nTroubleshooting for LAN:\n" +
-                                "1. Make sure you are connected to the same network.\n" +
-                                "2. Check the LAN server IP address in settings.\n" +
-                                "3. Make sure MySQL is running on the host machine.";
-                }
-
-                MessageBox.Show(errorMsg, "Database Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
+        // Show the login window immediately — never block the UI thread for DB work
         var loginWindow = AppHost.Services.GetRequiredService<GoodGovernanceApp.Views.LoginWindow>();
         loginWindow.Show();
 
         base.OnStartup(e);
+
+        // Run all DB initialisation off the UI thread so a slow/unreachable
+        // remote server can never freeze or prevent the window from appearing.
+        await Task.Run(async () =>
+        {
+            using var scope = AppHost.Services.CreateScope();
+            var services   = scope.ServiceProvider;
+            try
+            {
+                var dbContext = services.GetRequiredService<AppDbContext>();
+
+                bool canConn = await Task.Run(() =>
+                {
+                    try   { return dbContext.Database.CanConnect(); }
+                    catch { return false; }
+                });
+
+                if (!canConn)
+                {
+                    var config = services.GetRequiredService<IConfiguration>();
+                    string dbMode   = config["AppSettings:DatabaseMode"] ?? "Local";
+                    string errorMsg = "Database Connection Failed!\n\nThe application could not reach the database. " +
+                                      "Check your connection settings (Settings → Database).";
+
+                    if (dbMode == "Remote")
+                        errorMsg += "\n\nFor Hostinger remote:\n" +
+                                    "1. Add your current IP to 'Remote MySQL' in Hostinger hPanel.\n" +
+                                    "2. Verify the server/user/password in Settings.";
+                    else if (dbMode == "LAN")
+                        errorMsg += "\n\nFor LAN:\n" +
+                                    "1. Ensure you are on the same network.\n" +
+                                    "2. Verify the LAN server IP in Settings.";
+
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        System.Windows.MessageBox.Show(errorMsg, "Database Warning",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning));
+                    return;
+                }
+
+                // Non-critical patches — ignore failures silently
+                try { await Task.Run(() => dbContext.Database.EnsureCreated()); } catch { }
+
+                try
+                {
+                    await Task.Run(() =>
+                    {
+                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
+                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
+
+                        try
+                        {
+                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 0;");
+                            dbContext.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS officeallocations;");
+                            dbContext.Database.ExecuteSqlRaw(@"
+                                CREATE TABLE officeallocations (
+                                    Id INT AUTO_INCREMENT PRIMARY KEY,
+                                    YearlyBudgetId INT NOT NULL,
+                                    office_code VARCHAR(30) NOT NULL,
+                                    AllocatedAmount DECIMAL(65,30) NOT NULL,
+                                    CONSTRAINT FK_officeallocations_YearlyBudgets FOREIGN KEY (YearlyBudgetId) REFERENCES YearlyBudgets (Id) ON DELETE CASCADE,
+                                    CONSTRAINT FK_officeallocations_tbl_offices FOREIGN KEY (office_code) REFERENCES tbl_offices (office_code) ON DELETE CASCADE
+                                ) CHARACTER SET=utf8mb4;
+                            ");
+                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;");
+                        }
+                        catch
+                        {
+                            try { dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;"); } catch { }
+                        }
+                    });
+                }
+                catch { }
+
+                try { await Task.Run(() => DatabaseSeeder.SeedData(dbContext)); } catch { }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App Startup] DB init error: {ex.Message}");
+            }
+        });
     }
 
     protected override async void OnExit(ExitEventArgs e)

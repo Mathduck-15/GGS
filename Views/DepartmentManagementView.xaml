@@ -18,7 +18,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Department &amp; Role Management" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+        <TextBlock Grid.Row="0" Text="Department &amp; Project Management" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -50,7 +50,7 @@
                     </ListBox>
 
                     <StackPanel Grid.Row="2">
-                        <!-- Auto-generated Office Code -->  
+                        <!-- Auto-generated Office Code -->
                         <TextBlock Text="Office ID" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 2"/>
                         <Grid Margin="0 0 0 8">
                             <Grid.ColumnDefinitions>
@@ -77,7 +77,7 @@
                 </Grid>
             </materialDesign:Card>
 
-            <!-- Roles Detail Area -->
+            <!-- Projects Detail Area (visible when a department is selected) -->
             <Grid Grid.Column="1" Margin="12 0 0 0">
                 <Grid.Style>
                     <Style TargetType="Grid">
@@ -93,9 +93,9 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- Department header card -->
                 <materialDesign:Card Padding="16" Margin="0 0 0 16">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -110,49 +110,52 @@
                     </Grid>
                 </materialDesign:Card>
 
+                <!-- Projects table card -->
                 <materialDesign:Card Grid.Row="1" VerticalAlignment="Stretch">
                     <Grid Margin="16">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Department Roles" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
+                        <!-- Header with Add Project button -->
+                        <Grid Margin="0 0 0 12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Department Projects" FontSize="18" FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                            <Button Grid.Column="1"
+                                    Content="＋ Add Project"
+                                    Command="{Binding AddProjectCommand}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Padding="12 6"/>
+                        </Grid>
 
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding ProjectDetails}"
-                        SelectedItem="{Binding SelectedRole}"
-                        AutoGenerateColumns="False"
-                        CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single"
-                        ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                        <!-- Projects DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding ProjectDetails}"
+                                  SelectedItem="{Binding SelectedRole}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Project ID"      Binding="{Binding ProjectDetailsID}" Width="130"/>
-                                <DataGridTextColumn Header="Project"         Binding="{Binding Name}"             Width="200"/>
-                                <DataGridTextColumn Header="Description"     Binding="{Binding Description}"      Width="200"/>
-                                <DataGridTextColumn Header="Office Code"     Binding="{Binding OfficeCode}"        Width="200"/>
-                                <DataGridTextColumn Header="Total Budget"    Binding="{Binding Budget, StringFormat='{}{0:C}'}" Width="200"/>
-                                <DataGridTextColumn Header="Contact Person"  Binding="{Binding ContactPerson}"    Width="150"/>
+                                <DataGridTextColumn Header="Project ID"     Binding="{Binding ProjectDetailsID}" Width="130"/>
+                                <DataGridTextColumn Header="Project"        Binding="{Binding Name}"             Width="200"/>
+                                <DataGridTextColumn Header="Description"    Binding="{Binding Description}"      Width="200"/>
+                                <DataGridTextColumn Header="Office Code"    Binding="{Binding OfficeCode}"       Width="130"/>
+                                <DataGridTextColumn Header="Total Budget"   Binding="{Binding Budget, StringFormat='{}{0:C}'}" Width="140"/>
+                                <DataGridTextColumn Header="Contact Person" Binding="{Binding ContactPerson}"   Width="150"/>
                             </DataGrid.Columns>
                         </DataGrid>
-
-                        <StackPanel Grid.Row="2" Margin="0 16 0 0">
-                            <TextBlock Text="Add New Role" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 8"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Role Name" Text="{Binding NewRoleName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 8 0"/>
-                                <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Description" Text="{Binding NewRoleDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 8 0"/>
-                                <Button Grid.Column="2" Content="Add Role" Command="{Binding AddRoleCommand}"/>
-                            </Grid>
-                        </StackPanel>
                     </Grid>
                 </materialDesign:Card>
             </Grid>
 
-            <!-- Empty State -->
+            <!-- Empty State (visible when no department selected) -->
             <materialDesign:Card Grid.Column="1" Margin="12 0 0 0" Padding="32">
                 <materialDesign:Card.Style>
                     <Style TargetType="materialDesign:Card">
@@ -166,7 +169,7 @@
                 </materialDesign:Card.Style>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <materialDesign:PackIcon Kind="OfficeBuilding" Width="64" Height="64" HorizontalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                    <TextBlock Text="Select a department to view or manage its roles." FontSize="18" Margin="0 16 0 0" Foreground="{DynamicResource MaterialDesignBodyLight}" TextAlignment="Center"/>
+                    <TextBlock Text="Select a department to view or manage its projects." FontSize="18" Margin="0 16 0 0" Foreground="{DynamicResource MaterialDesignBodyLight}" TextAlignment="Center"/>
                 </StackPanel>
             </materialDesign:Card>
         </Grid>

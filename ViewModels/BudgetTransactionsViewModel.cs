@@ -1,194 +1,234 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
+using System.Data;
+using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MySqlConnector;
 
 namespace GoodGovernanceApp.ViewModels;
 
 public class BudgetTransactionsViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly DatabaseHelper _db;
 
-    // Budgets
-    private ObservableCollection<Budget> _budgets = new();
-    private Budget _selectedBudget = new();
-    private bool _isEditingBudget;
+    // ── Raw data loaded from DB ───────────────────────────────────────────────
+    private ObservableCollection<TransactionRow> _allRows = new();
 
-    // Transactions
-    private ObservableCollection<Transaction> _transactions = new();
-    private Transaction _selectedTransaction = new();
-    private bool _isEditingTransaction;
-    private string _transactionSearchText = string.Empty;
-    private ICollectionView _transactionsView;
+    // ── Collection bound to the DataGrid (filtered view) ──────────────────────
+    private ICollectionView _transactionsView = null!;
 
-    // Lookups
-    public ObservableCollection<Category> Categories { get; private set; } = new();
-    public ObservableCollection<string> TransactionTypes { get; } = new() { "Income", "Expense" };
+    // ── Filter fields ─────────────────────────────────────────────────────────
+    private string _filterOfficeCode   = string.Empty;
+    private string _filterProjectCode  = string.Empty;
+    private string _filterStatus       = string.Empty;
+    private string _filterFreeText     = string.Empty;
 
-    // Properties
-    public ObservableCollection<Budget> Budgets
+    // ── Selected row ──────────────────────────────────────────────────────────
+    private TransactionRow? _selectedTransaction;
+
+    // ── Loading indicator ─────────────────────────────────────────────────────
+    private bool _isLoading;
+
+    // =========================================================================
+    // Public Properties
+    // =========================================================================
+
+    public ObservableCollection<TransactionRow> AllRows
     {
-        get => _budgets;
-        set { _budgets = value; OnPropertyChanged(); }
-    }
-
-    public Budget SelectedBudget
-    {
-        get => _selectedBudget;
-        set { _selectedBudget = value ?? new Budget(); OnPropertyChanged(); }
-    }
-
-    public bool IsEditingBudget
-    {
-        get => _isEditingBudget;
-        set { _isEditingBudget = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotEditingBudget)); }
-    }
-    public bool IsNotEditingBudget => !IsEditingBudget;
-
-    public ObservableCollection<Transaction> Transactions
-    {
-        get => _transactions;
-        set { _transactions = value; OnPropertyChanged(); }
-    }
-
-    public Transaction SelectedTransaction
-    {
-        get => _selectedTransaction;
-        set { _selectedTransaction = value ?? new Transaction { Date = DateTime.Now }; OnPropertyChanged(); }
-    }
-
-    public bool IsEditingTransaction
-    {
-        get => _isEditingTransaction;
-        set { _isEditingTransaction = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotEditingTransaction)); }
-    }
-    public bool IsNotEditingTransaction => !IsEditingTransaction;
-
-    public string TransactionSearchText
-    {
-        get => _transactionSearchText;
-        set
+        get => _allRows;
+        private set
         {
-            _transactionSearchText = value;
+            _allRows = value;
             OnPropertyChanged();
-            _transactionsView?.Refresh();
+
+            _transactionsView = CollectionViewSource.GetDefaultView(_allRows);
+            _transactionsView.Filter = ApplyFilter;
+            OnPropertyChanged(nameof(TransactionsView));
         }
     }
 
-    // Commands
-    public ICommand AddBudgetCommand { get; }
-    public ICommand SaveBudgetCommand { get; }
-    public ICommand DeleteBudgetCommand { get; }
-    public ICommand CancelBudgetCommand { get; }
+    public ICollectionView TransactionsView => _transactionsView;
 
-    public ICommand AddTransactionCommand { get; }
-    public ICommand SaveTransactionCommand { get; }
-    public ICommand DeleteTransactionCommand { get; }
-    public ICommand CancelTransactionCommand { get; }
+    public TransactionRow? SelectedTransaction
+    {
+        get => _selectedTransaction;
+        set { _selectedTransaction = value; OnPropertyChanged(); }
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set { _isLoading = value; OnPropertyChanged(); }
+    }
+
+    // ── Filter properties (each setter triggers a view refresh) ───────────────
+    public string FilterOfficeCode
+    {
+        get => _filterOfficeCode;
+        set { _filterOfficeCode = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
+    }
+
+    public string FilterProjectCode
+    {
+        get => _filterProjectCode;
+        set { _filterProjectCode = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
+    }
+
+    public string FilterStatus
+    {
+        get => _filterStatus;
+        set { _filterStatus = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
+    }
+
+    /// <summary>Free-text search across all visible columns.</summary>
+    public string FilterFreeText
+    {
+        get => _filterFreeText;
+        set { _filterFreeText = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
+    }
+
+    // ── Status dropdown choices (empty string = no filter) ────────────────────
+    public ObservableCollection<string> StatusOptions { get; } =
+        new() { string.Empty, "Active", "Inactive", "Pending", "Completed" };
+
+    // ── Commands ──────────────────────────────────────────────────────────────
+    public ICommand RefreshCommand    { get; }
+    public ICommand ClearFilterCommand { get; }
+
+    // =========================================================================
+    // Constructor
+    // =========================================================================
 
     public BudgetTransactionsViewModel()
     {
+        _db = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+
+        // Initialise an empty view so bindings don't throw before data arrives
+        _allRows = new ObservableCollection<TransactionRow>();
+        _transactionsView = CollectionViewSource.GetDefaultView(_allRows);
+        _transactionsView.Filter = ApplyFilter;
+
+        RefreshCommand     = new RelayCommand(async _ => await LoadTransactionsAsync());
+        ClearFilterCommand = new RelayCommand(_ => ClearFilters());
+
+        _ = LoadTransactionsAsync();
+    }
+
+    // =========================================================================
+    // Data Loading (ADO.NET)
+    // =========================================================================
+
+    private async Task LoadTransactionsAsync()
+    {
+        IsLoading = true;
         try
         {
-            _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
-            LoadData();
+            const string sql = @"
+                SELECT
+                    t.Id,
+                    COALESCE(t.office_code, '')            AS OfficeCode,
+                    COALESCE(t.project_code, '')           AS ProjectCode,
+                    COALESCE(pd.project, '')               AS ProjectName,
+                    t.Amount,
+                    t.Date,
+                    COALESCE(t.Description, '')            AS Description,
+                    COALESCE(t.TransactionType, '')        AS TransactionType,
+                    COALESCE(t.Status, '')                 AS Status,
+                    t.CategoryId,
+                    t.UserId
+                FROM transactions t
+                LEFT JOIN project_details pd
+                       ON t.project_code = pd.project_details_id
+                ORDER BY t.Date DESC;";
+
+            DataTable dt = await _db.ExecuteQueryAsync(sql);
+
+            var rows = new ObservableCollection<TransactionRow>();
+            foreach (DataRow row in dt.Rows)
+            {
+                rows.Add(new TransactionRow
+                {
+                    Id              = Convert.ToInt32(row["Id"]),
+                    OfficeCode      = row["OfficeCode"].ToString()  ?? string.Empty,
+                    ProjectCode     = row["ProjectCode"].ToString() ?? string.Empty,
+                    ProjectName     = row["ProjectName"].ToString() ?? string.Empty,
+                    Amount          = Convert.ToDecimal(row["Amount"]),
+                    Date            = row["Date"] == DBNull.Value
+                                          ? DateTime.MinValue
+                                          : Convert.ToDateTime(row["Date"]),
+                    Description     = row["Description"].ToString()     ?? string.Empty,
+                    TransactionType = row["TransactionType"].ToString() ?? string.Empty,
+                    Status          = row["Status"].ToString()          ?? string.Empty,
+                    CategoryId      = Convert.ToInt32(row["CategoryId"]),
+                    UserId          = row["UserId"] == DBNull.Value
+                                          ? null
+                                          : Convert.ToInt64(row["UserId"])
+                });
+            }
+
+            AllRows = rows;
         }
-        catch { }
-
-        _transactionsView = CollectionViewSource.GetDefaultView(Transactions);
-        _transactionsView.Filter = FilterTransactions;
-
-        AddBudgetCommand = new RelayCommand(p => { SelectedBudget = new Budget(); IsEditingBudget = true; });
-        CancelBudgetCommand = new RelayCommand(p => { CancelChanges(); IsEditingBudget = false; SelectedBudget = new Budget(); });
-        SaveBudgetCommand = new RelayCommand(ExecuteSaveBudget, p => IsEditingBudget && SelectedBudget.CategoryId != 0 && SelectedBudget.Amount > 0);
-        DeleteBudgetCommand = new RelayCommand(ExecuteDeleteBudget, p => SelectedBudget.Id != 0 && !IsEditingBudget);
-
-        AddTransactionCommand = new RelayCommand(p => { SelectedTransaction = new Transaction { Date = DateTime.Now, TransactionType = "Expense" }; IsEditingTransaction = true; });
-        CancelTransactionCommand = new RelayCommand(p => { CancelChanges(); IsEditingTransaction = false; SelectedTransaction = new Transaction(); });
-        SaveTransactionCommand = new RelayCommand(ExecuteSaveTransaction, p => IsEditingTransaction && SelectedTransaction.CategoryId != 0 && SelectedTransaction.Amount > 0);
-        DeleteTransactionCommand = new RelayCommand(ExecuteDeleteTransaction, p => SelectedTransaction.Id != 0 && !IsEditingTransaction);
-    }
-
-    private void LoadData()
-    {
-        try
+        catch (Exception ex)
         {
-            _context.Categories.Load();
-            Categories = _context.Categories.Local.ToObservableCollection();
-
-            _context.Budgets.Include(b => b.Category).Load();
-            Budgets = _context.Budgets.Local.ToObservableCollection();
-
-            _context.Transactions.Include(t => t.Category).Include(t => t.User).Load();
-            Transactions = _context.Transactions.Local.ToObservableCollection();
-            
-            _transactionsView = CollectionViewSource.GetDefaultView(Transactions);
-            _transactionsView.Filter = FilterTransactions;
-            
-            OnPropertyChanged(nameof(Categories));
+            System.Diagnostics.Debug.WriteLine($"[BudgetTransactionsViewModel] Load error: {ex.Message}");
         }
-        catch { }
-    }
-
-    private bool FilterTransactions(object obj)
-    {
-        if (obj is Transaction t)
+        finally
         {
-            if (string.IsNullOrWhiteSpace(TransactionSearchText)) return true;
-            
-            string search = TransactionSearchText.ToLower();
-            bool matchCategory = t.Category?.Name.ToLower().Contains(search) ?? false;
-            bool matchDesc = t.Description?.ToLower().Contains(search) ?? false;
-            bool matchType = t.TransactionType.ToLower().Contains(search);
-            
-            return matchCategory || matchDesc || matchType;
+            IsLoading = false;
         }
-        return false;
     }
 
-    private void ExecuteSaveBudget(object? obj)
-    {
-        if (SelectedBudget.Id == 0) _context.Budgets.Add(SelectedBudget);
-        _context.SaveChanges();
-        IsEditingBudget = false;
-        LoadData();
-    }
+    // =========================================================================
+    // Filter Logic
+    // =========================================================================
 
-    private void ExecuteDeleteBudget(object? obj)
+    private bool ApplyFilter(object obj)
     {
-        _context.Budgets.Remove(SelectedBudget);
-        _context.SaveChanges();
-        SelectedBudget = new Budget();
-        LoadData();
-    }
+        if (obj is not TransactionRow row) return false;
 
-    private void ExecuteSaveTransaction(object? obj)
-    {
-        if (SelectedTransaction.Id == 0) _context.Transactions.Add(SelectedTransaction);
-        _context.SaveChanges();
-        IsEditingTransaction = false;
-        LoadData();
-    }
+        // Office code filter
+        if (!string.IsNullOrWhiteSpace(FilterOfficeCode) &&
+            !row.OfficeCode.Contains(FilterOfficeCode, StringComparison.OrdinalIgnoreCase))
+            return false;
 
-    private void ExecuteDeleteTransaction(object? obj)
-    {
-        _context.Transactions.Remove(SelectedTransaction);
-        _context.SaveChanges();
-        SelectedTransaction = new Transaction();
-        LoadData();
-    }
+        // Project code / name filter
+        if (!string.IsNullOrWhiteSpace(FilterProjectCode) &&
+            !row.ProjectCode.Contains(FilterProjectCode, StringComparison.OrdinalIgnoreCase) &&
+            !row.ProjectName.Contains(FilterProjectCode, StringComparison.OrdinalIgnoreCase))
+            return false;
 
-    private void CancelChanges()
-    {
-        foreach (var entry in _context.ChangeTracker.Entries().Where(e => e.State != EntityState.Unchanged))
+        // Status filter (exact match from dropdown)
+        if (!string.IsNullOrWhiteSpace(FilterStatus) &&
+            !row.Status.Equals(FilterStatus, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        // Free-text search across remaining visible columns
+        if (!string.IsNullOrWhiteSpace(FilterFreeText))
         {
-            entry.State = EntityState.Unchanged;
+            string q = FilterFreeText;
+            bool hit = row.OfficeCode.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.ProjectName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.Description.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.Status.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.Amount.ToString().Contains(q, StringComparison.OrdinalIgnoreCase);
+            if (!hit) return false;
         }
+
+        return true;
+    }
+
+    private void ClearFilters()
+    {
+        FilterOfficeCode  = string.Empty;
+        FilterProjectCode = string.Empty;
+        FilterStatus      = string.Empty;
+        FilterFreeText    = string.Empty;
     }
 }

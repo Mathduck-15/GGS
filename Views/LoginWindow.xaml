@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:GoodGovernanceApp.Views"
         mc:Ignorable="d"
-        Title="Good Governance Management - Login" Height="450" Width="400"
+        Title="Good Governance Management - Login" Height="450" Width="830"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -16,30 +16,114 @@
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
         Name="LoginWin">
-    
     <Grid>
-        <materialDesign:Card Width="300" VerticalAlignment="Center" Padding="16">
-            <StackPanel>
-                <TextBlock Text="Welcome Back" FontSize="24" FontWeight="Bold" Margin="0 0 0 8" HorizontalAlignment="Center"/>
-                <TextBlock Text="Login to your account" FontSize="14" Foreground="Gray" Margin="0 0 0 24" HorizontalAlignment="Center"/>
-                
-                <TextBox materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 16" />
-                
-                <PasswordBox materialDesign:HintAssist.Hint="Password" Style="{StaticResource MaterialDesignFloatingHintPasswordBox}" 
-                             Name="PasswordBoxControl" Margin="0 0 0 8" PasswordChanged="PasswordBox_PasswordChanged"/>
-                
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="0 0 0 16" HorizontalAlignment="Center"/>
-                
-                <Button Content="LOGIN" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=LoginWin}" 
-                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0 8 0 0"/>
-                <Button Content="Cheat" Command="{Binding CheatCommand}"
-                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0 8 0 0"/>
+        <Grid.ColumnDefinitions>
+            <!-- Left panel: logo/branding -->
+            <ColumnDefinition Width="*" />
+            <!-- Right panel: login card -->
+            <ColumnDefinition Width="380" />
+        </Grid.ColumnDefinitions>
 
-                <Button Content="Database Connection Settings" Command="{Binding OpenDbSettingsCommand}" 
-                        Style="{StaticResource MaterialDesignFlatButton}" Margin="0 16 0 0" 
-                        Foreground="{DynamicResource PrimaryHueMidBrush}" />
+        <!-- ── LEFT PANEL ── -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource PrimaryHueMidBrush}">
+            <StackPanel VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Margin="32">
+
+                <!-- Replace Source with your actual logo path -->
+
+                <Image Width="120" Height="120"
+                Stretch="Uniform"
+                HorizontalAlignment="Center"
+                Margin="0 0 0 24">
+                    <Image.Source>
+                        <Binding Path="LogoSource">
+                            <Binding.TargetNullValue>
+                                <BitmapImage UriSource="/Assets/logo.png"/>
+                            </Binding.TargetNullValue>
+                            <Binding.FallbackValue>
+                                <BitmapImage UriSource="/Assets/logo.png"/>
+                            </Binding.FallbackValue>
+                        </Binding>
+                    </Image.Source>
+                </Image>
+
+                <TextBlock Text="{Binding GovernanceName}"
+                           FontSize="26" FontWeight="Bold"
+                           Foreground="Black"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"/>
+
+                <TextBlock Text="{Binding Address}"
+                FontSize="26" FontWeight="Light"
+                Foreground="Black"
+                HorizontalAlignment="Center"
+                TextAlignment="Center"
+                TextWrapping="Wrap"/>
+
+
+                <Separator Margin="24 20"
+                           Background="Purple"/>
+
+                <TextBlock Text="Transparency · Accountability · Integrity"
+                           FontSize="11"
+                           Foreground="Black"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"/>
             </StackPanel>
-        </materialDesign:Card>
+        </Border>
+
+        <!-- ── RIGHT PANEL ── -->
+        <Grid Grid.Column="1">
+            <materialDesign:Card VerticalAlignment="Center"
+                                 Margin="24"
+                                 Padding="24">
+                <StackPanel>
+                    <TextBlock Text="Welcome Back"
+                               FontSize="24" FontWeight="Bold"
+                               Margin="0 0 0 8"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Login to your account"
+                               FontSize="14" Foreground="Gray"
+                               Margin="0 0 0 24"
+                               HorizontalAlignment="Center"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="Username"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0 0 0 16"/>
+
+                    <PasswordBox materialDesign:HintAssist.Hint="Password"
+                                 Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
+                                 Name="PasswordBoxControl"
+                                 Margin="0 0 0 8"
+                                 PasswordChanged="PasswordBox_PasswordChanged"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="Red"
+                               Margin="0 0 0 16"
+                               HorizontalAlignment="Center"/>
+
+                    <Button Content="LOGIN"
+                            Command="{Binding LoginCommand}"
+                            CommandParameter="{Binding ElementName=LoginWin}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Margin="0 8 0 0"/>
+                    <Button Content="Cheat"
+                            Command="{Binding CheatCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Margin="0 8 0 0"/>
+
+                    <Button Content="Database Connection Settings"
+                            Command="{Binding OpenDbSettingsCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Margin="0 16 0 0"
+                            Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                </StackPanel>
+            </materialDesign:Card>
+        </Grid>
+
     </Grid>
 </Window>

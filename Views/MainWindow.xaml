@@ -25,19 +25,23 @@
 
                     <!-- Header -->
                     <StackPanel Grid.Row="0" Margin="16">
-                        <materialDesign:PackIcon Kind="BankOutline" Width="48" Height="48" Foreground="{DynamicResource PrimaryHueMidBrush}" Margin="0 0 0 16"/>
-                        <TextBlock Text="Good Governance" FontSize="20" FontWeight="Bold"/>
-                        <TextBlock Text="Management System" FontSize="14" Foreground="Gray"/>
+                        <Button Style="{StaticResource MaterialDesignIconButton}" Command="{Binding OpenAppProfileCommand}" HorizontalAlignment="Left" Width="48" Height="48" Margin="0 0 0 16" Padding="0" ToolTip="Open Application Profile">
+                            <materialDesign:PackIcon Kind="BankOutline" Width="48" Height="48" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        </Button>
+                        <TextBlock Text="{Binding GovernanceName}" 
+                        FontSize="20" 
+                        FontWeight="Bold"
+                        TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <!-- Navigation Items -->
-                    <ListBox Grid.Row="1" ItemsSource="{Binding NavigationItems}" SelectedItem="{Binding SelectedNavItem}" Margin="0 16"
+                    <ListBox Grid.Row="1" ItemsSource="{Binding NavigationItems}" SelectedItem="{Binding SelectedNavItem}" Margin="0 11"
                              Style="{StaticResource MaterialDesignNavigationListBox}" BorderThickness="0">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="8">
-                                    <materialDesign:PackIcon Kind="{Binding Icon}" Width="24" Height="24" VerticalAlignment="Center" Margin="0 0 16 0"/>
-                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="15"/>
+                                    <materialDesign:PackIcon Kind="{Binding Icon}" Width="10" Height="10" VerticalAlignment="Center" Margin="0 0 11 0"/>
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="10"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

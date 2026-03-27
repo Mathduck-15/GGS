@@ -26,6 +26,9 @@ public class ProjectDetail
     [Column("contact_person")]
     public string? ContactPerson { get; set; }
 
+    [Column("yearly_budget_id")]
+    public int? YearlyBudgetId { get; set; }
+
     [Column("create_at")]
     public DateTime? CreatedAt { get; set; }
 

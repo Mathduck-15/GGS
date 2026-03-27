@@ -14,7 +14,28 @@ public class LoginViewModel : ViewModelBase
     private string _username = string.Empty;
     private string _password = string.Empty;
     private string _errorMessage = string.Empty;
+    private string _governanceName = "Good Governance Management System";
+    private System.Windows.Media.Imaging.BitmapImage? _logoSource;
     private readonly GoodGovernanceApp.Services.SessionService _sessionService;
+    private string _address = string.Empty;
+
+    public string Address
+    {
+        get => _address;
+        set { _address = value; OnPropertyChanged(); }
+    }
+
+    public string GovernanceName
+    {
+        get => _governanceName;
+        set { _governanceName = value; OnPropertyChanged(); }
+    }
+
+    public System.Windows.Media.Imaging.BitmapImage? LogoSource
+    {
+        get => _logoSource;
+        set { _logoSource = value; OnPropertyChanged(); }
+    }
 
 
     public string Username
@@ -45,6 +66,49 @@ public class LoginViewModel : ViewModelBase
         LoginCommand = new RelayCommand(ExecuteLogin, CanExecuteLogin);
         OpenDbSettingsCommand = new RelayCommand(ExecuteOpenDbSettings);
         CheatCommand = new RelayCommand(p => MessageBox.Show("username = admin and password = admin", "password = admin", MessageBoxButton.OK, MessageBoxImage.Information));  
+
+        _ = LoadApplicationProfileAsync();
+    }
+
+    private async System.Threading.Tasks.Task LoadApplicationProfileAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            string query = "SELECT GoveName, LogoAddress, Address FROM goveprofile LIMIT 1;";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var row = dataTable.Rows[0];
+                string goveName = row["GoveName"]?.ToString() ?? "";
+                string logoAddress = row["LogoAddress"]?.ToString() ?? "";
+
+                if (!string.IsNullOrWhiteSpace(goveName))
+                {
+                    GovernanceName = goveName;
+                }
+
+                if (!string.IsNullOrWhiteSpace(logoAddress) && System.IO.File.Exists(logoAddress))
+                {
+                    var bi = new System.Windows.Media.Imaging.BitmapImage();
+                    bi.BeginInit();
+                    bi.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bi.UriSource = new System.Uri(logoAddress, System.UriKind.Absolute);
+                    bi.EndInit();
+                    LogoSource = bi;
+                }
+
+                string address = row["Address"]?.ToString() ?? "";
+                if (!string.IsNullOrWhiteSpace(address))
+                    Address = address;
+
+            }
+        }
+        catch
+        {
+            // Ignore failure, fallbacks are handled by initial values and XAML
+        }
     }
 
     private void ExecuteOpenDbSettings(object? parameter)

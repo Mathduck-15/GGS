@@ -34,7 +34,8 @@ public static class ConfigHelper
                $"Database={config.GetValueOrDefault("Database", "")};" +
                $"User={config.GetValueOrDefault("User", "root")};" +
                $"Password={config.GetValueOrDefault("Password", "")};" +
-               "AllowZeroDateTime=True;ConvertZeroDateTime=True;";
+               "AllowZeroDateTime=True;ConvertZeroDateTime=True;" +
+               "Connection Timeout=15;SslMode=None;";
     }
 
     public static void WriteConfig(string fileName, string server, string port, string database, string user, string password)

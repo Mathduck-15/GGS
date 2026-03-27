@@ -32,6 +32,10 @@ public class Transaction
     [StringLength(20)]
     public string? OfficeCode { get; set; }
 
+    [Column("project_code")]
+    [StringLength(50)]
+    public string? ProjectCode { get; set; }
+
 
     [Required]
     [StringLength(20)]

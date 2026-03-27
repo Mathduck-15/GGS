@@ -154,7 +154,7 @@ public class SettingsViewModel : ViewModelBase
         PresetNetworkCommand = new RelayCommand(_ => ApplyPreset("LAN"));
         PresetRemoteCommand  = new RelayCommand(_ => ApplyPreset("Remote"));
         TestBothCommand      = new RelayCommand(async _ => await ExecuteTestBoth());
-        SaveSettingsCommand  = new RelayCommand(_ => ExecuteSaveSettings(null));
+        SaveSettingsCommand  = new RelayCommand(async _ => await ExecuteSaveSettings(null));
 
         FullBackupCommand         = new RelayCommand(async p => await ExecuteBackup("Full"));
         DifferentialBackupCommand = new RelayCommand(async p => await ExecuteBackup("Differential"));
@@ -210,13 +210,13 @@ public class SettingsViewModel : ViewModelBase
     }
 
     private static string BuildGgmsConnStr(string server, string db)
-        => $"Server={server};Port=3306;Database={db};User=root;Password=root;AllowZeroDateTime=True;ConvertZeroDateTime=True;";
+        => $"Server={server};Port=3306;Database={db};User=root;Password=root;AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
 
     private static string BuildGgmsRemoteConnStr()
-        => "Server=194.59.164.58;Port=3306;Database=u621755393_ggms;User=u621755393_ggms_user;Password=Ggms@2026;AllowZeroDateTime=True;ConvertZeroDateTime=True;";
+        => "Server=194.59.164.58;Port=3306;Database=u621755393_ggms;User=u621755393_ggms_user;Password=Ggms@2026;AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
 
     public string BuildCrsConnStr()
-        => $"Server={CrsServer};Port={CrsPort};Database={CrsDatabase};User={CrsUser};Password={CrsPassword};AllowZeroDateTime=True;ConvertZeroDateTime=True;";
+        => $"Server={CrsServer};Port={CrsPort};Database={CrsDatabase};User={CrsUser};Password={CrsPassword};AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
 
     // ── Test Both ────────────────────────────────────────────────────────────
     private async Task ExecuteTestBoth()
@@ -257,9 +257,21 @@ public class SettingsViewModel : ViewModelBase
             await conn.OpenAsync();
             return (true, "OK");
         }
+        catch (MySqlException ex)
+        {
+            // Extract detailed MySQL error information
+            string detailedError = $"MySQL Error [{ex.Number}]: {ex.Message}";
+            
+            if (ex.InnerException != null)
+            {
+                detailedError += $"\nInner: {ex.InnerException.Message}";
+            }
+            
+            return (false, detailedError);
+        }
         catch (Exception ex)
         {
-            return (false, ex.Message);
+            return (false, $"General Error: {ex.Message}");
         }
     }
 
@@ -300,7 +312,7 @@ public class SettingsViewModel : ViewModelBase
         catch { StatusMessage = "Error loading settings from txt config files."; }
     }
 
-    private void ExecuteSaveSettings(object? parameter)
+    private async Task ExecuteSaveSettings(object? parameter)
     {
         try
         {
@@ -310,6 +322,22 @@ public class SettingsViewModel : ViewModelBase
                 "LAN"    => LanConnectionString,
                 _        => LocalConnectionString
             };
+            
+            IsTesting = true;
+            StatusMessage = "Testing connection before saving...";
+
+            // Test before allowing save
+            var (isOk, msg) = await TestConnectionAsync(ggmsConn);
+            IsTesting = false;
+
+            if (!isOk)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Cannot save settings because the database is unreachable.\n\nError:\n{msg}",
+                    "Connection Failed", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                StatusMessage = "Save aborted. Database unreachable.";
+                return;
+            }
 
             // Parse the selected GGMS connection string to save its parts
             string server= "localhost", port= "3306", db= "governance", user= "root", pass= "";
@@ -332,7 +360,10 @@ public class SettingsViewModel : ViewModelBase
             ConfigHelper.WriteConfig("GgmsConfig.txt", server, port, db, user, pass);
             ConfigHelper.WriteConfig("CrsConfig.txt", CrsServer, CrsPort, CrsDatabase, CrsUser, CrsPassword);
 
-            StatusMessage = "Settings successfully saved. App will use these next time a database connection runs.";
+            StatusMessage = "Settings successfully saved. Please restart the app.";
+            System.Windows.MessageBox.Show(
+                "Settings saved successfully!\n\nPlease restart the application to apply the changes.",
+                "Restart Required", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         }
         catch { StatusMessage = "Error saving settings to txt config files."; }
     }

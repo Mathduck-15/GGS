@@ -1,8 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Windows.Input;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -23,6 +24,15 @@ public class MainViewModel : ViewModelBase
     public string CurrentUserRole => _sessionService.CurrentUser?.Role ?? "None";
 
     public ObservableCollection<NavigationItem> NavigationItems { get; }
+
+
+    private string _governanceName = "Good Governance Management System";
+
+    public string GovernanceName
+    {
+        get => _governanceName;
+        set { _governanceName = value; OnPropertyChanged(); }
+    }
 
     public NavigationItem SelectedNavItem
     {
@@ -46,18 +56,21 @@ public class MainViewModel : ViewModelBase
     }
 
     public ICommand LogoutCommand { get; }
+    public ICommand OpenAppProfileCommand { get; }
 
     public MainViewModel()
     {
         _sessionService = App.AppHost!.Services.GetRequiredService<Services.SessionService>();
-        
+        OpenAppProfileCommand = new RelayCommand(ExecuteOpenAppProfile);
+        LoadApplicationProfileAsync();
+
         var allItems = new List<NavigationItem>
         {
             new NavigationItem { Name = "Dashboard", Icon = "ViewDashboard", ViewToken = "Dashboard" },
             new NavigationItem { Name = "My Profile", Icon = "AccountEdit", ViewToken = "Profile" },
             new NavigationItem { Name = "Users", Icon = "AccountGroup", ViewToken = "Users" },
             new NavigationItem { Name = "Parameters", Icon = "CogBox", ViewToken = "Parameters" },
-            new NavigationItem { Name = "Budget & Transactions", Icon = "Finance", ViewToken = "Transactions" },
+            new NavigationItem { Name = "Transactions", Icon = "Finance", ViewToken = "Transactions" },
             new NavigationItem { Name = "Budget Allocation", Icon = "ScaleBalance", ViewToken = "BudgetAllocation" },
             new NavigationItem { Name = "CRS Beneficiaries", Icon = "AccountMultiple", ViewToken = "CrsBeneficiary" },
             new NavigationItem { Name = "Reports", Icon = "FileChart", ViewToken = "Reports" },
@@ -90,6 +103,26 @@ public class MainViewModel : ViewModelBase
         // Set default view
         if (NavigationItems.Any())
             SelectedNavItem = NavigationItems[0];
+    }
+
+    private async System.Threading.Tasks.Task LoadApplicationProfileAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            string query = "SELECT GoveName, Address FROM goveprofile LIMIT 1;";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var row = dataTable.Rows[0];
+
+                string goveName = row["GoveName"]?.ToString() ?? "";
+                if (!string.IsNullOrWhiteSpace(goveName))
+                    GovernanceName = goveName;
+            }
+        }
+        catch { }
     }
 
     private void NavigateTo(string? viewToken)
@@ -155,5 +188,11 @@ public class MainViewModel : ViewModelBase
             loginWindow!.Show();
             window.Close();
         }
+    }
+
+    private void ExecuteOpenAppProfile(object? parameter)
+    {
+        var window = new Views.ApplicationProfileWindow();
+        window.ShowDialog();
     }
 }

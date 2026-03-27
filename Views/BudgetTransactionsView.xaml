@@ -1,67 +1,175 @@
 <UserControl x:Class="GoodGovernanceApp.Views.BudgetTransactionsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:local="clr-namespace:GoodGovernanceApp.Views"
              xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
-             mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1000">
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100">
 
     <UserControl.DataContext>
         <viewmodels:BudgetTransactionsViewModel />
     </UserControl.DataContext>
 
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Margin="16">
         <Grid.RowDefinitions>
-
-            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>  <!-- Title + Refresh -->
+            <RowDefinition Height="Auto"/>  <!-- Filter bar -->
+            <RowDefinition Height="*"/>     <!-- DataGrid -->
+            <RowDefinition Height="Auto"/>  <!-- Loading indicator -->
         </Grid.RowDefinitions>
 
-        <!-- Top Section: Budgets -->
-       
-        <!-- Bottom Section: Transactions -->
-        <materialDesign:Card Grid.Row="1" Margin="8" Padding="16">
+        <!-- ── Title & Refresh ──────────────────────────────────────────── -->
+        <Grid Grid.Row="0" Margin="0 0 0 12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Transactions" FontSize="24" FontWeight="Light" VerticalAlignment="Center"/>
+            <Button Grid.Column="1"
+                    Content="↻  Refresh"
+                    Command="{Binding RefreshCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"/>
+        </Grid>
+
+        <!-- ── Filter Bar ────────────────────────────────────────────────── -->
+        <materialDesign:Card Grid.Row="1" Padding="12 8" Margin="0 0 0 12">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="2*"/>   <!-- Free-text search -->
+                    <ColumnDefinition Width="*"/>    <!-- Office Code -->
+                    <ColumnDefinition Width="2*"/>   <!-- Project Code / Name -->
+                    <ColumnDefinition Width="*"/>    <!-- Status dropdown -->
+                    <ColumnDefinition Width="Auto"/> <!-- Clear button -->
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    
-                    <TextBlock Grid.Row="0" Text="Transactions" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
-                    
-                    <TextBox Grid.Row="1" materialDesign:HintAssist.Hint="Search Transactions..." 
-                             Text="{Binding TransactionSearchText, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0,0,-306,16" />
+                <!-- Free-text search -->
+                <TextBox Grid.Column="0"
+                         materialDesign:HintAssist.Hint="Search all columns…"
+                         Text="{Binding FilterFreeText, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Margin="0 0 8 0"/>
 
-                    <DataGrid Grid.Row="2" ItemsSource="{Binding Transactions}" AutoGenerateColumns="False" 
-                    SelectedItem="{Binding SelectedTransaction}" IsReadOnly="True" CanUserAddRows="False" 
-                    Margin="0,0,-306,0" HorizontalAlignment="Stretch">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat={}{0:d}}" Width="*"/>
-                            <DataGridTextColumn Header="Office Code" Binding="{Binding OfficeCode}" Width="*"/>
-                            <DataGridTextColumn Header="Type" Binding="{Binding TransactionType}" Width="*"/>
-                            <DataGridTextColumn Header="Category" Binding="{Binding Category.Name}" Width="*"/>
-                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:C}}" Width="*"/>
-                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
+                <!-- Office Code filter -->
+                <TextBox Grid.Column="1"
+                         materialDesign:HintAssist.Hint="Office Code"
+                         Text="{Binding FilterOfficeCode, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Margin="0 0 8 0"/>
 
-                
+                <!-- Project Code / Name filter -->
+                <TextBox Grid.Column="2"
+                         materialDesign:HintAssist.Hint="Project Code or Name"
+                         Text="{Binding FilterProjectCode, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Margin="0 0 8 0"/>
+
+                <!-- Status dropdown -->
+                <ComboBox Grid.Column="3"
+                          materialDesign:HintAssist.Hint="Status"
+                          ItemsSource="{Binding StatusOptions}"
+                          SelectedItem="{Binding FilterStatus}"
+                          Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                          Margin="0 0 8 0"/>
+
+                <!-- Clear filters -->
+                <Button Grid.Column="4"
+                        Content="Clear"
+                        Command="{Binding ClearFilterCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        VerticalAlignment="Bottom"/>
             </Grid>
         </materialDesign:Card>
+
+        <!-- ── Transactions DataGrid ─────────────────────────────────────── -->
+        <materialDesign:Card Grid.Row="2" Padding="0">
+            <DataGrid ItemsSource="{Binding TransactionsView}"
+                      SelectedItem="{Binding SelectedTransaction}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      SelectionMode="Single"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      materialDesign:DataGridAssist.CellPadding="10 6 10 6"
+                      materialDesign:DataGridAssist.ColumnHeaderPadding="10 6 10 6">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Office Code"
+                                        Binding="{Binding OfficeCode}"
+                                        Width="110"
+                                        SortMemberPath="OfficeCode"/>
+
+                    <DataGridTextColumn Header="Project Code"
+                                        Binding="{Binding ProjectCode}"
+                                        Width="130"
+                                        SortMemberPath="ProjectCode"/>
+
+                    <DataGridTextColumn Header="Project Name"
+                                        Binding="{Binding ProjectName}"
+                                        Width="200"
+                                        SortMemberPath="ProjectName"/>
+
+                    <DataGridTextColumn Header="Amount"
+                                        Binding="{Binding Amount, StringFormat='{}{0:C}'}"
+                                        Width="110"
+                                        SortMemberPath="Amount">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Date"
+                                        Binding="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}"
+                                        Width="110"
+                                        SortMemberPath="Date"/>
+
+                    <DataGridTextColumn Header="Description"
+                                        Binding="{Binding Description}"
+                                        Width="200"/>
+
+                    <DataGridTextColumn Header="Type"
+                                        Binding="{Binding TransactionType}"
+                                        Width="90"
+                                        SortMemberPath="TransactionType"/>
+
+                    <DataGridTextColumn Header="Status"
+                                        Binding="{Binding Status}"
+                                        Width="90"
+                                        SortMemberPath="Status"/>
+
+                    <DataGridTextColumn Header="Category ID"
+                                        Binding="{Binding CategoryId}"
+                                        Width="100"
+                                        SortMemberPath="CategoryId"/>
+
+                    <DataGridTextColumn Header="User ID"
+                                        Binding="{Binding UserId}"
+                                        Width="80"
+                                        SortMemberPath="UserId"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </materialDesign:Card>
+
+        <!-- ── Loading Indicator ─────────────────────────────────────────── -->
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0 8 0 0"
+                    Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+            <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                         IsIndeterminate="True"
+                         Width="20" Height="20"
+                         Margin="0 0 8 0"/>
+            <TextBlock Text="Loading transactions…"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using System.Windows.Input;
 using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Utilities;
@@ -11,11 +13,20 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class CrsBeneficiaryViewModel : ViewModelBase
 {
-    private string _statusMessage = "CRS database not yet connected. Showing placeholder data.";
+    // ── Backing Fields ─────────────────────────────────────────────────────────
+    private string _statusMessage = "Press Load to fetch beneficiaries.";
     private bool _isLoading;
-    private bool _isCrsConnected;
+    private string _searchText = string.Empty;
 
-    public ObservableCollection<CrsBeneficiary> Beneficiaries { get; } = new();
+    // ── Collections ────────────────────────────────────────────────────────────
+
+    /// <summary>Master list — never filtered directly.</summary>
+    public ObservableCollection<Beneficiary> Beneficiaries { get; } = new();
+
+    /// <summary>Filtered view bound to the DataGrid.</summary>
+    public ICollectionView BeneficiariesView { get; }
+
+    // ── Properties ─────────────────────────────────────────────────────────────
 
     public string StatusMessage
     {
@@ -29,93 +40,138 @@ public class CrsBeneficiaryViewModel : ViewModelBase
         set { _isLoading = value; OnPropertyChanged(); }
     }
 
-    public bool IsCrsConnected
+    /// <summary>
+    /// Filters by last name, first name, beneficiary ID, or address.
+    /// Updates the view automatically as the user types.
+    /// </summary>
+    public string SearchText
     {
-        get => _isCrsConnected;
-        set { _isCrsConnected = value; OnPropertyChanged(); }
+        get => _searchText;
+        set
+        {
+            _searchText = value;
+            OnPropertyChanged();
+            BeneficiariesView.Refresh();
+            StatusMessage = string.IsNullOrWhiteSpace(value)
+                ? $"✅ Showing all {Beneficiaries.Count:N0} beneficiaries."
+                : $"🔍 Filtering by \"{value}\" — {BeneficiariesView.Cast<Beneficiary>().Count():N0} result(s) found.";
+        }
     }
 
+    // ── Commands ───────────────────────────────────────────────────────────────
     public ICommand LoadCommand { get; }
+    public ICommand ClearCommand { get; }
 
+    // ── Constructor ────────────────────────────────────────────────────────────
     public CrsBeneficiaryViewModel()
     {
+        BeneficiariesView = CollectionViewSource.GetDefaultView(Beneficiaries);
+        BeneficiariesView.Filter = FilterBeneficiary;
+
         LoadCommand = new RelayCommand(async _ => await LoadBeneficiariesAsync());
-        LoadPlaceholderData();
+        ClearCommand = new RelayCommand(_ => ClearSearch());
     }
 
-    private void LoadPlaceholderData()
+    // ── Filter Logic ───────────────────────────────────────────────────────────
+    private bool FilterBeneficiary(object obj)
     {
-        Beneficiaries.Clear();
-        Beneficiaries.Add(new CrsBeneficiary { BeneficiaryId = "—", FirstName = "CRS", LastName = "Database", MiddleName = "Not Yet Shared", Address = "(address not yet available)" });
-        StatusMessage = "CRS database not yet connected. These are placeholder rows.";
-        IsCrsConnected = false;
+        if (obj is not Beneficiary b) return false;
+        if (string.IsNullOrWhiteSpace(_searchText)) return true;
+
+        var keyword = _searchText.Trim().ToLower();
+
+        return (b.LastName?.ToLower().Contains(keyword) ?? false)
+            || (b.FirstName?.ToLower().Contains(keyword) ?? false)
+            || (b.MiddleName?.ToLower().Contains(keyword) ?? false)
+            || (b.FullName?.ToLower().Contains(keyword) ?? false)
+            || (b.BeneficiaryId?.ToLower().Contains(keyword) ?? false)
+            || (b.Address?.ToLower().Contains(keyword) ?? false)
+            || (b.Sex?.ToLower().Contains(keyword) ?? false)
+            || (b.MaritalStatus?.ToLower().Contains(keyword) ?? false)
+            || (b.DisabilityType?.ToLower().Contains(keyword) ?? false);
     }
 
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+    }
+
+    // ── Data Loading ───────────────────────────────────────────────────────────
     private async Task LoadBeneficiariesAsync()
     {
         IsLoading = true;
-        StatusMessage = "Connecting to CRS database...";
+        StatusMessage = "Loading beneficiaries...";
 
         try
         {
-            string crsConnStr = ConfigHelper.BuildConnectionString("CrsConfig.txt");
-
-            if (string.IsNullOrEmpty(crsConnStr) || crsConnStr.Contains("Server=;"))
-            {
-                StatusMessage = "❌ CRS connection not configured. Go to Settings to set CRS credentials.";
-                IsLoading = false;
-                return;
-            }
-
             Beneficiaries.Clear();
-            int batchSize = 500;
-            int offset = 0;
-            int totalLoaded = 0;
 
-            while (true)
+            using var conn = new MySqlConnection(ConfigHelper.BuildConnectionString("CrsConfig.txt"));
+            await conn.OpenAsync();
+
+            const string sql = @"
+                SELECT
+                    id, residents_id, beneficiary_id, user_id, civilregistry_id,
+                    last_name, first_name, middle_name, full_name,
+                    sex, date_of_birth, age, marital_status, address,
+                    is_pwd, pwd_id_no, is_senior, senior_id_no,
+                    disability_type, cause_of_disability,
+                    created_at, updated_at
+                FROM val_beneficiaries
+                ORDER BY last_name, first_name";
+
+            using var cmd = new MySqlCommand(sql, conn);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
             {
-                using var conn = new MySqlConnection(crsConnStr);
-                await conn.OpenAsync();
-
-                using var cmd = new MySqlCommand(
-                    $"SELECT beneficiary_id, first_name, last_name, middle_name, address " +
-                    $"FROM val_beneficiaries LIMIT {batchSize} OFFSET {offset}", conn);
-
-                using var reader = await cmd.ExecuteReaderAsync();
-                int batchCount = 0;
-
-                while (await reader.ReadAsync())
+                Beneficiaries.Add(new Beneficiary
                 {
-                    batchCount++;
-                    var b = new CrsBeneficiary
-                    {
-                        BeneficiaryId = reader["beneficiary_id"]?.ToString() ?? "",
-                        FirstName     = reader["first_name"]?.ToString()     ?? "",
-                        LastName      = reader["last_name"]?.ToString()      ?? "",
-                        MiddleName    = reader["middle_name"]?.ToString()    ?? "",
-                        Address       = string.IsNullOrWhiteSpace(reader["address"]?.ToString())
-                                            ? "(address not yet available)"
-                                            : reader["address"]!.ToString()!
-                    };
-                    Beneficiaries.Add(b);
-                    totalLoaded++;
-                }
+                    Id = reader.GetInt64("id"),
+                    ResidentsId = reader.GetInt64("residents_id"),
+                    BeneficiaryId = reader["beneficiary_id"]?.ToString() ?? "",
 
-                if (batchCount < batchSize) break;
-                offset += batchSize;
+                    UserId = reader.IsDBNull(reader.GetOrdinal("user_id"))
+        ? null : reader.GetInt32("user_id"),
 
-                StatusMessage = $"Loading CRS records... {totalLoaded:N0} loaded";
-                await Task.Delay(10); // Allow UI refresh between batches
+                    CivilRegistryId = reader["civilregistry_id"]?.ToString(),
+
+                    LastName = reader["last_name"]?.ToString(),
+                    FirstName = reader["first_name"]?.ToString(),
+                    MiddleName = reader["middle_name"]?.ToString(),
+                    FullName = reader["full_name"]?.ToString(),
+
+                    Sex = reader["sex"]?.ToString(),
+
+                    // ✅ FIXED
+                    DateOfBirthRaw = reader["date_of_birth"]?.ToString(),
+                    AgeRaw = reader["age"]?.ToString(),
+
+                    MaritalStatus = reader["marital_status"]?.ToString(),
+                    Address = reader["address"]?.ToString(),
+
+                    IsPwd = reader.GetInt32("is_pwd") == 1,
+                    PwdIdNo = reader["pwd_id_no"]?.ToString(),
+
+                    IsSenior = reader.GetInt32("is_senior") == 1,
+                    SeniorIdNo = reader["senior_id_no"]?.ToString(),
+
+                    DisabilityType = reader["disability_type"]?.ToString(),
+                    CauseOfDisability = reader["cause_of_disability"]?.ToString(),
+
+                    CreatedAt = reader.IsDBNull(reader.GetOrdinal("created_at"))
+        ? null : reader.GetDateTime("created_at"),
+
+                    UpdatedAt = reader.IsDBNull(reader.GetOrdinal("updated_at"))
+        ? null : reader.GetDateTime("updated_at"),
+                });
             }
 
-            IsCrsConnected = true;
-            StatusMessage = $"✅ CRS loaded — {totalLoaded:N0} beneficiaries (read-only)";
+            StatusMessage = $"✅ Loaded {Beneficiaries.Count:N0} beneficiaries.";
         }
         catch (Exception ex)
         {
-            IsCrsConnected = false;
-            StatusMessage = $"❌ CRS connection failed: {ex.Message}";
-            LoadPlaceholderData();
+            StatusMessage = $"❌ Failed to load beneficiaries: {ex.Message}";
         }
         finally
         {

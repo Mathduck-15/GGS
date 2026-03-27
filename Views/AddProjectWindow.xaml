@@ -1,0 +1,148 @@
+<Window x:Class="GoodGovernanceApp.Views.AddProjectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
+        Title="Add New Project"
+        Width="560" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Window.DataContext>
+        <viewmodels:AddProjectViewModel />
+    </Window.DataContext>
+
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0 0 0 20">
+            <TextBlock Text="Add New Project" FontSize="22" FontWeight="Light"/>
+            <TextBlock Text="Fill in the details below. Fields marked * are required."
+                       FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"
+                       Margin="0 4 0 0"/>
+        </StackPanel>
+
+        <!-- Form -->
+        <materialDesign:Card Grid.Row="1" Padding="20" Margin="0 0 0 16">
+            <StackPanel>
+
+                <!-- Project ID (read-only) -->
+                <TextBlock Text="Project ID" FontSize="11"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           Margin="0 0 0 2"/>
+                <TextBox Text="{Binding ProjectId, Mode=OneWay}"
+                         IsReadOnly="True"
+                         FontFamily="Consolas"
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                         materialDesign:HintAssist.Hint="Auto-generated"
+                         Margin="0 0 0 16"/>
+
+                <!-- Project Name * -->
+                <TextBox materialDesign:HintAssist.Hint="Project Name *"
+                         Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 0 0 16"/>
+
+                <!-- Description -->
+                <TextBox materialDesign:HintAssist.Hint="Description"
+                         Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         MinLines="2" MaxLines="4"
+                         VerticalScrollBarVisibility="Auto"
+                         Margin="0 0 0 16"/>
+
+                <!-- Year Filter -->
+                <Grid Margin="0 0 0 16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Filter Year (required)" FontSize="11"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   Margin="0 0 0 2"/>
+                        <TextBlock Text="{Binding SelectedYear, StringFormat='Selected year: {0}', FallbackValue='No year selected'}"
+                                   FontSize="12" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    </StackPanel>
+
+                    <!-- Year picker popup button -->
+                    <Grid Grid.Column="1" VerticalAlignment="Bottom">
+                        <Grid.Resources>
+                            <Popup x:Key="YearPopup"/>
+                        </Grid.Resources>
+                        <Button x:Name="YearButton"
+                                Content="Select Year  ▾"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Click="YearButton_Click"/>
+                        <Popup x:Name="YearPopup"
+                               PlacementTarget="{Binding ElementName=YearButton}"
+                               Placement="Bottom"
+                               StaysOpen="False"
+                               AllowsTransparency="True">
+                            <materialDesign:Card Padding="4" MinWidth="140">
+                                <StackPanel>
+                                    <TextBlock Text="Select Year" FontSize="11" FontWeight="Bold"
+                                               Margin="8 6 8 2"
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                    <ListBox x:Name="YearListBox"
+                                             ItemsSource="{Binding AvailableYears}"
+                                             SelectedItem="{Binding SelectedYear}"
+                                             SelectionChanged="YearListBox_SelectionChanged"
+                                             MaxHeight="180"
+                                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                                    <Separator/>
+                                    <Button Content="Clear"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            HorizontalAlignment="Stretch"
+                                            Click="ClearYear_Click"/>
+                                </StackPanel>
+                            </materialDesign:Card>
+                        </Popup>
+                    </Grid>
+                </Grid>
+
+                <!-- Office Code * -->
+                <TextBlock Text="Office Code *" FontSize="11"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           Margin="0 0 0 2"/>
+                <ComboBox ItemsSource="{Binding FilteredOfficeCodes}"
+                          SelectedItem="{Binding SelectedOfficeCode}"
+                          materialDesign:HintAssist.Hint="Select Office Code"
+                          IsEditable="False"
+                          Margin="0 0 0 16"/>
+
+                <!-- Total Budget -->
+                <TextBox materialDesign:HintAssist.Hint="Total Budget (numeric)"
+                         Text="{Binding TotalBudget, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 0 0 16"/>
+
+                <!-- Contact Person -->
+                <TextBox materialDesign:HintAssist.Hint="Contact Person"
+                         Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0 0 0 0"/>
+
+            </StackPanel>
+        </materialDesign:Card>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="0 0 8 0"
+                    Click="Cancel_Click"/>
+            <Button Content="Save Project"
+                    Command="{Binding SaveCommand}"
+                    Style="{StaticResource MaterialDesignRaisedButton}"/>
+        </StackPanel>
+    </Grid>
+</Window>

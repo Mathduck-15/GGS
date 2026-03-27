@@ -7,6 +7,7 @@ using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using GoodGovernanceApp.Views;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -85,6 +86,7 @@ public class DepartmentManagementViewModel : ViewModelBase
     public ICommand AddRoleCommand { get; }
     public ICommand DeleteDepartmentCommand { get; }
     public ICommand RegenerateCodeCommand { get; }
+    public ICommand AddProjectCommand { get; }
 
     public DepartmentManagementViewModel()
     {
@@ -93,6 +95,7 @@ public class DepartmentManagementViewModel : ViewModelBase
         AddRoleCommand = new RelayCommand(async _ => await AddRoleAsync(), _ => SelectedDepartment != null);
         DeleteDepartmentCommand = new RelayCommand(async _ => await DeleteOfficeAsync(), _ => SelectedDepartment != null);
         RegenerateCodeCommand = new RelayCommand(_ => NewOfficeCode = GenerateOfficeCode());
+        AddProjectCommand = new RelayCommand(_ => OpenAddProjectWindow(), _ => SelectedDepartment != null);
 
         _ = LoadOfficesAsync();
     }
@@ -204,5 +207,21 @@ public class DepartmentManagementViewModel : ViewModelBase
         
         Departments.Remove(SelectedDepartment);
         SelectedDepartment = null;
+    }
+
+    private void OpenAddProjectWindow()
+    {
+        var window = new AddProjectWindow
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+
+        bool? result = window.ShowDialog();
+
+        if (result == true)
+        {
+            // Refresh the project list for the currently selected department
+            _ = LoadRolesAsync();
+        }
     }
 }
