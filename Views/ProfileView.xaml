@@ -30,9 +30,24 @@
 
                 <!-- Left Column: Primary Identity -->
                 <StackPanel Grid.Column="0" Margin="0 0 48 0">
-                    <materialDesign:PackIcon Kind="AccountCircle" Width="160" Height="160" 
-                                            Foreground="{DynamicResource PrimaryHueMidBrush}" 
-                                            HorizontalAlignment="Center" Margin="0 0 0 24"/>
+                    <!-- Profile Photo Container -->
+                    <Grid Width="160" Height="160" HorizontalAlignment="Center" Margin="0 0 0 16">
+                        <!-- Fallback Icon -->
+                        <materialDesign:PackIcon Kind="AccountCircle" Width="160" Height="160"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                        
+                        <!-- Actual Photo -->
+                        <Ellipse>
+                            <Ellipse.Fill>
+                                <ImageBrush ImageSource="{Binding ProfilePhotoSource}" Stretch="UniformToFill" />
+                            </Ellipse.Fill>
+                        </Ellipse>
+                    </Grid>
+
+                    <Button Content="UPLOAD PHOTO" 
+                            Command="{Binding UploadPhotoCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            HorizontalAlignment="Center" Margin="0 0 0 24"/>
                     
                     <TextBlock Text="{Binding Username}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center"/>
                     <TextBlock Text="{Binding Role}" FontSize="20" Foreground="{DynamicResource MaterialDesignBodyLight}" HorizontalAlignment="Center" Margin="0 4 0 0"/>

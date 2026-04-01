@@ -87,6 +87,7 @@ public class DepartmentManagementViewModel : ViewModelBase
     public ICommand DeleteDepartmentCommand { get; }
     public ICommand RegenerateCodeCommand { get; }
     public ICommand AddProjectCommand { get; }
+    public ICommand AllocateBudgetCommand { get; }
 
     public DepartmentManagementViewModel()
     {
@@ -96,6 +97,7 @@ public class DepartmentManagementViewModel : ViewModelBase
         DeleteDepartmentCommand = new RelayCommand(async _ => await DeleteOfficeAsync(), _ => SelectedDepartment != null);
         RegenerateCodeCommand = new RelayCommand(_ => NewOfficeCode = GenerateOfficeCode());
         AddProjectCommand = new RelayCommand(_ => OpenAddProjectWindow(), _ => SelectedDepartment != null);
+        AllocateBudgetCommand = new RelayCommand(_ => AllocateBudget(), _ => SelectedRole != null);
 
         _ = LoadOfficesAsync();
     }
@@ -129,7 +131,35 @@ public class DepartmentManagementViewModel : ViewModelBase
 
             System.Diagnostics.Debug.WriteLine($"=== Filtered: {filtered.Count} matches ===");
 
-            foreach (var project in filtered) ProjectDetails.Add(project);
+            var projectCodes = filtered
+                .Where(p => !string.IsNullOrEmpty(p.ProjectDetailsID))
+                .Select(p => p.ProjectDetailsID!)
+                .ToList();
+
+            var spentByProject = new Dictionary<string, decimal>();
+
+            if (projectCodes.Any())
+            {
+                spentByProject = await _context.Transactions
+                    .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
+                    .GroupBy(t => t.ProjectCode)
+                    .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount) })
+                    .ToDictionaryAsync(x => x.ProjectCode!, x => x.Spent);
+            }
+
+            foreach (var project in filtered)
+            {
+                if (project.ProjectDetailsID != null && spentByProject.TryGetValue(project.ProjectDetailsID, out decimal spent))
+                {
+                    project.Spent = spent;
+                }
+                else
+                {
+                    project.Spent = 0;
+                }
+
+                ProjectDetails.Add(project);
+            }
         }
     }
 
@@ -223,5 +253,13 @@ public class DepartmentManagementViewModel : ViewModelBase
             // Refresh the project list for the currently selected department
             _ = LoadRolesAsync();
         }
+    }
+
+    private void AllocateBudget()
+    {
+        if (SelectedRole == null || SelectedDepartment == null) return;
+        
+        var mainVm = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.ViewModels.MainViewModel>();
+        mainVm.NavigateTo("BudgetAllocation", SelectedDepartment.OfficeCode);
     }
 }

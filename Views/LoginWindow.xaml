@@ -39,12 +39,6 @@
                 Margin="0 0 0 24">
                     <Image.Source>
                         <Binding Path="LogoSource">
-                            <Binding.TargetNullValue>
-                                <BitmapImage UriSource="/Assets/logo.png"/>
-                            </Binding.TargetNullValue>
-                            <Binding.FallbackValue>
-                                <BitmapImage UriSource="/Assets/logo.png"/>
-                            </Binding.FallbackValue>
                         </Binding>
                     </Image.Source>
                 </Image>
@@ -57,7 +51,7 @@
                            TextWrapping="Wrap"/>
 
                 <TextBlock Text="{Binding Address}"
-                FontSize="26" FontWeight="Light"
+                FontSize="17" FontWeight="Light"
                 Foreground="Black"
                 HorizontalAlignment="Center"
                 TextAlignment="Center"
@@ -90,37 +84,64 @@
                                Margin="0 0 0 24"
                                HorizontalAlignment="Center"/>
 
-                    <TextBox materialDesign:HintAssist.Hint="Username"
+                    <!-- Username or Email -->
+                    <TextBox materialDesign:HintAssist.Hint="Username or Email"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0 0 0 16"/>
 
+                    <!-- Password -->
                     <PasswordBox materialDesign:HintAssist.Hint="Password"
                                  Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
                                  Name="PasswordBoxControl"
                                  Margin="0 0 0 8"
                                  PasswordChanged="PasswordBox_PasswordChanged"/>
 
+                    <!-- Error / status message -->
                     <TextBlock Text="{Binding ErrorMessage}"
                                Foreground="Red"
-                               Margin="0 0 0 16"
-                               HorizontalAlignment="Center"/>
+                               Margin="0 0 0 12"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               FontSize="12"/>
 
-                    <Button Content="LOGIN"
-                            Command="{Binding LoginCommand}"
-                            CommandParameter="{Binding ElementName=LoginWin}"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0 8 0 0"/>
-                    <Button Content="Cheat"
-                            Command="{Binding CheatCommand}"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            Margin="0 8 0 0"/>
+                    <!-- LOGIN button + spinner -->
+                    <Grid Margin="0 8 0 0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+
+                        <Button Grid.Column="0"
+                        Content="Cheat"
+                        Command="{Binding CheatCommand}"
+                        CommandParameter="{Binding ElementName=LoginWin}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"/>
+
+                        <Button Grid.Column="1"
+                                Content="LOGIN"
+                                Command="{Binding LoginCommand}"
+                                CommandParameter="{Binding ElementName=LoginWin}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"/>
+
+                        <ProgressBar Grid.Column="2"
+                                     Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                     IsIndeterminate="True"
+                                     Width="24" Height="24"
+                                     Margin="10 0 0 0"
+                                     VerticalAlignment="Center"
+                                     Visibility="{Binding IsLoggingIn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </Grid>
 
                     <Button Content="Database Connection Settings"
                             Command="{Binding OpenDbSettingsCommand}"
                             Style="{StaticResource MaterialDesignFlatButton}"
                             Margin="0 16 0 0"
                             Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    
+                    
                 </StackPanel>
             </materialDesign:Card>
         </Grid>

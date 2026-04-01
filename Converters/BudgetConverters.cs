@@ -25,6 +25,24 @@ public class AllocationColorConverter : IValueConverter
     }
 }
 
+public class RemainingFundColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is decimal amount)
+        {
+            if (amount < 0) return Brushes.Red;
+            return Brushes.Green;
+        }
+        return Brushes.Black;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class ProgressColorConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

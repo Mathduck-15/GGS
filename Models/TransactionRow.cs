@@ -11,6 +11,7 @@ public class TransactionRow
     public string OfficeCode      { get; set; } = string.Empty;
     public string ProjectCode     { get; set; } = string.Empty;   // project_details_id
     public string ProjectName     { get; set; } = string.Empty;   // project_details.project
+    public string VoucherCode     { get; set; } = string.Empty;
     public decimal Amount         { get; set; }
     public DateTime Date          { get; set; }
     public string Description     { get; set; } = string.Empty;

@@ -12,6 +12,7 @@
     <UserControl.Resources>
         <converters:AllocationColorConverter x:Key="AllocationColorConverter" />
         <converters:ProgressColorConverter x:Key="ProgressColorConverter" />
+        <converters:RemainingFundColorConverter x:Key="RemainingFundColorConverter" />
     </UserControl.Resources>
 
     <UserControl.DataContext>
@@ -165,24 +166,36 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- Transactions Sub-panel (shown when an office is selected) -->
                 <materialDesign:Card Grid.Row="1" Padding="16"
                                      Visibility="{Binding SelectedOffice, Converter={StaticResource NullToVisibilityConverter}}">
                     <StackPanel>
-                        <TextBlock Text="{Binding TransactionPanelHeader}" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 10"/>
-                        <DataGrid ItemsSource="{Binding OfficeTransactions}"
+                        <!-- Project Fund Summary DataGrid -->
+                        <TextBlock Text="Project Fund Summary" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 10"/>
+                        <DataGrid ItemsSource="{Binding OfficeProjects}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   IsReadOnly="True"
-                                  MaxHeight="200">
+                                  MaxHeight="250"
+                                  Margin="0 0 0 24">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="ID"          Binding="{Binding Id}"              Width="60"/>
-                                <DataGridTextColumn Header="Amount (₱)"  Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="120"/>
-                                <DataGridTextColumn Header="Description" Binding="{Binding Description}"    Width="*"/>
-                                <DataGridTextColumn Header="Date"        Binding="{Binding TransactionDate, StringFormat={}{0:MMM dd, yyyy}}"  Width="120"/>
-                                <DataGridTextColumn Header="Created"     Binding="{Binding CreatedAt, StringFormat={}{0:MMM dd, yyyy HH:mm}}" Width="150"/>
+                                <DataGridTextColumn Header="Project ID"   Binding="{Binding ProjectDetailsID}" Width="120"/>
+                                <DataGridTextColumn Header="Voucher Code" Binding="{Binding VoucherCode}"      Width="110"/>
+                                <DataGridTextColumn Header="Project"      Binding="{Binding Name}"             Width="*"/>
+                                <DataGridTextColumn Header="Total Budget" Binding="{Binding Budget, StringFormat=₱\{0:N2\}}" Width="120"/>
+                                <DataGridTextColumn Header="Spent"        Binding="{Binding Spent, StringFormat=₱\{0:N2\}}"  Width="120"/>
+                                <DataGridTextColumn Header="Remaining"    Binding="{Binding Remaining, StringFormat=₱\{0:N2\}}" Width="120">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{Binding Remaining, Converter={StaticResource RemainingFundColorConverter}}"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
                             </DataGrid.Columns>
                         </DataGrid>
+
+                        <TextBlock Text="{Binding TransactionPanelHeader}" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 10"/>
+                    
                         <TextBlock Text="No transactions recorded yet for this office."
                                    FontStyle="Italic" Foreground="{DynamicResource MaterialDesignBodyLight}"
                                    Margin="0 8 0 0">

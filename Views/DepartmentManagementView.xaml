@@ -126,11 +126,17 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Department Projects" FontSize="18" FontWeight="Bold"
                                        VerticalAlignment="Center"/>
-                            <Button Grid.Column="1"
-                                    Content="＋ Add Project"
-                                    Command="{Binding AddProjectCommand}"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    Padding="12 6"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Allocate Budget"
+                                        Command="{Binding AllocateBudgetCommand}"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Margin="0 0 8 0"
+                                        Padding="12 6"/>
+                                <Button Content="＋ Add Project"
+                                        Command="{Binding AddProjectCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Padding="12 6"/>
+                            </StackPanel>
                         </Grid>
 
                         <!-- Projects DataGrid -->
@@ -144,10 +150,20 @@
                                   ScrollViewer.HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Project ID"     Binding="{Binding ProjectDetailsID}" Width="130"/>
+                                <DataGridTextColumn Header="Voucher Code"   Binding="{Binding VoucherCode}"      Width="110"/>
                                 <DataGridTextColumn Header="Project"        Binding="{Binding Name}"             Width="200"/>
                                 <DataGridTextColumn Header="Description"    Binding="{Binding Description}"      Width="200"/>
                                 <DataGridTextColumn Header="Office Code"    Binding="{Binding OfficeCode}"       Width="130"/>
                                 <DataGridTextColumn Header="Total Budget"   Binding="{Binding Budget, StringFormat='{}{0:C}'}" Width="140"/>
+                                <DataGridTextColumn Header="Spent"          Binding="{Binding Spent, StringFormat='{}{0:C}'}"  Width="140"/>
+                                <DataGridTextColumn Header="Remaining"      Binding="{Binding Remaining, StringFormat='{}{0:C}'}" Width="140">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
                                 <DataGridTextColumn Header="Contact Person" Binding="{Binding ContactPerson}"   Width="150"/>
                             </DataGrid.Columns>
                         </DataGrid>

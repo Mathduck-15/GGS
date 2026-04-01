@@ -1,28 +1,58 @@
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using GoodGovernanceApp.Data;
-using Microsoft.EntityFrameworkCore;
-using GoodGovernanceApp.Views;
+using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Utilities;
-using System.Linq;
+using GoodGovernanceApp.Views;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GoodGovernanceApp.ViewModels;
 
 public class LoginViewModel : ViewModelBase
 {
-    private string _username = string.Empty;
-    private string _password = string.Empty;
+    // ── Fields ───────────────────────────────────────────────────────────────
+    private string _username     = string.Empty;
+    private string _password     = string.Empty;
     private string _errorMessage = string.Empty;
+    private bool   _isLoggingIn  = false;
     private string _governanceName = "Good Governance Management System";
     private System.Windows.Media.Imaging.BitmapImage? _logoSource;
-    private readonly GoodGovernanceApp.Services.SessionService _sessionService;
     private string _address = string.Empty;
+    private readonly GoodGovernanceApp.Services.SessionService _sessionService;
+    public ICommand CheatCommand { get; }
 
-    public string Address
+    // ── Properties ───────────────────────────────────────────────────────────
+    public string Username
     {
-        get => _address;
-        set { _address = value; OnPropertyChanged(); }
+        get => _username;
+        set { _username = value; OnPropertyChanged(); ClearError(); }
+    }
+
+    public string Password
+    {
+        get => _password;
+        set { _password = value; OnPropertyChanged(); ClearError(); }
+    }
+
+    public string ErrorMessage
+    {
+        get => _errorMessage;
+        set { _errorMessage = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>True while the async login is in progress (disables the button).</summary>
+    public bool IsLoggingIn
+    {
+        get => _isLoggingIn;
+        set { _isLoggingIn = value; OnPropertyChanged(); }
+    }
+
+    private void ExecuteCheat()
+    {
+        MessageBox.Show("Username: superadmin\nPassword: password", "Cheat Codes", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     public string GovernanceName
@@ -37,122 +67,170 @@ public class LoginViewModel : ViewModelBase
         set { _logoSource = value; OnPropertyChanged(); }
     }
 
-
-    public string Username
+    public string Address
     {
-        get => _username;
-        set { _username = value; OnPropertyChanged(); }
+        get => _address;
+        set { _address = value; OnPropertyChanged(); }
     }
 
-    public string Password
-    {
-        get => _password;
-        set { _password = value; OnPropertyChanged(); }
-    }
-
-    public string ErrorMessage
-    {
-        get => _errorMessage;
-        set { _errorMessage = value; OnPropertyChanged(); }
-    }
-
-    public ICommand LoginCommand { get; }
+    // ── Commands ─────────────────────────────────────────────────────────────
+    public ICommand LoginCommand       { get; }
     public ICommand OpenDbSettingsCommand { get; }
-    public ICommand CheatCommand { get; }
 
+    // ── Constructor ───────────────────────────────────────────────────────────
     public LoginViewModel(GoodGovernanceApp.Services.SessionService sessionService)
     {
         _sessionService = sessionService;
-        LoginCommand = new RelayCommand(ExecuteLogin, CanExecuteLogin);
-        OpenDbSettingsCommand = new RelayCommand(ExecuteOpenDbSettings);
-        CheatCommand = new RelayCommand(p => MessageBox.Show("username = admin and password = admin", "password = admin", MessageBoxButton.OK, MessageBoxImage.Information));  
+
+        LoginCommand          = new RelayCommand(async p => await ExecuteLoginAsync(p), CanExecuteLogin);
+        OpenDbSettingsCommand = new RelayCommand(_ => new DatabaseSettingsWindow().ShowDialog());
 
         _ = LoadApplicationProfileAsync();
+
+        CheatCommand = new RelayCommand(_ => ExecuteCheat());
     }
 
-    private async System.Threading.Tasks.Task LoadApplicationProfileAsync()
+    // ── CanExecute ────────────────────────────────────────────────────────────
+    private bool CanExecuteLogin(object? _)
+        => !string.IsNullOrWhiteSpace(Username)
+        && !string.IsNullOrWhiteSpace(Password)
+        && !IsLoggingIn;
+
+    private void ClearError() => ErrorMessage = string.Empty;
+
+    // ── Login Logic ───────────────────────────────────────────────────────────
+    /// <summary>
+    /// Authenticates the user against the `users` table.
+    ///
+    /// Lookup strategy:
+    ///   1. Try matching the typed username against the `name` column (display name).
+    ///   2. If not found, retry with the `email` column — accommodates users who
+    ///      log in with their email address.
+    ///
+    /// Password verification:
+    ///   The stored hash must be a SHA-256 hex digest (produced by PasswordHasher.HashPassword).
+    ///   ⚠ If passwords were seeded via Laravel's bcrypt(), the comparison will always fail.
+    ///     In that case install BCrypt.Net-Next (NuGet) and use BCrypt.Verify() instead.
+    ///
+    /// Status check:
+    ///   Users with status = "inactive" or "suspended" are rejected with a clear message.
+    /// </summary>
+    private async Task ExecuteLoginAsync(object? parameter)
+    {
+        IsLoggingIn  = true;
+        ErrorMessage = string.Empty;
+
+        try
+        {
+            User? user = null;
+
+            // ── 1. Try to find user in the database ──────────────────────────
+            using var scope   = App.AppHost!.Services.CreateScope();
+            var context       = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            string inputLower = Username.Trim().ToLowerInvariant();
+
+            // First try: match by `name` (case-insensitive)
+            user = await context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u =>
+                    u.Name.ToLower() == inputLower);
+
+            // Second try: match by `email` — handles users who type their email
+            if (user == null)
+            {
+                user = await context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u =>
+                        u.Email.ToLower() == inputLower);
+            }
+
+            // ── 2. Validate existence ────────────────────────────────────────
+            if (user == null)
+            {
+                ErrorMessage = "❌ No account found with that username or email.";
+                return;
+            }
+
+            // ── 3. Validate password ─────────────────────────────────────────
+            bool passwordOk = PasswordHasher.VerifyPassword(Password, user.Password);
+
+            if (!passwordOk)
+            {
+                ErrorMessage = "❌ Incorrect password. Please try again.";
+                return;
+            }
+
+            // ── 4. Check account status ──────────────────────────────────────
+            if (user.Status?.Equals("inactive", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                ErrorMessage = "⚠ Your account is inactive. Please contact an administrator.";
+                return;
+            }
+
+            if (user.Status?.Equals("suspended", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                ErrorMessage = "🚫 Your account has been suspended. Please contact an administrator.";
+                return;
+            }
+
+            // ── 5. Login success ─────────────────────────────────────────────
+            _sessionService.CurrentUser = user;
+
+            var mainWindow = App.AppHost!.Services.GetService(typeof(MainWindow)) as MainWindow;
+            mainWindow!.Show();
+
+            if (parameter is Window window)
+                window.Close();
+        }
+        catch (Exception ex)
+        {
+            // Surface a user-friendly message; the raw exception helps diagnose
+            // connection or column-mapping issues during development.
+            ErrorMessage = $"❌ Login error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoggingIn = false;
+        }
+    }
+
+    // ── Application Profile ───────────────────────────────────────────────────
+    private async Task LoadApplicationProfileAsync()
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            var dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
             string query = "SELECT GoveName, LogoAddress, Address FROM goveprofile LIMIT 1;";
             var dataTable = await dbHelper.ExecuteQueryAsync(query);
 
             if (dataTable.Rows.Count > 0)
             {
-                var row = dataTable.Rows[0];
-                string goveName = row["GoveName"]?.ToString() ?? "";
-                string logoAddress = row["LogoAddress"]?.ToString() ?? "";
+                var row        = dataTable.Rows[0];
+                string govName = row["GoveName"]?.ToString() ?? "";
+                string logoUrl = row["LogoAddress"]?.ToString() ?? "";
+                string addr    = row["Address"]?.ToString() ?? "";
 
-                if (!string.IsNullOrWhiteSpace(goveName))
-                {
-                    GovernanceName = goveName;
-                }
+                if (!string.IsNullOrWhiteSpace(govName))
+                    GovernanceName = govName;
 
-                if (!string.IsNullOrWhiteSpace(logoAddress) && System.IO.File.Exists(logoAddress))
+                if (!string.IsNullOrWhiteSpace(addr))
+                    Address = addr;
+
+                if (!string.IsNullOrWhiteSpace(logoUrl) && System.IO.File.Exists(logoUrl))
                 {
                     var bi = new System.Windows.Media.Imaging.BitmapImage();
                     bi.BeginInit();
                     bi.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bi.UriSource = new System.Uri(logoAddress, System.UriKind.Absolute);
+                    bi.UriSource   = new Uri(logoUrl, UriKind.Absolute);
                     bi.EndInit();
                     LogoSource = bi;
                 }
-
-                string address = row["Address"]?.ToString() ?? "";
-                if (!string.IsNullOrWhiteSpace(address))
-                    Address = address;
-
             }
         }
         catch
         {
-            // Ignore failure, fallbacks are handled by initial values and XAML
-        }
-    }
-
-    private void ExecuteOpenDbSettings(object? parameter)
-    {
-        var settingsWindow = new DatabaseSettingsWindow();
-        settingsWindow.ShowDialog();
-    }
-
-    private bool CanExecuteLogin(object? parameter)
-    {
-        return !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password);
-    }
-
-    private void ExecuteLogin(object? parameter)
-    {
-        string hashedInput = PasswordHasher.HashPassword(Password);
-        
-        using var scope = App.AppHost!.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        var user = context.Users.FirstOrDefault(u => u.Name == Username && u.Password == hashedInput);
-        
-        if (user != null || (Username == "admin" && Password == "admin")) // admin override
-        {
-            if (user == null && Username == "admin")
-            {
-                // Ensure we have a dummy admin in session if using override
-                user = new Models.User { Name = "admin", Role = "SuperAdmin" };
-            }
-
-            _sessionService.CurrentUser = user;
-
-            var mainWindow = App.AppHost!.Services.GetService(typeof(MainWindow)) as MainWindow;
-            mainWindow!.Show();
-            
-            // Close login window
-            if (parameter is Window window)
-            {
-                window.Close();
-            }
-        }
-        else
-        {
-            ErrorMessage = "Invalid Username or Password";
+            // Non-fatal — fallback values apply via initial property values.
         }
     }
 }

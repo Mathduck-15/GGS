@@ -34,4 +34,14 @@ public class ProjectDetail
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    [Column("voucher_code")]
+    [StringLength(10)]
+    public string? VoucherCode { get; set; }
+
+    [NotMapped]
+    public decimal Spent { get; set; }
+
+    [NotMapped]
+    public decimal Remaining => (Budget ?? 0) - Spent;
 }

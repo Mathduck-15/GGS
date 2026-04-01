@@ -7,6 +7,9 @@ using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
+using System.IO;
+using System.Windows.Media.Imaging;
 using System.Linq;
 using System;
 
@@ -25,6 +28,7 @@ public class UserManagementViewModel : ViewModelBase
     private ObservableCollection<Office> _offices = new();
     private ObservableCollection<DepartmentRole> _allRoles = new();
     private ObservableCollection<DepartmentRole> _filteredRoles = new();
+    private BitmapImage? _selectedUserProfilePhotoSource;
 
     // ── ValidateUsers ────────────────────────────────────────────────────────
     private ObservableCollection<ValidateUser> _validateUsers = new();
@@ -63,7 +67,14 @@ public class UserManagementViewModel : ViewModelBase
             OnPropertyChanged();
             OnPropertyChanged(nameof(SelectedOfficeId));
             RefreshFilteredRoles();
+            RefreshProfilePhoto();
         }
+    }
+
+    public BitmapImage? SelectedUserProfilePhotoSource
+    {
+        get => _selectedUserProfilePhotoSource;
+        set { _selectedUserProfilePhotoSource = value; OnPropertyChanged(); }
     }
 
     public long? SelectedOfficeId
@@ -152,6 +163,7 @@ public class UserManagementViewModel : ViewModelBase
     public ICommand DeleteCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand RefreshValidateUsersCommand { get; }
+    public ICommand UploadPhotoCommand { get; }
 
     // ── Constructor ───────────────────────────────────────────────────────────
     public UserManagementViewModel()
@@ -177,6 +189,7 @@ public class UserManagementViewModel : ViewModelBase
         DeleteCommand = new RelayCommand(ExecuteDelete, CanExecuteDelete);
         CancelCommand = new RelayCommand(ExecuteCancel);
         RefreshValidateUsersCommand = new RelayCommand(_ => LoadValidateUsers());
+        UploadPhotoCommand = new RelayCommand(_ => ExecuteUploadPhoto(), _ => IsEditing);
     }
 
     // ── Data Loading ──────────────────────────────────────────────────────────
@@ -267,6 +280,58 @@ public class UserManagementViewModel : ViewModelBase
         OnPropertyChanged(nameof(OfficeRoles));
     }
 
+    private void RefreshProfilePhoto()
+    {
+        SelectedUserProfilePhotoSource = null;
+        if (SelectedUser != null && !string.IsNullOrEmpty(SelectedUser.ProfilePhoto) && File.Exists(SelectedUser.ProfilePhoto))
+        {
+            try
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad; // allows file to be released
+                bitmap.UriSource = new Uri(SelectedUser.ProfilePhoto, UriKind.Absolute);
+                bitmap.EndInit();
+                SelectedUserProfilePhotoSource = bitmap;
+            }
+            catch { /* Ignore load errors */ }
+        }
+    }
+
+    private void ExecuteUploadPhoto()
+    {
+        if (!IsEditing) return;
+
+        var openFileDialog = new OpenFileDialog
+        {
+            Title = "Select Profile Photo",
+            Filter = "Image Files (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp|All files (*.*)|*.*"
+        };
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            try
+            {
+                string appDir = AppDomain.CurrentDomain.BaseDirectory;
+                string photosDir = Path.Combine(appDir, "ProfilePhotos");
+                if (!Directory.Exists(photosDir)) Directory.CreateDirectory(photosDir);
+
+                string ext = Path.GetExtension(openFileDialog.FileName);
+                string newFileName = $"profile_{SelectedUser.Id}_{DateTime.Now.Ticks}{ext}";
+                string destinationPath = Path.Combine(photosDir, newFileName);
+
+                File.Copy(openFileDialog.FileName, destinationPath, overwrite: true);
+
+                SelectedUser.ProfilePhoto = destinationPath;
+                RefreshProfilePhoto();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Could not upload photo: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+    }
+
     // ── User Commands ─────────────────────────────────────────────────────────
     private void ExecuteAdd(object? parameter)
     {
@@ -306,10 +371,26 @@ public class UserManagementViewModel : ViewModelBase
     {
         if (SelectedUser.Id != 0)
         {
-            _context.Users.Remove(SelectedUser);
-            _context.SaveChanges();
-            SelectedUser = new User();
-            LoadData();
+            try
+            {
+                _context.Users.Remove(SelectedUser);
+                _context.SaveChanges();
+                SelectedUser = new User();
+                LoadData();
+            }
+            catch (DbUpdateException)
+            {
+                // Revert the deletion state in the EF tracker so the app doesn't crash on next action
+                foreach (var entry in _context.ChangeTracker.Entries().Where(e => e.State != EntityState.Unchanged))
+                    entry.State = EntityState.Unchanged;
+
+                System.Windows.MessageBox.Show(
+                    "This user cannot be deleted because they have associated records (e.g., budgets, requests) in the system.\n\n" +
+                    "To prevent them from accessing the system, please Edit the user and change their Status to 'inactive'.",
+                    "Deletion Blocked",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+            }
         }
     }
 

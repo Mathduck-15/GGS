@@ -1,9 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -27,6 +31,21 @@ public class MainViewModel : ViewModelBase
 
 
     private string _governanceName = "Good Governance Management System";
+
+
+    private string? _profilePhotoPath;
+    private BitmapImage? _profilePhotoSource;
+
+
+    public BitmapImage? ProfilePhotoSource
+    {
+        get => _profilePhotoSource;
+        set
+        {
+            _profilePhotoSource = value;
+            OnPropertyChanged();
+        }
+    }
 
     public string GovernanceName
     {
@@ -63,6 +82,7 @@ public class MainViewModel : ViewModelBase
         _sessionService = App.AppHost!.Services.GetRequiredService<Services.SessionService>();
         OpenAppProfileCommand = new RelayCommand(ExecuteOpenAppProfile);
         LoadApplicationProfileAsync();
+        LoadProfilePhotoAsync();
 
         var allItems = new List<NavigationItem>
         {
@@ -105,6 +125,34 @@ public class MainViewModel : ViewModelBase
             SelectedNavItem = NavigationItems[0];
     }
 
+    private async System.Threading.Tasks.Task LoadProfilePhotoAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            string query = $"SELECT profile_photo FROM users WHERE Id = {_sessionService.CurrentUser?.Id};";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var path = dataTable.Rows[0]["profile_photo"]?.ToString();
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad; // allows file to be released so you can upload a new one
+                    bitmap.UriSource = new Uri(path, UriKind.Absolute);
+                    bitmap.EndInit();
+                    ProfilePhotoSource = bitmap;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Could not load profile photo: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+    }
+
     private async System.Threading.Tasks.Task LoadApplicationProfileAsync()
     {
         try
@@ -125,7 +173,7 @@ public class MainViewModel : ViewModelBase
         catch { }
     }
 
-    private void NavigateTo(string? viewToken)
+    public void NavigateTo(string? viewToken, object? parameter = null)
     {
         switch (viewToken)
         {
@@ -148,7 +196,12 @@ public class MainViewModel : ViewModelBase
                 CurrentView = new Views.ReportsView();
                 break;
             case "BudgetAllocation":
-                CurrentView = new Views.BudgetAllocationView();
+                var allocationView = new Views.BudgetAllocationView();
+                if (parameter is string officeCode && allocationView.DataContext is BudgetAllocationViewModel vm)
+                {
+                    vm.ActivateForOffice(officeCode);
+                }
+                CurrentView = allocationView;
                 break;
             case "CrsBeneficiary":
                 CurrentView = new Views.CrsBeneficiaryView();
@@ -180,14 +233,17 @@ public class MainViewModel : ViewModelBase
 
     private void ExecuteLogout(object? parameter)
     {
-        // Re-open login window and close main window
-        if (parameter is System.Windows.Window window)
-        {
-            _sessionService.ClearSession();
-            var loginWindow = App.AppHost!.Services.GetService(typeof(Views.LoginWindow)) as Views.LoginWindow;
-            loginWindow!.Show();
-            window.Close();
-        }
+        _sessionService.ClearSession();
+        
+        var loginWindow = App.AppHost!.Services.GetService(typeof(Views.LoginWindow)) as Views.LoginWindow;
+        loginWindow!.Show();
+
+        // The CommandParameter binding often fails inside a DrawerHost across Visual Trees in WPF.
+        // We find the main window safely using Application.Current to close it.
+        var window = parameter as System.Windows.Window 
+                     ?? System.Windows.Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault();
+        
+        window?.Close();
     }
 
     private void ExecuteOpenAppProfile(object? parameter)

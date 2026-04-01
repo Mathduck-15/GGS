@@ -30,6 +30,7 @@ public class BudgetAllocationViewModel : ViewModelBase
     public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
     public ObservableCollection<OfficeAllocationItemViewModel> DepartmentAllocations { get; } = new();
     public ObservableCollection<TblTransaction> OfficeTransactions { get; } = new();
+    public ObservableCollection<ProjectDetail> OfficeProjects { get; } = new();
 
     // ── Properties ───────────────────────────────────────────────────────────
     public int NewBudgetYear
@@ -104,6 +105,23 @@ public class BudgetAllocationViewModel : ViewModelBase
         _ = LoadInitialDataAsync();
     }
 
+    public void ActivateForOffice(string officeCode)
+    {
+        // Give the initial load a moment to fetch yearly budgets if it's currently running
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(300); // Wait briefly for LoadInitialDataAsync to finish
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                var officeVm = DepartmentAllocations.FirstOrDefault(a => a.OfficeCode == officeCode);
+                if (officeVm != null)
+                {
+                    SelectedOffice = officeVm;
+                }
+            });
+        });
+    }
+
     // ── Data Loading ─────────────────────────────────────────────────────────
     private async Task LoadInitialDataAsync()
     {
@@ -176,6 +194,41 @@ public class BudgetAllocationViewModel : ViewModelBase
             .ToListAsync();
 
         foreach (var t in txns) OfficeTransactions.Add(t);
+
+        // Load project breakdown
+        OfficeProjects.Clear();
+        var filteredProjects = await _context.ProjectDetails
+            .Where(p => p.OfficeCode == SelectedOffice.OfficeCode)
+            .ToListAsync();
+
+        var projectCodes = filteredProjects
+            .Where(p => !string.IsNullOrEmpty(p.ProjectDetailsID))
+            .Select(p => p.ProjectDetailsID!)
+            .ToList();
+
+        var spentByProject = new Dictionary<string, decimal>();
+        
+        if (projectCodes.Any())
+        {
+            spentByProject = await _context.Transactions
+                .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
+                .GroupBy(t => t.ProjectCode)
+                .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount) })
+                .ToDictionaryAsync(x => x.ProjectCode!, x => x.Spent);
+        }
+
+        foreach (var project in filteredProjects)
+        {
+            if (project.ProjectDetailsID != null && spentByProject.TryGetValue(project.ProjectDetailsID, out decimal spent))
+            {
+                project.Spent = spent;
+            }
+            else
+            {
+                project.Spent = 0;
+            }
+            OfficeProjects.Add(project);
+        }
     }
 
     private void CalculateUnallocated()

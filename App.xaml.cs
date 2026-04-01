@@ -128,6 +128,11 @@ public partial class App : Application
                     {
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
+                        
+                        // Patch VoucherCode
+                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE project_details ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
+                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE transactions ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
+                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_transaction ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
 
                         try
                         {

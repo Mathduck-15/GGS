@@ -61,4 +61,8 @@ public class TblTransaction
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    [Column("voucher_code")]
+    [StringLength(10)]
+    public string? VoucherCode { get; set; }
 }

@@ -1,9 +1,12 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Services;
 using GoodGovernanceApp.Utilities;
+using Microsoft.Win32;
 using MySqlConnector;
 
 namespace GoodGovernanceApp.ViewModels;
@@ -11,6 +14,7 @@ namespace GoodGovernanceApp.ViewModels;
 public class SettingsViewModel : ViewModelBase
 {
     private readonly BackupService _backupService;
+    private readonly BackupSchedulerService _scheduler;
 
     // ── Database Mode ────────────────────────────────────────────────────────
     private string _databaseMode = "Local";
@@ -18,6 +22,13 @@ public class SettingsViewModel : ViewModelBase
     {
         get => _databaseMode;
         set { _databaseMode = value; OnPropertyChanged(); }
+    }
+
+    private string _selectedPreset = string.Empty;
+    public string SelectedPreset
+    {
+        get => _selectedPreset;
+        set { _selectedPreset = value; OnPropertyChanged(); }
     }
 
     // ── GGMS Connection Strings ──────────────────────────────────────────────
@@ -42,7 +53,7 @@ public class SettingsViewModel : ViewModelBase
         set { _remoteConnectionString = value; OnPropertyChanged(); }
     }
 
-    // ── CRS Connection Fields (individually editable) ────────────────────────
+    // ── CRS Connection Fields ────────────────────────────────────────────────
     private string _crsServer = "localhost";
     public string CrsServer
     {
@@ -78,7 +89,7 @@ public class SettingsViewModel : ViewModelBase
         set { _crsPassword = value; OnPropertyChanged(); }
     }
 
-    // ── LAN IP (separate editable field for network preset) ──────────────────
+    // ── LAN IP ──────────────────────────────────────────────────────────────
     private string _lanIp = "192.168.1.1";
     public string LanIp
     {
@@ -87,18 +98,9 @@ public class SettingsViewModel : ViewModelBase
         {
             _lanIp = value;
             OnPropertyChanged();
-            // Live-update both LAN strings when user edits the IP
             LanConnectionString = BuildGgmsConnStr(value, "governance");
             CrsServer = value;
         }
-    }
-
-    // ── Backup ───────────────────────────────────────────────────────────────
-    private string _mySqlDumpPath = "mysqldump";
-    public string MySqlDumpPath
-    {
-        get => _mySqlDumpPath;
-        set { _mySqlDumpPath = value; OnPropertyChanged(); }
     }
 
     // ── Status ───────────────────────────────────────────────────────────────
@@ -130,17 +132,91 @@ public class SettingsViewModel : ViewModelBase
         set { _isTesting = value; OnPropertyChanged(); }
     }
 
-    // ── Commands ─────────────────────────────────────────────────────────────
-    public ICommand PresetLocalCommand { get; }
-    public ICommand PresetNetworkCommand { get; }
-    public ICommand PresetRemoteCommand { get; }
-    public ICommand TestBothCommand { get; }
-    public ICommand SaveSettingsCommand { get; }
-    public ICommand FullBackupCommand { get; }
-    public ICommand DifferentialBackupCommand { get; }
-    public ICommand IncrementalBackupCommand { get; }
+    // ── Backup Settings ──────────────────────────────────────────────────────
+    private string _backupType = "Full";
+    /// <summary>Full | Differential | Incremental</summary>
+    public string BackupType
+    {
+        get => _backupType;
+        set { _backupType = value; OnPropertyChanged(); }
+    }
 
-    // Keep legacy for XAML that still uses IsLocal/IsLan/IsRemote
+    private string _scheduleType = "Daily";
+    /// <summary>Once | Daily | Weekly | Monthly</summary>
+    public string ScheduleType
+    {
+        get => _scheduleType;
+        set
+        {
+            _scheduleType = value;
+            OnPropertyChanged();
+            // Show/hide the day-of-month field
+            OnPropertyChanged(nameof(IsMonthlyOrOnce));
+            OnPropertyChanged(nameof(IsOnce));
+        }
+    }
+
+    private int _scheduleDay = 1;
+    /// <summary>Day of month (Monthly) or DayOfWeek index (Weekly).</summary>
+    public int ScheduleDay
+    {
+        get => _scheduleDay;
+        set { _scheduleDay = value; OnPropertyChanged(); }
+    }
+
+    private DateTime _nextRunTime = DateTime.Now.AddDays(1);
+    public DateTime NextRunTime
+    {
+        get => _nextRunTime;
+        set { _nextRunTime = value; OnPropertyChanged(); }
+    }
+
+    private string _backupFolder = string.Empty;
+    public string BackupFolder
+    {
+        get => _backupFolder;
+        set { _backupFolder = value; OnPropertyChanged(); }
+    }
+
+    private string _mySqlDumpPath = "mysqldump";
+    public string MySqlDumpPath
+    {
+        get => _mySqlDumpPath;
+        set { _mySqlDumpPath = value; OnPropertyChanged(); }
+    }
+
+    private bool _isBackupEnabled;
+    public bool IsBackupEnabled
+    {
+        get => _isBackupEnabled;
+        set { _isBackupEnabled = value; OnPropertyChanged(); }
+    }
+
+    private string _backupStatusMessage = string.Empty;
+    public string BackupStatusMessage
+    {
+        get => _backupStatusMessage;
+        set { _backupStatusMessage = value; OnPropertyChanged(); }
+    }
+
+    // Visibility helpers for XAML
+    public bool IsMonthlyOrOnce => ScheduleType == "Monthly" || ScheduleType == "Once";
+    public bool IsOnce          => ScheduleType == "Once";
+
+    // ── Commands ─────────────────────────────────────────────────────────────
+    public ICommand PresetLocalCommand        { get; }
+    public ICommand PresetNetworkCommand      { get; }
+    public ICommand PresetRemoteCommand       { get; }
+    public ICommand TestBothCommand           { get; }
+    public ICommand SaveSettingsCommand       { get; }
+    public ICommand FullBackupCommand         { get; }
+    public ICommand DifferentialBackupCommand { get; }
+    public ICommand IncrementalBackupCommand  { get; }
+    public ICommand BrowseBackupFolderCommand  { get; }
+    public ICommand BrowseMySqlDumpCommand    { get; }
+    public ICommand SaveBackupSettingsCommand { get; }
+
+    // Mode helpers kept for XAML compatibility
     public bool IsLocal  => DatabaseMode == "Local";
     public bool IsLan    => DatabaseMode == "LAN";
     public bool IsRemote => DatabaseMode == "Remote";
@@ -148,7 +224,10 @@ public class SettingsViewModel : ViewModelBase
     public SettingsViewModel()
     {
         _backupService = new BackupService();
+        _scheduler     = new BackupSchedulerService();
+
         LoadSettings();
+        LoadBackupSettings();
 
         PresetLocalCommand   = new RelayCommand(_ => ApplyPreset("Local"));
         PresetNetworkCommand = new RelayCommand(_ => ApplyPreset("LAN"));
@@ -156,15 +235,23 @@ public class SettingsViewModel : ViewModelBase
         TestBothCommand      = new RelayCommand(async _ => await ExecuteTestBoth());
         SaveSettingsCommand  = new RelayCommand(async _ => await ExecuteSaveSettings(null));
 
-        FullBackupCommand         = new RelayCommand(async p => await ExecuteBackup("Full"));
-        DifferentialBackupCommand = new RelayCommand(async p => await ExecuteBackup("Differential"));
-        IncrementalBackupCommand  = new RelayCommand(async p => await ExecuteBackup("Incremental"));
+        FullBackupCommand         = new RelayCommand(async _ => await ExecuteManualBackup("Full"));
+        DifferentialBackupCommand = new RelayCommand(async _ => await ExecuteManualBackup("Differential"));
+        IncrementalBackupCommand  = new RelayCommand(async _ => await ExecuteManualBackup("Incremental"));
+
+        BrowseBackupFolderCommand  = new RelayCommand(_ => BrowseBackupFolder());
+        BrowseMySqlDumpCommand    = new RelayCommand(_ => BrowseMySqlDump());
+        SaveBackupSettingsCommand = new RelayCommand(_ => ExecuteSaveBackupSettings());
     }
 
     // ── Preset Logic ─────────────────────────────────────────────────────────
     private void ApplyPreset(string mode)
     {
         DatabaseMode = mode;
+        if (mode == "Local") SelectedPreset = "LOCAL";
+        else if (mode == "LAN") SelectedPreset = "NETWORK";
+        else if (mode == "Remote") SelectedPreset = "REMOTE";
+
         OnPropertyChanged(nameof(IsLocal));
         OnPropertyChanged(nameof(IsLan));
         OnPropertyChanged(nameof(IsRemote));
@@ -172,36 +259,25 @@ public class SettingsViewModel : ViewModelBase
         switch (mode)
         {
             case "Local":
-                LocalConnectionString = BuildGgmsConnStr("localhost", "governance");
-                LanConnectionString   = BuildGgmsConnStr(LanIp, "governance");
+                LocalConnectionString  = BuildGgmsConnStr("localhost", "governance");
+                LanConnectionString    = BuildGgmsConnStr(LanIp, "governance");
                 RemoteConnectionString = BuildGgmsRemoteConnStr();
-                CrsServer   = "localhost";
-                CrsPort     = "3306";
-                CrsDatabase = "crs_db";
-                CrsUser     = "root";
-                CrsPassword = "root";
+                CrsServer   = "localhost"; CrsPort = "3306";
+                CrsDatabase = "crs_db";   CrsUser = "root"; CrsPassword = "root";
                 break;
 
             case "LAN":
-                // Keep LanIp editable — only fill defaults if blank
-                if (string.IsNullOrWhiteSpace(LanIp) || LanIp == "192.168.1.1")
-                    LanIp = "192.168.1.1";  // triggers live-update of LanConnectionString + CrsServer
-                else
-                    LanConnectionString = BuildGgmsConnStr(LanIp, "governance");
-
-                CrsServer   = LanIp;
-                CrsPort     = "3306";
-                CrsDatabase = "crs_db";
-                CrsUser     = "root";
-                CrsPassword = "root";
+                if (string.IsNullOrWhiteSpace(LanIp))
+                    LanIp = "192.168.1.1";
+                LanConnectionString = BuildGgmsConnStr(LanIp, "governance");
+                CrsServer   = LanIp;  CrsPort = "3306";
+                CrsDatabase = "crs_db"; CrsUser = "root"; CrsPassword = "root";
                 break;
 
             case "Remote":
                 RemoteConnectionString = BuildGgmsRemoteConnStr();
-                CrsServer   = "194.59.164.58";
-                CrsPort     = "3306";
-                CrsDatabase = "u621755393_crs";
-                CrsUser     = "u621755393_crs_user";
+                CrsServer   = "194.59.164.58";       CrsPort     = "3306";
+                CrsDatabase = "u621755393_crs";      CrsUser     = "u621755393_crs_user";
                 CrsPassword = "Crs@2026";
                 break;
         }
@@ -210,15 +286,20 @@ public class SettingsViewModel : ViewModelBase
     }
 
     private static string BuildGgmsConnStr(string server, string db)
-        => $"Server={server};Port=3306;Database={db};User=root;Password=root;AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
+        => $"Server={server};Port=3306;Database={db};User=root;Password=root;" +
+           "AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
 
     private static string BuildGgmsRemoteConnStr()
-        => "Server=194.59.164.58;Port=3306;Database=u621755393_ggms;User=u621755393_ggms_user;Password=Ggms@2026;AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
+        => "Server=194.59.164.58;Port=3306;Database=u621755393_ggms;" +
+           "User=u621755393_ggms_user;Password=Ggms@2026;" +
+           "AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
 
     public string BuildCrsConnStr()
-        => $"Server={CrsServer};Port={CrsPort};Database={CrsDatabase};User={CrsUser};Password={CrsPassword};AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
+        => $"Server={CrsServer};Port={CrsPort};Database={CrsDatabase};User={CrsUser};" +
+           $"Password={CrsPassword};AllowZeroDateTime=True;ConvertZeroDateTime=True;" +
+           "Connection Timeout=15;SslMode=None;";
 
-    // ── Test Both ────────────────────────────────────────────────────────────
+    // ── Connection Test ───────────────────────────────────────────────────────
     private async Task ExecuteTestBoth()
     {
         IsTesting = true;
@@ -232,12 +313,8 @@ public class SettingsViewModel : ViewModelBase
             _        => LocalConnectionString
         };
 
-        // Always test the CURRENT UI fields, not the saved file, 
-        // to allow users to verify their typing before they hit Save!
-        string crsConn = BuildCrsConnStr();
-
         var ggmsTask = TestConnectionAsync(ggmsConn);
-        var crsTask  = TestConnectionAsync(crsConn);
+        var crsTask  = TestConnectionAsync(BuildCrsConnStr());
         await Task.WhenAll(ggmsTask, crsTask);
 
         var (ggmsOk, ggmsMsg) = ggmsTask.Result;
@@ -245,7 +322,6 @@ public class SettingsViewModel : ViewModelBase
 
         GgmsTestResult = ggmsOk ? "✅ GGMS: Connected"  : $"❌ GGMS: {ggmsMsg}";
         CrsTestResult  = crsOk  ? "✅ CRS: Connected"   : $"❌ CRS: {crsMsg}";
-
         IsTesting = false;
     }
 
@@ -257,59 +333,57 @@ public class SettingsViewModel : ViewModelBase
             await conn.OpenAsync();
             return (true, "OK");
         }
-        catch (MySqlException ex)
-        {
-            // Extract detailed MySQL error information
-            string detailedError = $"MySQL Error [{ex.Number}]: {ex.Message}";
-            
-            if (ex.InnerException != null)
-            {
-                detailedError += $"\nInner: {ex.InnerException.Message}";
-            }
-            
-            return (false, detailedError);
-        }
-        catch (Exception ex)
-        {
-            return (false, $"General Error: {ex.Message}");
-        }
+        catch (MySqlException ex) { return (false, $"MySQL Error [{ex.Number}]: {ex.Message}"); }
+        catch (Exception ex)      { return (false, $"General Error: {ex.Message}"); }
     }
 
-    // ── Load / Save ──────────────────────────────────────────────────────────
+    // ── Load / Save Settings ─────────────────────────────────────────────────
     private void LoadSettings()
     {
         try
         {
             var ggmsConfig = ConfigHelper.ReadConfig("GgmsConfig.txt");
-            var crsConfig = ConfigHelper.ReadConfig("CrsConfig.txt");
+            var crsConfig  = ConfigHelper.ReadConfig("CrsConfig.txt");
 
             if (crsConfig.ContainsKey("Server"))
             {
-                CrsServer   = crsConfig.GetValueOrDefault("Server", "localhost");
-                CrsPort     = crsConfig.GetValueOrDefault("Port", "3306");
+                CrsServer   = crsConfig.GetValueOrDefault("Server",   "localhost");
+                CrsPort     = crsConfig.GetValueOrDefault("Port",     "3306");
                 CrsDatabase = crsConfig.GetValueOrDefault("Database", "crs_db");
-                CrsUser     = crsConfig.GetValueOrDefault("User", "root");
+                CrsUser     = crsConfig.GetValueOrDefault("User",     "root");
                 CrsPassword = crsConfig.GetValueOrDefault("Password", "");
             }
 
-            // Figure out which preset we are currently on based on Ggms Server
             string currentServer = ggmsConfig.GetValueOrDefault("Server", "localhost");
-            
             if (currentServer == "194.59.164.58")
-            {
                 ApplyPreset("Remote");
-            }
-            else if (currentServer != "localhost" && currentServer.Contains("."))
-            {
-                LanIp = currentServer;
-                ApplyPreset("LAN");
-            }
+            else if (currentServer != "localhost" && currentServer.Contains('.'))
+            { LanIp = currentServer; ApplyPreset("LAN"); }
             else
-            {
                 ApplyPreset("Local");
-            }
         }
         catch { StatusMessage = "Error loading settings from txt config files."; }
+    }
+
+    private void LoadBackupSettings()
+    {
+        var s = BackupConfigHelper.Load();
+        BackupType      = s.BackupType;
+        ScheduleType    = s.ScheduleType;
+        ScheduleDay     = s.ScheduleDay;
+        NextRunTime     = s.NextRunTime;
+        BackupFolder    = s.BackupFolder;
+        MySqlDumpPath   = s.MySqlDumpPath;
+        IsBackupEnabled = s.IsEnabled;
+
+        // Start scheduler using the active connection string.
+        string connStr = DatabaseMode switch
+        {
+            "Remote" => RemoteConnectionString,
+            "LAN"    => LanConnectionString,
+            _        => LocalConnectionString
+        };
+        _scheduler.Start(s, connStr);
     }
 
     private async Task ExecuteSaveSettings(object? parameter)
@@ -322,11 +396,9 @@ public class SettingsViewModel : ViewModelBase
                 "LAN"    => LanConnectionString,
                 _        => LocalConnectionString
             };
-            
+
             IsTesting = true;
             StatusMessage = "Testing connection before saving...";
-
-            // Test before allowing save
             var (isOk, msg) = await TestConnectionAsync(ggmsConn);
             IsTesting = false;
 
@@ -334,14 +406,13 @@ public class SettingsViewModel : ViewModelBase
             {
                 System.Windows.MessageBox.Show(
                     $"Cannot save settings because the database is unreachable.\n\nError:\n{msg}",
-                    "Connection Failed", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    "Connection Failed",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 StatusMessage = "Save aborted. Database unreachable.";
                 return;
             }
 
-            // Parse the selected GGMS connection string to save its parts
-            string server= "localhost", port= "3306", db= "governance", user= "root", pass= "";
-            
+            string server = "localhost", port = "3306", db = "governance", user = "root", pass = "";
             foreach (var part in ggmsConn.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
                 var kv = part.Split('=', 2);
@@ -363,16 +434,58 @@ public class SettingsViewModel : ViewModelBase
             StatusMessage = "Settings successfully saved. Please restart the app.";
             System.Windows.MessageBox.Show(
                 "Settings saved successfully!\n\nPlease restart the application to apply the changes.",
-                "Restart Required", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                "Restart Required",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         }
         catch { StatusMessage = "Error saving settings to txt config files."; }
     }
 
-    // ── Backup ───────────────────────────────────────────────────────────────
-    private async Task ExecuteBackup(string type)
+    // ── Backup: Browse + Save ─────────────────────────────────────────────────
+    private void BrowseBackupFolder()
     {
-        StatusMessage = $"Starting {type} backup...";
-        string backupDir = Path.Combine(Directory.GetCurrentDirectory(), "Backups");
+        // WPF does not have a FolderBrowserDialog natively.
+        // We use a SaveFileDialog pointed at a folder as a well-known workaround.
+        var dlg = new SaveFileDialog
+        {
+            Title            = "Select Backup Destination Folder",
+            FileName         = "[Select this folder]",
+            Filter           = "Folder|*.none",
+            CheckFileExists  = false,
+            CheckPathExists  = true,
+            ValidateNames    = false
+        };
+        if (!string.IsNullOrWhiteSpace(BackupFolder) && Directory.Exists(BackupFolder))
+            dlg.InitialDirectory = BackupFolder;
+
+        if (dlg.ShowDialog() == true)
+            BackupFolder = Path.GetDirectoryName(dlg.FileName) ?? string.Empty;
+    }
+
+    private void BrowseMySqlDump()
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title  = "Select mysqldump.exe",
+            Filter = "mysqldump.exe|mysqldump.exe|All Executables|*.exe"
+        };
+        if (dlg.ShowDialog() == true)
+            MySqlDumpPath = dlg.FileName;
+    }
+
+    private void ExecuteSaveBackupSettings()
+    {
+        var settings = new BackupSettings
+        {
+            BackupType   = BackupType,
+            ScheduleType = ScheduleType,
+            ScheduleDay  = ScheduleDay,
+            NextRunTime  = NextRunTime,
+            BackupFolder = BackupFolder,
+            MySqlDumpPath = MySqlDumpPath,
+            IsEnabled    = IsBackupEnabled
+        };
+
+        BackupConfigHelper.Save(settings);
 
         string connStr = DatabaseMode switch
         {
@@ -381,18 +494,40 @@ public class SettingsViewModel : ViewModelBase
             _        => LocalConnectionString
         };
 
+        _scheduler.Start(settings, connStr);
+
+        BackupStatusMessage = IsBackupEnabled
+            ? $"✅ Auto backup enabled — next run: {NextRunTime:yyyy-MM-dd HH:mm}"
+            : "⏸ Auto backup disabled and settings saved.";
+    }
+
+    // ── Manual Backup ─────────────────────────────────────────────────────────
+    private async Task ExecuteManualBackup(string type)
+    {
+        BackupStatusMessage = $"Running {type} backup manually…";
+
+        string folder = string.IsNullOrWhiteSpace(BackupFolder)
+            ? Path.Combine(AppContext.BaseDirectory, "Backups")
+            : BackupFolder;
+
         _backupService.MySqlDumpPath = MySqlDumpPath;
+
+        string connStr = DatabaseMode switch
+        {
+            "Remote" => RemoteConnectionString,
+            "LAN"    => LanConnectionString,
+            _        => LocalConnectionString
+        };
 
         bool success = type switch
         {
-            "Full"          => await _backupService.CreateFullBackupAsync(connStr, backupDir),
-            "Differential"  => await _backupService.CreateDifferentialBackupAsync(connStr, backupDir),
-            "Incremental"   => await _backupService.CreateIncrementalBackupAsync(connStr, backupDir),
-            _               => false
+            "Differential" => await _backupService.CreateDifferentialBackupAsync(connStr, folder),
+            "Incremental"  => await _backupService.CreateIncrementalBackupAsync(connStr, folder),
+            _              => await _backupService.CreateFullBackupAsync(connStr, folder)
         };
 
-        StatusMessage = success
-            ? $"{type} backup completed successfully in ./Backups/"
-            : $"Failed to create {type} backup. Check if mysqldump is installed.";
+        BackupStatusMessage = success
+            ? $"✅ {type} backup saved to: {folder}"
+            : $"❌ {type} backup failed. Check backup_errors.log in {folder}";
     }
 }

@@ -24,12 +24,19 @@ public class AddProjectViewModel : ViewModelBase
     private int?   _selectedYear;
     private string _selectedOfficeCode = string.Empty;
     private int?   _resolvedYearlyBudgetId;
+    private string _voucherCode = string.Empty;
 
     // ── Public properties ────────────────────────────────────────────────────────
     public string ProjectId
     {
         get => _projectId;
         private set { _projectId = value; OnPropertyChanged(); }
+    }
+
+    public string VoucherCode
+    {
+        get => _voucherCode;
+        private set { _voucherCode = value; OnPropertyChanged(); }
     }
 
     public string ProjectName
@@ -101,10 +108,44 @@ public class AddProjectViewModel : ViewModelBase
         _ = InitializeAsync();
     }
 
-    // ── Initialization ───────────────────────────────────────────────────────────
     private async Task InitializeAsync()
     {
-        await Task.WhenAll(GenerateProjectIdAsync(), LoadYearsAsync());
+        await Task.WhenAll(GenerateProjectIdAsync(), LoadYearsAsync(), GenerateUniqueVoucherCodeAsync());
+    }
+
+    private async Task GenerateUniqueVoucherCodeAsync()
+    {
+        bool isUnique = false;
+        string code = string.Empty;
+        
+        while (!isUnique)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            code = new string(System.Linq.Enumerable.Repeat(chars, 10)
+                .Select(s => s[random.Next(s.Length)])
+                .ToArray());
+
+            try
+            {
+                const string sql = "SELECT COUNT(1) FROM project_details WHERE voucher_code = @code";
+                var result = await _db.ExecuteScalarAsync(sql, new MySqlParameter("@code", code));
+                if (result != null && int.TryParse(result.ToString(), out int count))
+                {
+                    if (count == 0) isUnique = true;
+                }
+                else
+                {
+                    isUnique = true; // Fallback to allow continuing if check fails
+                }
+            }
+            catch 
+            {
+                isUnique = true; // Safety fallback
+            }
+        }
+        
+        VoucherCode = code;
     }
 
     // ── Project-ID generation ────────────────────────────────────────────────────
@@ -249,9 +290,9 @@ public class AddProjectViewModel : ViewModelBase
 
         const string insertSql = @"
             INSERT INTO project_details
-                (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at)
+                (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at, voucher_code)
             VALUES
-                (@pid, @project, @desc, @code, @budget, @contact, @ybid, NOW(), NOW());";
+                (@pid, @project, @desc, @code, @budget, @contact, @ybid, NOW(), NOW(), @voucher);";
 
         try
         {
@@ -262,7 +303,8 @@ public class AddProjectViewModel : ViewModelBase
                 new MySqlParameter("@code",    SelectedOfficeCode),
                 new MySqlParameter("@budget",  (object?)budget         ?? DBNull.Value),
                 new MySqlParameter("@contact", (object?)ContactPerson  ?? DBNull.Value),
-                new MySqlParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value));
+                new MySqlParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
+                new MySqlParameter("@voucher", VoucherCode));
 
             MessageBox.Show($"Project \"{ProjectName}\" saved successfully!", "Success",
                 MessageBoxButton.OK, MessageBoxImage.Information);

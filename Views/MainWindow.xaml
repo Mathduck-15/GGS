@@ -79,7 +79,8 @@
                         <TextBlock Grid.Column="1" Text="{Binding SelectedNavItem.Name}" VerticalAlignment="Center" FontSize="20" Margin="16 0 0 0" />
                         
                         <StackPanel Grid.Column="2" Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountCircle" Width="32" Height="32" VerticalAlignment="Center"/>
+                            <Image Width="32" Height="32" VerticalAlignment="Center" 
+                            Source="{Binding ProfilePhotoSource}" />
                             <StackPanel VerticalAlignment="Center" Margin="8 0 16 0">
                                 <TextBlock Text="{Binding CurrentUserName}" FontSize="14" FontWeight="Bold"/>
                                 <TextBlock Text="{Binding CurrentUserRole}" FontSize="11" Foreground="LightGray"/>

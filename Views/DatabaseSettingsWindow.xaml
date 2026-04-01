@@ -44,12 +44,53 @@
                         <TextBlock Text="Quick Presets — fills both GGMS and CRS simultaneously:" FontSize="12"
                                    Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 10"/>
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
-                            <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 8 0" Width="100"/>
-                            <Button Content="🌐 NETWORK" Command="{Binding PresetNetworkCommand}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 8 0" Width="130"/>
-                            <Button Content="☁ REMOTE" Command="{Binding PresetRemoteCommand}"
-                                    Style="{StaticResource MaterialDesignOutlinedButton}" Width="130"/>
+                            <Grid Margin="0 0 8 0" Width="100">
+                                <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPreset}" Value="LOCAL">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+
+                            <Grid Margin="0 0 8 0" Width="130">
+                                <Button Content="🌐 NETWORK" Command="{Binding PresetNetworkCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                <Button Content="🌐 NETWORK" Command="{Binding PresetNetworkCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPreset}" Value="NETWORK">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+
+                            <Grid Width="130">
+                                <Button Content="☁ REMOTE" Command="{Binding PresetRemoteCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                <Button Content="☁ REMOTE" Command="{Binding PresetRemoteCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPreset}" Value="REMOTE">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
                         </StackPanel>
 
                         

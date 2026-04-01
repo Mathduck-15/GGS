@@ -8,6 +8,9 @@ using GoodGovernanceApp.Services;
 using GoodGovernanceApp.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
+using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -21,6 +24,9 @@ public class ProfileViewModel : ViewModelBase
     private string _confirmPassword = string.Empty;
     private string _role = string.Empty;
     private string _officeName = "None";
+    
+    private string? _profilePhotoPath;
+    private BitmapImage? _profilePhotoSource;
 
     public string Username
     {
@@ -59,7 +65,14 @@ public class ProfileViewModel : ViewModelBase
         set { _officeName = value; OnPropertyChanged(); }
     }
 
+    public BitmapImage? ProfilePhotoSource
+    {
+        get => _profilePhotoSource;
+        set { _profilePhotoSource = value; OnPropertyChanged(); }
+    }
+
     public ICommand SaveChangesCommand { get; }
+    public ICommand UploadPhotoCommand { get; }
 
     public ProfileViewModel()
     {
@@ -67,8 +80,47 @@ public class ProfileViewModel : ViewModelBase
         _sessionService = App.AppHost!.Services.GetRequiredService<SessionService>();
 
         SaveChangesCommand = new RelayCommand(async _ => await ExecuteSaveChanges(), _ => CanSave());
+        UploadPhotoCommand = new RelayCommand(_ => ExecuteUploadPhoto());
 
         LoadUserData();
+    }
+
+    private void ExecuteUploadPhoto()
+    {
+        var openFileDialog = new OpenFileDialog
+        {
+            Title = "Select Profile Photo",
+            Filter = "Image Files (*.jpg;*.jpeg;*.png;*.bmp)|*.jpg;*.jpeg;*.png;*.bmp|All files (*.*)|*.*"
+        };
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            try
+            {
+                // Create ProfilePhotos directory if it doesn't exist
+                string appDir = AppDomain.CurrentDomain.BaseDirectory;
+                string photosDir = Path.Combine(appDir, "ProfilePhotos");
+                if (!Directory.Exists(photosDir))
+                {
+                    Directory.CreateDirectory(photosDir);
+                }
+
+                // Copy selected file to the directory
+                string ext = Path.GetExtension(openFileDialog.FileName);
+                string newFileName = $"profile_{_sessionService.CurrentUser?.Id}_{DateTime.Now.Ticks}{ext}";
+                string destinationPath = Path.Combine(photosDir, newFileName);
+
+                File.Copy(openFileDialog.FileName, destinationPath, overwrite: true);
+
+                // Update properties
+                _profilePhotoPath = destinationPath;
+                ProfilePhotoSource = new BitmapImage(new Uri(destinationPath, UriKind.Absolute));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not upload photo: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     private void LoadUserData()
@@ -79,6 +131,21 @@ public class ProfileViewModel : ViewModelBase
             Username = currentUser.Name;
             Role = currentUser.Role;
             OfficeName = currentUser.Office?.Name ?? "General / Unassigned";
+            
+            if (!string.IsNullOrEmpty(currentUser.ProfilePhoto) && File.Exists(currentUser.ProfilePhoto))
+            {
+                _profilePhotoPath = currentUser.ProfilePhoto;
+                try
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad; // allows file to be released
+                    bitmap.UriSource = new Uri(currentUser.ProfilePhoto, UriKind.Absolute);
+                    bitmap.EndInit();
+                    ProfilePhotoSource = bitmap;
+                }
+                catch { /* Ignore image load errors */ }
+            }
         }
     }
 
@@ -109,11 +176,17 @@ public class ProfileViewModel : ViewModelBase
                 user.Password = PasswordHasher.HashPassword(NewPassword);
             }
 
+            if (_profilePhotoPath != null)
+            {
+                user.ProfilePhoto = _profilePhotoPath;
+            }
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
             // Update session
             sessionUser.Name = Username;
+            if (_profilePhotoPath != null) sessionUser.ProfilePhoto = _profilePhotoPath;
             
             NewPassword = string.Empty;
             ConfirmPassword = string.Empty;

@@ -47,4 +47,7 @@ public class Transaction
     [StringLength(20)]
     public string Status { get; set; } = "Active";
 
+    [Column("voucher_code")]
+    [StringLength(10)]
+    public string? VoucherCode { get; set; }
 }

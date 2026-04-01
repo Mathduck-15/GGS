@@ -134,6 +134,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
                     COALESCE(t.office_code, '')            AS OfficeCode,
                     COALESCE(t.project_code, '')           AS ProjectCode,
                     COALESCE(pd.project, '')               AS ProjectName,
+                    COALESCE(pd.voucher_code, '')          AS VoucherCode,
                     t.Amount,
                     t.Date,
                     COALESCE(t.Description, '')            AS Description,
@@ -157,6 +158,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
                     OfficeCode      = row["OfficeCode"].ToString()  ?? string.Empty,
                     ProjectCode     = row["ProjectCode"].ToString() ?? string.Empty,
                     ProjectName     = row["ProjectName"].ToString() ?? string.Empty,
+                    VoucherCode     = row["VoucherCode"].ToString() ?? string.Empty,
                     Amount          = Convert.ToDecimal(row["Amount"]),
                     Date            = row["Date"] == DBNull.Value
                                           ? DateTime.MinValue
@@ -214,6 +216,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
             bool hit = row.OfficeCode.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.ProjectName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.VoucherCode.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Description.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Status.Contains(q, StringComparison.OrdinalIgnoreCase)

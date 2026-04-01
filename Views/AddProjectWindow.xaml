@@ -46,6 +46,18 @@
                          materialDesign:HintAssist.Hint="Auto-generated"
                          Margin="0 0 0 16"/>
 
+                <!-- Voucher Code (read-only) -->
+                <TextBlock Text="Voucher Code" FontSize="11"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           Margin="0 0 0 2"/>
+                <TextBox Text="{Binding VoucherCode, Mode=OneWay}"
+                         IsReadOnly="True"
+                         FontFamily="Consolas"
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                         materialDesign:HintAssist.Hint="Auto-generated"
+                         Margin="0 0 0 16"/>
+
                 <!-- Project Name * -->
                 <TextBox materialDesign:HintAssist.Hint="Project Name *"
                          Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}"

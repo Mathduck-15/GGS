@@ -114,6 +114,11 @@
                                         Width="200"
                                         SortMemberPath="ProjectName"/>
 
+                    <DataGridTextColumn Header="Voucher Code"
+                                        Binding="{Binding VoucherCode}"
+                                        Width="110"
+                                        SortMemberPath="VoucherCode"/>
+
                     <DataGridTextColumn Header="Amount"
                                         Binding="{Binding Amount, StringFormat='{}{0:C}'}"
                                         Width="110"
