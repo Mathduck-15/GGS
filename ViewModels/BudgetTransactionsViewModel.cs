@@ -1,3 +1,8 @@
+using GoodGovernanceApp.Data;
+using GoodGovernanceApp.Models;
+using GoodGovernanceApp.Views;
+using Microsoft.Extensions.DependencyInjection;
+using MySqlConnector;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -5,10 +10,6 @@ using System.Data;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
-using GoodGovernanceApp.Data;
-using GoodGovernanceApp.Models;
-using Microsoft.Extensions.DependencyInjection;
-using MySqlConnector;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -73,6 +74,8 @@ public class BudgetTransactionsViewModel : ViewModelBase
         set { _filterOfficeCode = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
     }
 
+    public ICommand PrintVoucherCommand { get; }
+
     public string FilterProjectCode
     {
         get => _filterProjectCode;
@@ -116,6 +119,17 @@ public class BudgetTransactionsViewModel : ViewModelBase
         RefreshCommand     = new RelayCommand(async _ => await LoadTransactionsAsync());
         ClearFilterCommand = new RelayCommand(_ => ClearFilters());
 
+
+        PrintVoucherCommand = new RelayCommand(row =>
+        {
+            if (row is TransactionRow t)
+            {
+                var window = new VoucherPrintWindow(t);
+                window.ShowDialog();
+            }
+        });
+
+
         _ = LoadTransactionsAsync();
     }
 
@@ -123,29 +137,25 @@ public class BudgetTransactionsViewModel : ViewModelBase
     // Data Loading (ADO.NET)
     // =========================================================================
 
+
+
     private async Task LoadTransactionsAsync()
     {
         IsLoading = true;
         try
         {
             const string sql = @"
-                SELECT
-                    t.Id,
-                    COALESCE(t.office_code, '')            AS OfficeCode,
-                    COALESCE(t.project_code, '')           AS ProjectCode,
-                    COALESCE(pd.project, '')               AS ProjectName,
-                    COALESCE(pd.voucher_code, '')          AS VoucherCode,
-                    t.Amount,
-                    t.Date,
-                    COALESCE(t.Description, '')            AS Description,
-                    COALESCE(t.TransactionType, '')        AS TransactionType,
-                    COALESCE(t.Status, '')                 AS Status,
-                    t.CategoryId,
-                    t.UserId
+            SELECT
+                t.Id,
+                COALESCE(t.project_code, '')     AS ProjectCode,
+                COALESCE(pd.project, '')         AS ProjectName,
+                COALESCE(t.voucher_code, '')     AS VoucherCode,
+                t.Amount,
+                t.Date
                 FROM transactions t
                 LEFT JOIN project_details pd
-                       ON t.project_code = pd.project_details_id
-                ORDER BY t.Date DESC;";
+                ON t.project_code = pd.project_details_id
+            ORDER BY t.Date DESC;";
 
             DataTable dt = await _db.ExecuteQueryAsync(sql);
 
@@ -154,22 +164,14 @@ public class BudgetTransactionsViewModel : ViewModelBase
             {
                 rows.Add(new TransactionRow
                 {
-                    Id              = Convert.ToInt32(row["Id"]),
-                    OfficeCode      = row["OfficeCode"].ToString()  ?? string.Empty,
-                    ProjectCode     = row["ProjectCode"].ToString() ?? string.Empty,
-                    ProjectName     = row["ProjectName"].ToString() ?? string.Empty,
-                    VoucherCode     = row["VoucherCode"].ToString() ?? string.Empty,
-                    Amount          = Convert.ToDecimal(row["Amount"]),
-                    Date            = row["Date"] == DBNull.Value
-                                          ? DateTime.MinValue
-                                          : Convert.ToDateTime(row["Date"]),
-                    Description     = row["Description"].ToString()     ?? string.Empty,
-                    TransactionType = row["TransactionType"].ToString() ?? string.Empty,
-                    Status          = row["Status"].ToString()          ?? string.Empty,
-                    CategoryId      = Convert.ToInt32(row["CategoryId"]),
-                    UserId          = row["UserId"] == DBNull.Value
-                                          ? null
-                                          : Convert.ToInt64(row["UserId"])
+                    Id = Convert.ToInt32(row["Id"]),
+                    ProjectCode = row["ProjectCode"].ToString() ?? string.Empty,
+                    ProjectName = row["ProjectName"].ToString() ?? string.Empty,
+                    VoucherCode = row["VoucherCode"].ToString() ?? string.Empty,
+                    Amount = Convert.ToDecimal(row["Amount"]),
+                    Date = row["Date"] == DBNull.Value
+                       ? DateTime.MinValue
+                       : Convert.ToDateTime(row["Date"]),
                 });
             }
 
@@ -213,11 +215,8 @@ public class BudgetTransactionsViewModel : ViewModelBase
         if (!string.IsNullOrWhiteSpace(FilterFreeText))
         {
             string q = FilterFreeText;
-            bool hit = row.OfficeCode.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.ProjectName.Contains(q, StringComparison.OrdinalIgnoreCase)
+            bool hit = row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.VoucherCode.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.Description.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Status.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Amount.ToString().Contains(q, StringComparison.OrdinalIgnoreCase);

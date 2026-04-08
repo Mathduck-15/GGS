@@ -37,15 +37,7 @@
                 </materialDesign:Card>
 
                 <!-- Total Income Card -->
-                <materialDesign:Card Margin="8" Padding="16" UniformCornerRadius="8">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
-                            <materialDesign:PackIcon Kind="TrendingUp" Width="32" Height="32" Foreground="Green"/>
-                            <TextBlock Text="Total Income" FontSize="16" Foreground="{DynamicResource MaterialDesignBodyLight}" VerticalAlignment="Center" Margin="8 0 0 0"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding TotalIncome, StringFormat={}{0:C}}" FontSize="28" FontWeight="SemiBold" Foreground="Green"/>
-                    </StackPanel>
-                </materialDesign:Card>
+           
 
                 <!-- Total Expense Card -->
                 <materialDesign:Card Margin="8" Padding="16" UniformCornerRadius="8">
@@ -94,19 +86,7 @@
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
                             
-                            <!-- Income Bar -->
-                            <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
-                                <TextBlock Text="{Binding TotalIncome, StringFormat={}{0:C0}}" HorizontalAlignment="Center" Margin="0 0 0 4" FontSize="12" FontWeight="Bold" Foreground="Green"/>
-                                <Border Height="{Binding IncomeHeight}" Width="60" CornerRadius="4 4 0 0">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                                            <GradientStop Color="#FF4CAF50" Offset="0"/>
-                                            <GradientStop Color="#884CAF50" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                </Border>
-                                <TextBlock Text="Income" HorizontalAlignment="Center" Margin="0 8 0 0" FontWeight="SemiBold"/>
-                            </StackPanel>
+                           
 
                             <!-- Expense Bar -->
                             <StackPanel Grid.Column="1" VerticalAlignment="Bottom">

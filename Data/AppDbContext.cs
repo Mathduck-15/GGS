@@ -196,8 +196,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<YearlyBudget>().ToTable("yearlybudgets");
         modelBuilder.Entity<Budget>().HasOne(b => b.Category).WithMany(c => c.Budgets).HasForeignKey(b => b.CategoryId);
         modelBuilder.Entity<Budget>().HasOne(b => b.Office).WithMany().HasForeignKey(b => b.OfficeId).OnDelete(DeleteBehavior.SetNull);
-        modelBuilder.Entity<Transaction>().HasOne(t => t.Category).WithMany(c => c.Transactions).HasForeignKey(t => t.CategoryId);
-        modelBuilder.Entity<Transaction>().HasOne(t => t.User).WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.SetNull);
+     
         modelBuilder.Entity<SystemLog>().HasOne(l => l.User).WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<User>().HasOne(u => u.Office).WithMany(o => o.Users).HasForeignKey(u => u.OfficeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<DepartmentRole>().HasOne(dr => dr.Office).WithMany(o => o.Roles).HasForeignKey(dr => dr.OfficeId).OnDelete(DeleteBehavior.Cascade);

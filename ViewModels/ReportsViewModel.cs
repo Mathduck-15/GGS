@@ -137,11 +137,6 @@ public class ReportsViewModel : ViewModelBase
                     BudgetSummaries = new ObservableCollection<object>(summaries);
                     break;
 
-                case "Transaction History":
-                    var trans = await _context.Transactions.Include(t => t.Category).Include(t => t.User).OrderByDescending(t => t.Date).ToListAsync();
-                    TransactionHistory = new ObservableCollection<Transaction>(trans);
-                    break;
-
                 case "Parameters List":
                     var @params = await _context.Parameters.OrderBy(p => p.Name).ToListAsync();
                     ParametersList = new ObservableCollection<Parameter>(@params);

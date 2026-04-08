@@ -1,13 +1,14 @@
+using GoodGovernanceApp.Data;
+using GoodGovernanceApp.Models;
+using GoodGovernanceApp.Views;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
-using Microsoft.EntityFrameworkCore;
-using GoodGovernanceApp.Data;
-using GoodGovernanceApp.Models;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using GoodGovernanceApp.Views;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -160,6 +161,14 @@ public class DepartmentManagementViewModel : ViewModelBase
 
                 ProjectDetails.Add(project);
             }
+
+
+
+            System.Diagnostics.Debug.WriteLine($"=== spentByProject count: {spentByProject.Count} ===");
+            foreach (var kvp in spentByProject)
+                System.Diagnostics.Debug.WriteLine($"  {kvp.Key} => {kvp.Value}");
+
+
         }
     }
 
@@ -231,10 +240,39 @@ public class DepartmentManagementViewModel : ViewModelBase
     private async Task DeleteOfficeAsync()
     {
         if (SelectedDepartment == null) return;
-        
+
+        // Check if office has allocations
+        var hasAllocations = await _context.OfficeAllocations
+            .AnyAsync(a => a.Office!.OfficeCode == SelectedDepartment.OfficeCode);
+
+        if (hasAllocations)
+        {
+            var confirm = MessageBox.Show(
+                $"'{SelectedDepartment.Name}' has existing budget allocations.\nDeleting this department will also remove all its allocations.\n\nDo you want to proceed?",
+                "Warning - Budget Allocations Exist",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            // Delete allocations first
+            var allocations = await _context.OfficeAllocations
+                .Where(a => a.Office!.OfficeCode == SelectedDepartment.OfficeCode)
+                .ToListAsync();
+            _context.OfficeAllocations.RemoveRange(allocations);
+        }
+
+        // Then delete the office
+        var result = MessageBox.Show(
+            $"Are you sure you want to delete '{SelectedDepartment.Name}'?",
+            "Confirm Delete",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes) return;
+
         _context.Offices.Remove(SelectedDepartment);
         await _context.SaveChangesAsync();
-        
         Departments.Remove(SelectedDepartment);
         SelectedDepartment = null;
     }

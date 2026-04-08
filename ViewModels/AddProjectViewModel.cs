@@ -25,7 +25,7 @@ public class AddProjectViewModel : ViewModelBase
     private string _selectedOfficeCode = string.Empty;
     private int?   _resolvedYearlyBudgetId;
     private string _voucherCode = string.Empty;
-
+    public string transaction_type = "Expense";
     // ── Public properties ────────────────────────────────────────────────────────
     public string ProjectId
     {
@@ -294,6 +294,14 @@ public class AddProjectViewModel : ViewModelBase
             VALUES
                 (@pid, @project, @desc, @code, @budget, @contact, @ybid, NOW(), NOW(), @voucher);";
 
+        const string insertSqlTransaction = @"
+            INSERT INTO transactions
+                (project_code, Amount, voucher_code, date, transaction_type)
+            VALUES
+                (@pid, @budget,  @voucher, NOW(), @transtype);";
+
+
+
         try
         {
             await _db.ExecuteNonQueryAsync(insertSql,
@@ -305,6 +313,13 @@ public class AddProjectViewModel : ViewModelBase
                 new MySqlParameter("@contact", (object?)ContactPerson  ?? DBNull.Value),
                 new MySqlParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
                 new MySqlParameter("@voucher", VoucherCode));
+
+
+            await _db.ExecuteNonQueryAsync(insertSqlTransaction,
+               new MySqlParameter("@pid", ProjectId),
+               new MySqlParameter("@budget", (object?)budget ?? DBNull.Value),
+               new MySqlParameter("@voucher", VoucherCode),
+                new MySqlParameter("@transtype", transaction_type));
 
             MessageBox.Show($"Project \"{ProjectName}\" saved successfully!", "Success",
                 MessageBoxButton.OK, MessageBoxImage.Information);

@@ -49,7 +49,7 @@
                           Visibility="{Binding IsUserActivityLogVisible, Converter={StaticResource BoolToVis}}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp, StringFormat={}{0:G}}" />
-                        <DataGridTextColumn Header="User" Binding="{Binding User.Username}" />
+                        <DataGridTextColumn Header="User" Binding="{Binding User.Name}" />
                         <DataGridTextColumn Header="Action" Binding="{Binding Action}" />
                         <DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="*" />
                     </DataGrid.Columns>
@@ -74,7 +74,7 @@
                         <DataGridTextColumn Header="Type" Binding="{Binding TransactionType}" />
                         <DataGridTextColumn Header="Category" Binding="{Binding Category.Name}" />
                         <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}{0:C}}" />
-                        <DataGridTextColumn Header="User" Binding="{Binding User.Username}" />
+                        <DataGridTextColumn Header="User" Binding="{Binding User.Name}" />
                         <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>

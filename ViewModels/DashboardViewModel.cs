@@ -20,7 +20,9 @@ public class DashboardViewModel : ViewModelBase
     private decimal _totalIncome;
     private decimal _totalExpense;
     private int _activeUsersCount;
-    
+
+    int currentYear = DateTime.Now.Year;
+
     // Custom chart data
     private double _incomeHeight;
     private double _expenseHeight;
@@ -47,6 +49,8 @@ public class DashboardViewModel : ViewModelBase
         get => _totalBudget;
         set { _totalBudget = value; OnPropertyChanged(); }
     }
+
+
 
     public decimal TotalIncome
     {
@@ -106,11 +110,9 @@ public class DashboardViewModel : ViewModelBase
             TotalBudget = await _context.YearlyBudgets.SumAsync(b => b.TotalAmount);
             
             TotalIncome = await _context.Transactions
-                                        .Where(t => t.TransactionType == "Income")
                                         .SumAsync(t => t.Amount);
 
             TotalExpense = await _context.Transactions
-                                         .Where(t => t.TransactionType == "Expense")
                                          .SumAsync(t => t.Amount);
 
             ActiveUsersCount = await _context.Users
