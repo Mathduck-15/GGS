@@ -1,0 +1,222 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- =============================================
+         METRO TILE COLOR PALETTE
+         ============================================= -->
+    <SolidColorBrush x:Key="MetroTeal"         Color="#FF009688"/>
+    <SolidColorBrush x:Key="MetroBlue"         Color="#FF1565C0"/>
+    <SolidColorBrush x:Key="MetroIndigo"       Color="#FF3949AB"/>
+    <SolidColorBrush x:Key="MetroOrange"       Color="#FFE65100"/>
+    <SolidColorBrush x:Key="MetroGreen"        Color="#FF2E7D32"/>
+    <SolidColorBrush x:Key="MetroDarkTeal"     Color="#FF00695C"/>
+    <SolidColorBrush x:Key="MetroPurple"       Color="#FF6A1B9A"/>
+    <SolidColorBrush x:Key="MetroCrimson"      Color="#FFC62828"/>
+    <SolidColorBrush x:Key="MetroBluegrey"     Color="#FF37474F"/>
+    <SolidColorBrush x:Key="MetroCyan"         Color="#FF00838F"/>
+    <SolidColorBrush x:Key="MetroAmber"        Color="#FFE65100"/>
+    <SolidColorBrush x:Key="MetroSlate"        Color="#FF263238"/>
+
+    <!-- App Background / Header colors -->
+    <SolidColorBrush x:Key="AppHeaderBrush"    Color="#FF0D1B2A"/>
+    <SolidColorBrush x:Key="AppBgBrush"        Color="#FF111827"/>
+    <SolidColorBrush x:Key="AppBgLightBrush"   Color="#FF1A2332"/>
+    <SolidColorBrush x:Key="TileHoverOverlay"  Color="#22FFFFFF"/>
+
+    <!-- =============================================
+         METRO TILE BUTTON STYLE
+         ============================================= -->
+    <Style x:Key="MetroTileButton" TargetType="Button">
+        <Setter Property="Width"            Value="150"/>
+        <Setter Property="Height"           Value="140"/>
+        <Setter Property="Margin"           Value="10"/>
+        <Setter Property="Cursor"           Value="Hand"/>
+        <Setter Property="BorderThickness"  Value="0"/>
+        <Setter Property="FontFamily"       Value="Segoe UI"/>
+        <Setter Property="Foreground"       Value="White"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <!-- Tile Body -->
+                        <Border x:Name="TileBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform x:Name="TileScale" ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <Border.Effect>
+                                <DropShadowEffect x:Name="TileShadow"
+                                                  Color="#000000"
+                                                  Opacity="0.35"
+                                                  BlurRadius="12"
+                                                  ShadowDepth="3"
+                                                  Direction="270"/>
+                            </Border.Effect>
+
+                            <!-- Hover overlay -->
+                            <Border x:Name="HoverOverlay"
+                                    CornerRadius="4"
+                                    Background="Transparent">
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                        </Border>
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <!-- Mouse Over -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="TileScale"
+                                                         Storyboard.TargetProperty="ScaleX"
+                                                         To="1.06" Duration="0:0:0.18"
+                                                         EasingFunction="{StaticResource CubicEaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetName="TileScale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="1.06" Duration="0:0:0.18"
+                                                         EasingFunction="{StaticResource CubicEaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                         Storyboard.TargetProperty="BlurRadius"
+                                                         To="24" Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.5" Duration="0:0:0.18"/>
+                                        <ColorAnimation Storyboard.TargetName="HoverOverlay"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        To="#28FFFFFF" Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="TileScale"
+                                                         Storyboard.TargetProperty="ScaleX"
+                                                         To="1.0" Duration="0:0:0.18"
+                                                         EasingFunction="{StaticResource CubicEaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetName="TileScale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="1.0" Duration="0:0:0.18"
+                                                         EasingFunction="{StaticResource CubicEaseOut}"/>
+                                        <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                         Storyboard.TargetProperty="BlurRadius"
+                                                         To="12" Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetName="TileShadow"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.35" Duration="0:0:0.18"/>
+                                        <ColorAnimation Storyboard.TargetName="HoverOverlay"
+                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                        To="#00FFFFFF" Duration="0:0:0.18"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+
+                        <!-- Pressed -->
+                        <Trigger Property="IsPressed" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="TileScale"
+                                                         Storyboard.TargetProperty="ScaleX"
+                                                         To="0.96" Duration="0:0:0.08"/>
+                                        <DoubleAnimation Storyboard.TargetName="TileScale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="0.96" Duration="0:0:0.08"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Easing Functions -->
+    <CubicEase x:Key="CubicEaseOut" EasingMode="EaseOut"/>
+    <CubicEase x:Key="CubicEaseInOut" EasingMode="EaseInOut"/>
+
+    <!-- =============================================
+         HEADER BUTTON STYLE (Flat icon button)
+         ============================================= -->
+    <Style x:Key="HeaderIconButton" TargetType="Button">
+        <Setter Property="Background"       Value="Transparent"/>
+        <Setter Property="BorderThickness"  Value="0"/>
+        <Setter Property="Foreground"       Value="White"/>
+        <Setter Property="Cursor"           Value="Hand"/>
+        <Setter Property="Padding"          Value="6"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="20"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#22FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#44FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =============================================
+         BACK BUTTON STYLE
+         ============================================= -->
+    <Style x:Key="MetroBackButton" TargetType="Button">
+        <Setter Property="Background"       Value="Transparent"/>
+        <Setter Property="BorderThickness"  Value="0"/>
+        <Setter Property="Foreground"       Value="White"/>
+        <Setter Property="Cursor"           Value="Hand"/>
+        <Setter Property="Padding"          Value="10 6"/>
+        <Setter Property="FontFamily"       Value="Segoe UI"/>
+        <Setter Property="FontSize"         Value="13"/>
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#33FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#55FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =============================================
+         DB STATUS INDICATOR STYLE
+         ============================================= -->
+    <Style x:Key="DbStatusDot" TargetType="Ellipse">
+        <Setter Property="Width"  Value="8"/>
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Fill"   Value="#FF4CAF50"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0 0 5 0"/>
+    </Style>
+
+</ResourceDictionary>

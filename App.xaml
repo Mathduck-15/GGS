@@ -7,14 +7,21 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="DeepPurple" SecondaryColor="Lime" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <!-- Material Design theme -->
+                <materialDesign:BundledTheme BaseTheme="Dark" PrimaryColor="Teal" SecondaryColor="Cyan"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml"/>
+                <!-- Metro Tile styles -->
+                <ResourceDictionary Source="pack://application:,,,/GoodGovernanceApp;component/Views/Styles/MetroTileStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <localConverters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-            <localConverters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
-            <localConverters:InvertBooleanConverter x:Key="InvertBooleanConverter" />
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <!-- ── Value Converters ─────────────────────────────────── -->
+            <localConverters:NullToVisibilityConverter          x:Key="NullToVisibilityConverter"/>
+            <localConverters:StringToVisibilityConverter        x:Key="StringToVisibilityConverter"/>
+            <localConverters:InvertBooleanConverter             x:Key="InvertBooleanConverter"/>
+            <localConverters:BoolToVisibilityConverter          x:Key="BooleanToVisibilityConverter"/>
+            <localConverters:InverseBoolToVisibilityConverter   x:Key="InverseBoolToVisibilityConverter"/>
+            <localConverters:StringToSolidColorBrushConverter   x:Key="StringToSolidColorBrushConverter"/>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

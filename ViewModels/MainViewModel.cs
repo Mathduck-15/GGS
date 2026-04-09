@@ -5,46 +5,86 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
 namespace GoodGovernanceApp.ViewModels;
 
+/// <summary>
+/// Represents a Metro tile navigation item.
+/// </summary>
 public class NavigationItem
 {
-    public string Name { get; set; } = string.Empty;
-    public string Icon { get; set; } = "Apps"; // Default material design icon
+    public string Name      { get; set; } = string.Empty;
+    public string Icon      { get; set; } = "Apps";
     public string ViewToken { get; set; } = string.Empty;
+
+    /// <summary>Hex color string for the tile background, e.g. "#FF009688"</summary>
+    public string TileColor { get; set; } = "#FF009688";
+
+    /// <summary>Optional tile group label shown in the dashboard.</summary>
+    public string Group     { get; set; } = string.Empty;
 }
 
 public class MainViewModel : ViewModelBase
 {
+    // ── services ─────────────────────────────────────────────────────────────
     private readonly Services.SessionService _sessionService;
-    private NavigationItem _selectedNavItem = null!;
-    private object _currentView = null!;
+    private readonly Timer _clockTimer;
 
+    // ── backing fields ────────────────────────────────────────────────────────
+    private NavigationItem _selectedNavItem = null!;
+    private object         _currentView     = null!;
+    private bool           _isShowingDashboard = true;
+    private string         _governanceName  = "Good Governance Management System";
+    private string         _currentDate     = string.Empty;
+    private bool           _isDatabaseConnected = true;
+    private string?        _profilePhotoPath;
+    private BitmapImage?   _profilePhotoSource;
+    private string         _currentSectionTitle = "Dashboard";
+
+    // ── public properties ─────────────────────────────────────────────────────
     public string CurrentUserName => _sessionService.CurrentUser?.Name ?? "Guest";
     public string CurrentUserRole => _sessionService.CurrentUser?.Role ?? "None";
 
-    public ObservableCollection<NavigationItem> NavigationItems { get; }
+    public string CurrentDate
+    {
+        get => _currentDate;
+        private set { _currentDate = value; OnPropertyChanged(); }
+    }
 
+    public bool IsDatabaseConnected
+    {
+        get => _isDatabaseConnected;
+        set { _isDatabaseConnected = value; OnPropertyChanged(); }
+    }
 
-    private string _governanceName = "Good Governance Management System";
+    public bool IsShowingDashboard
+    {
+        get => _isShowingDashboard;
+        set
+        {
+            _isShowingDashboard = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsShowingView));
+        }
+    }
 
+    /// <summary>Inverse of IsShowingDashboard – used in XAML visibility bindings.</summary>
+    public bool IsShowingView => !_isShowingDashboard;
 
-    private string? _profilePhotoPath;
-    private BitmapImage? _profilePhotoSource;
-
+    public string CurrentSectionTitle
+    {
+        get => _currentSectionTitle;
+        set { _currentSectionTitle = value; OnPropertyChanged(); }
+    }
 
     public BitmapImage? ProfilePhotoSource
     {
         get => _profilePhotoSource;
-        set
-        {
-            _profilePhotoSource = value;
-            OnPropertyChanged();
-        }
+        set { _profilePhotoSource = value; OnPropertyChanged(); }
     }
 
     public string GovernanceName
@@ -60,44 +100,65 @@ public class MainViewModel : ViewModelBase
         {
             _selectedNavItem = value;
             OnPropertyChanged();
-            NavigateTo(value?.ViewToken);
         }
     }
 
     public object CurrentView
     {
         get => _currentView;
-        set
-        {
-            _currentView = value;
-            OnPropertyChanged();
-        }
+        set { _currentView = value; OnPropertyChanged(); }
     }
 
-    public ICommand LogoutCommand { get; }
-    public ICommand OpenAppProfileCommand { get; }
+    public ObservableCollection<NavigationItem> NavigationItems { get; }
 
+    // ── commands ──────────────────────────────────────────────────────────────
+    public ICommand LogoutCommand        { get; }
+    public ICommand OpenAppProfileCommand{ get; }
+    public ICommand NavigateTileCommand  { get; }
+    public ICommand ShowDashboardCommand { get; }
+
+    // ── constructor ───────────────────────────────────────────────────────────
     public MainViewModel()
     {
         _sessionService = App.AppHost!.Services.GetRequiredService<Services.SessionService>();
+
+        // Live clock
+        CurrentDate = DateTime.Now.ToString("dddd, MMMM dd, yyyy  •  hh:mm tt");
+        _clockTimer = new Timer(_ =>
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+                CurrentDate = DateTime.Now.ToString("dddd, MMMM dd, yyyy  •  hh:mm tt"));
+        }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
+
+        // Commands
         OpenAppProfileCommand = new RelayCommand(ExecuteOpenAppProfile);
+        LogoutCommand         = new RelayCommand(ExecuteLogout);
+        NavigateTileCommand   = new RelayCommand(ExecuteNavigateTile);
+        ShowDashboardCommand  = new RelayCommand(_ =>
+        {
+            IsShowingDashboard   = true;
+            CurrentSectionTitle  = "Dashboard";
+            CurrentView          = null!;
+        });
+
         LoadApplicationProfileAsync();
         LoadProfilePhotoAsync();
 
+        // ── Build navigation items with Metro tile colors ──────────────────
         var allItems = new List<NavigationItem>
         {
-            new NavigationItem { Name = "Dashboard", Icon = "ViewDashboard", ViewToken = "Dashboard" },
-            new NavigationItem { Name = "My Profile", Icon = "AccountEdit", ViewToken = "Profile" },
-            new NavigationItem { Name = "Users", Icon = "AccountGroup", ViewToken = "Users" },
-            new NavigationItem { Name = "Parameters", Icon = "CogBox", ViewToken = "Parameters" },
-            new NavigationItem { Name = "Transactions", Icon = "Finance", ViewToken = "Transactions" },
-            new NavigationItem { Name = "Budget Allocation", Icon = "ScaleBalance", ViewToken = "BudgetAllocation" },
-            new NavigationItem { Name = "CRS Beneficiaries", Icon = "AccountMultiple", ViewToken = "CrsBeneficiary" },
-            new NavigationItem { Name = "Reports", Icon = "FileChart", ViewToken = "Reports" },
-            new NavigationItem { Name = "Departments", Icon = "OfficeBuilding", ViewToken = "Departments" },
-            new NavigationItem { Name = "File Center", Icon = "CloudUpload", ViewToken = "FileUpload" },
-            new NavigationItem { Name = "Evaluation Center", Icon = "FileCertificate", ViewToken = "Evaluation" },
-            new NavigationItem { Name = "Settings & Backups", Icon = "DatabaseSettings", ViewToken = "Settings" }
+            new() { Name="Dashboard",        Icon="ViewDashboard",    ViewToken="Dashboard",      TileColor="#FF00796B", Group="Main"       },
+            new() { Name="My Profile",       Icon="AccountEdit",      ViewToken="Profile",        TileColor="#FF1565C0", Group="Main"       },
+            new() { Name="Users",            Icon="AccountGroup",     ViewToken="Users",          TileColor="#FF3949AB", Group="Management" },
+            new() { Name="Parameters",       Icon="CogBox",           ViewToken="Parameters",     TileColor="#FFE65100", Group="System"     },
+            new() { Name="Transactions",     Icon="Finance",          ViewToken="Transactions",   TileColor="#FF2E7D32", Group="Finance"    },
+            new() { Name="Budget Allocation",Icon="ScaleBalance",     ViewToken="BudgetAllocation",TileColor="#FF00695C",Group="Finance"   },
+            new() { Name="CRS Beneficiaries",Icon="AccountMultiple",  ViewToken="CrsBeneficiary", TileColor="#FF6A1B9A", Group="Management" },
+            new() { Name="Reports",          Icon="FileChart",        ViewToken="Reports",        TileColor="#FFC62828", Group="Reports"    },
+            new() { Name="Departments",      Icon="OfficeBuilding",   ViewToken="Departments",    TileColor="#FF37474F", Group="Management" },
+            new() { Name="File Center",      Icon="CloudUpload",      ViewToken="FileUpload",     TileColor="#FF00838F", Group="System"     },
+            new() { Name="Evaluation Center",Icon="FileCertificate",  ViewToken="Evaluation",     TileColor="#FF827717", Group="Reports"    },
+            new() { Name="Settings & Backups",Icon="DatabaseSettings",ViewToken="Settings",       TileColor="#FF263238", Group="System"     },
         };
 
         var role = _sessionService.CurrentUser?.Role;
@@ -109,76 +170,48 @@ public class MainViewModel : ViewModelBase
         }
         else if (role == "Evaluator")
         {
-            filtered = allItems.Where(i => i.ViewToken == "Dashboard" || i.ViewToken == "Profile" || i.ViewToken == "Evaluation");
+            filtered = allItems.Where(i => i.ViewToken is "Dashboard" or "Profile" or "Evaluation");
         }
         else // Standard User
         {
-            filtered = allItems.Where(i => i.ViewToken == "Dashboard" || i.ViewToken == "Profile" || i.ViewToken == "Transactions" || i.ViewToken == "FileUpload");
+            filtered = allItems.Where(i => i.ViewToken is "Dashboard" or "Profile" or "Transactions" or "FileUpload");
         }
 
         NavigationItems = new ObservableCollection<NavigationItem>(filtered);
 
-        LogoutCommand = new RelayCommand(ExecuteLogout);
-
-        // Set default view
-        if (NavigationItems.Any())
-            SelectedNavItem = NavigationItems[0];
+        // Start on the dashboard tile grid
+        IsShowingDashboard  = true;
+        CurrentSectionTitle = "Dashboard";
     }
 
-    private async System.Threading.Tasks.Task LoadProfilePhotoAsync()
+    // ── tile navigation ───────────────────────────────────────────────────────
+    private void ExecuteNavigateTile(object? parameter)
     {
-        try
-        {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
-            string query = $"SELECT profile_photo FROM users WHERE Id = {_sessionService.CurrentUser?.Id};";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+        if (parameter is not string viewToken) return;
 
-            if (dataTable.Rows.Count > 0)
-            {
-                var path = dataTable.Rows[0]["profile_photo"]?.ToString();
-                if (!string.IsNullOrEmpty(path) && File.Exists(path))
-                {
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad; // allows file to be released so you can upload a new one
-                    bitmap.UriSource = new Uri(path, UriKind.Absolute);
-                    bitmap.EndInit();
-                    ProfilePhotoSource = bitmap;
-                }
-            }
-        }
-        catch (Exception ex)
+        // Dashboard tile → return to tile grid
+        if (viewToken == "Dashboard")
         {
-            System.Windows.MessageBox.Show($"Could not load profile photo: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            IsShowingDashboard  = true;
+            CurrentSectionTitle = "Dashboard";
+            CurrentView         = null!;
+            return;
         }
+
+        NavigateTo(viewToken);
+        CurrentSectionTitle = NavigationItems.FirstOrDefault(i => i.ViewToken == viewToken)?.Name ?? viewToken;
+        IsShowingDashboard  = false;
     }
 
-    private async System.Threading.Tasks.Task LoadApplicationProfileAsync()
-    {
-        try
-        {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
-            string query = "SELECT GoveName, Address FROM goveprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
-            {
-                var row = dataTable.Rows[0];
-
-                string goveName = row["GoveName"]?.ToString() ?? "";
-                if (!string.IsNullOrWhiteSpace(goveName))
-                    GovernanceName = goveName;
-            }
-        }
-        catch { }
-    }
-
+    // ── public navigation (called by other ViewModels too) ────────────────────
     public void NavigateTo(string? viewToken, object? parameter = null)
     {
         switch (viewToken)
         {
             case "Dashboard":
-                CurrentView = new Views.DashboardView();
+                IsShowingDashboard  = true;
+                CurrentSectionTitle = "Dashboard";
+                CurrentView         = null!;
                 break;
             case "Profile":
                 CurrentView = new Views.ProfileView();
@@ -198,9 +231,7 @@ public class MainViewModel : ViewModelBase
             case "BudgetAllocation":
                 var allocationView = new Views.BudgetAllocationView();
                 if (parameter is string officeCode && allocationView.DataContext is BudgetAllocationViewModel vm)
-                {
                     vm.ActivateForOffice(officeCode);
-                }
                 CurrentView = allocationView;
                 break;
             case "CrsBeneficiary":
@@ -219,33 +250,83 @@ public class MainViewModel : ViewModelBase
                 CurrentView = new Views.EvaluationView();
                 break;
             default:
-                // Show a placeholder or dashboard text block
-                CurrentView = new System.Windows.Controls.TextBlock 
-                { 
-                    Text = viewToken + " View Placeholder", 
-                    FontSize = 24, 
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center, 
-                    VerticalAlignment = System.Windows.VerticalAlignment.Center 
+                CurrentView = new System.Windows.Controls.TextBlock
+                {
+                    Text = viewToken + " – coming soon",
+                    FontSize = 24,
+                    Foreground = System.Windows.Media.Brushes.White,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment   = VerticalAlignment.Center
                 };
                 break;
         }
     }
 
+    // ── profile photo ─────────────────────────────────────────────────────────
+    private async System.Threading.Tasks.Task LoadProfilePhotoAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            string query = $"SELECT profile_photo FROM users WHERE Id = {_sessionService.CurrentUser?.Id};";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var path = dataTable.Rows[0]["profile_photo"]?.ToString();
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.UriSource   = new Uri(path, UriKind.Absolute);
+                    bitmap.EndInit();
+                    ProfilePhotoSource = bitmap;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"Could not load profile photo: {ex.Message}", "Error",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    // ── governance name ───────────────────────────────────────────────────────
+    private async System.Threading.Tasks.Task LoadApplicationProfileAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            string query = "SELECT GoveName, Address FROM goveprofile LIMIT 1;";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var goveName = dataTable.Rows[0]["GoveName"]?.ToString() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(goveName))
+                    GovernanceName = goveName;
+            }
+        }
+        catch { }
+    }
+
+    // ── logout ────────────────────────────────────────────────────────────────
     private void ExecuteLogout(object? parameter)
     {
+        _clockTimer.Dispose();
         _sessionService.ClearSession();
-        
+
         var loginWindow = App.AppHost!.Services.GetService(typeof(Views.LoginWindow)) as Views.LoginWindow;
         loginWindow!.Show();
 
-        // The CommandParameter binding often fails inside a DrawerHost across Visual Trees in WPF.
-        // We find the main window safely using Application.Current to close it.
-        var window = parameter as System.Windows.Window 
-                     ?? System.Windows.Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault();
-        
+        var window = parameter as System.Windows.Window
+                     ?? Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault();
         window?.Close();
     }
 
+    // ── app profile window ────────────────────────────────────────────────────
     private void ExecuteOpenAppProfile(object? parameter)
     {
         var window = new Views.ApplicationProfileWindow();
