@@ -107,10 +107,10 @@
                         </Grid>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding CurrentUserName}"
+                        <TextBlock Text="{Binding CurrentUserName, Mode=OneWay}"
                                    FontSize="13" FontWeight="SemiBold"
                                    Foreground="White"/>
-                        <TextBlock Text="{Binding CurrentUserRole}"
+                        <TextBlock Text="{Binding CurrentUserRole, Mode=OneWay}"
                                    FontSize="10" Foreground="#77FFFFFF"/>
                     </StackPanel>
                 </StackPanel>
@@ -194,7 +194,7 @@
                         <TextBlock FontSize="28" FontWeight="Light"
                                    Foreground="White" LineHeight="38">
                             <Run Text="Welcome back, "/>
-                            <Run Text="{Binding CurrentUserName}"
+                            <Run Text="{Binding CurrentUserName, Mode=OneWay}"
                                  FontWeight="Bold" Foreground="#FF4DD0E1"/>
                         </TextBlock>
                         <TextBlock Text="Select a module below to get started."

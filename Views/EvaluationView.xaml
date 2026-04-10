@@ -35,7 +35,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Pending Reviews" FontSize="22" FontWeight="Bold" 
+                    <TextBlock Grid.Row="0" Text="Pending Reviews" FontSize="22" FontWeight="Bold"  Foreground="#88FFFFFF" 
                Margin="0 0 0 0"/>
 
                     <DataGrid Grid.Row="2" ItemsSource="{Binding PendingFiles}" SelectedItem="{Binding SelectedFile}" 
@@ -91,7 +91,7 @@
             <!-- Evaluation Form -->
             <materialDesign:Card Grid.Column="1" Margin="12 0 0 0" VerticalAlignment="Top">
                 <StackPanel Margin="16">
-                    <TextBlock Text="Evaluation Form" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"/>
+                    <TextBlock Text="Evaluation Form" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#88FFFFFF"/>
 
                     <TextBlock Text="Evaluating:" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                     <TextBlock Text="{Binding SelectedFile.FileName}" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 24"/>
@@ -112,7 +112,7 @@
 
                     <Separator Margin="0 0 0 24"/>
 
-                    <TextBlock Text="Score (0 - 100)" Margin="0 0 0 8"/>
+                    <TextBlock Text="Score (0 - 100)" Margin="0 0 0 8"  Foreground="#88FFFFFF"/>
                     <Slider Minimum="0" Maximum="100" Value="{Binding Score}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0 0 0 24"/>
                     <TextBlock Text="{Binding Score}" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Margin="0 -20 0 16"/>
 
@@ -120,6 +120,7 @@
                              Text="{Binding Comments}" 
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" 
                              Height="120" TextWrapping="Wrap" AcceptsReturn="True"
+                              Foreground="#88FFFFFF"
                              Margin="0 0 0 24"/>
 
                     <Button Content="SUBMIT SCORE" Command="{Binding SubmitEvaluationCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>

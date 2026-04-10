@@ -35,7 +35,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="Departments" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
+                    <TextBlock Text="Departments" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"  Foreground="#88FFFFFF"/>
 
                     <ListBox Grid.Row="1" ItemsSource="{Binding Departments}" SelectedItem="{Binding SelectedDepartment}" Margin="0 0 0 12">
                         <ListBox.ItemTemplate>
@@ -62,7 +62,7 @@
                                      materialDesign:HintAssist.Hint="Office Code (auto-generated)"
                                      IsReadOnly="True"
                                      FontFamily="Consolas"
-                                     Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                     Foreground="#88FFFFFF"
                                      FontWeight="Bold"/>
                             <Button Grid.Column="1" Content="↻" ToolTip="Generate new code"
                                     Command="{Binding RegenerateCodeCommand}"
@@ -70,8 +70,8 @@
                                     Margin="4 0 0 0"/>
                         </Grid>
 
-                        <TextBox materialDesign:HintAssist.Hint="New Department Name" Text="{Binding NewDepartmentName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 8"/>
-                        <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding NewDepartmentDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"/>
+                        <TextBox materialDesign:HintAssist.Hint="New Department Name" Text="{Binding NewDepartmentName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 8"  Foreground="#88FFFFFF"/>
+                        <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding NewDepartmentDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"  Foreground="#88FFFFFF"/>
                         <Button Content="Add Department" Command="{Binding AddDepartmentCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
                     </StackPanel>
                 </Grid>

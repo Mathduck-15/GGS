@@ -25,7 +25,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Annual Budget Allocation" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+        <TextBlock Grid.Row="0" Text="Annual Budget Allocation" FontSize="28" FontWeight="Light" Margin="0 0 0 24" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -37,18 +37,21 @@
             <StackPanel Grid.Column="0" Margin="0 0 12 0">
                 <materialDesign:Card Padding="16" Margin="0 0 0 16">
                     <StackPanel>
-                        <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14"/>
+                        <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="2*"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Year"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
                                      Text="{Binding NewBudgetYear}" Margin="0 0 8 12"/>
                             <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Total Amount"
+                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
                                      Text="{Binding NewBudgetAmount}" Margin="0 0 0 12"/>
                         </Grid>
                         <TextBox materialDesign:HintAssist.Hint="Description"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
                                  Text="{Binding NewBudgetDescription}" Margin="0 0 0 14"/>
                         <Button Content="Set Yearly Budget" Command="{Binding AddYearlyBudgetCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"/>
@@ -57,7 +60,7 @@
 
                 <materialDesign:Card Padding="16">
                     <StackPanel>
-                        <TextBlock Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10"/>
+                        <TextBlock Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                         <ListBox ItemsSource="{Binding YearlyBudgets}" SelectedItem="{Binding SelectedYearlyBudget}" MinHeight="150">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -97,7 +100,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Budget Distribution" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
+                        <TextBlock Text="Budget Distribution" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
 
                         <!-- Summary Stats -->
                         <Grid Grid.Row="1" Margin="0 0 0 16">
@@ -109,6 +112,7 @@
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Total Budget" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
                                 <TextBlock Text="{Binding SelectedYearlyBudget.TotalAmount, StringFormat=₱{0:N2}}"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
                                            FontSize="20" FontWeight="SemiBold"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
@@ -120,6 +124,7 @@
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Allocated %" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
                                 <TextBlock Text="{Binding AllocationPercent, StringFormat={}{0:N1}%}"
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
                                            FontSize="20" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Grid>
@@ -166,52 +171,7 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <materialDesign:Card Grid.Row="1" Padding="16"
-                                     Visibility="{Binding SelectedOffice, Converter={StaticResource NullToVisibilityConverter}}">
-                    <StackPanel>
-                        <!-- Project Fund Summary DataGrid -->
-                        <TextBlock Text="Project Fund Summary" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 10"/>
-                        <DataGrid ItemsSource="{Binding OfficeProjects}"
-                                  AutoGenerateColumns="False"
-                                  CanUserAddRows="False"
-                                  IsReadOnly="True"
-                                  MaxHeight="250"
-                                  Margin="0 0 0 24">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Project ID"   Binding="{Binding ProjectDetailsID}" Width="120"/>
-                                <DataGridTextColumn Header="Voucher Code" Binding="{Binding VoucherCode}"      Width="110"/>
-                                <DataGridTextColumn Header="Project"      Binding="{Binding Name}"             Width="*"/>
-                                <DataGridTextColumn Header="Total Budget" Binding="{Binding Budget, StringFormat=₱\{0:N2\}}" Width="120"/>
-                                <DataGridTextColumn Header="Spent"        Binding="{Binding Spent, StringFormat=₱\{0:N2\}}"  Width="120"/>
-                                <DataGridTextColumn Header="Remaining"    Binding="{Binding Remaining, StringFormat=₱\{0:N2\}}" Width="120">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{Binding Remaining, Converter={StaticResource RemainingFundColorConverter}}"/>
-                                            <Setter Property="FontWeight" Value="SemiBold"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-
-                        <TextBlock Text="{Binding TransactionPanelHeader}" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 10"/>
-                    
-                        <TextBlock Text="No transactions recorded yet for this office."
-                                   FontStyle="Italic" Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                   Margin="0 8 0 0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding OfficeTransactions.Count}" Value="0">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
-                </materialDesign:Card>
+                
             </Grid>
         </Grid>
     </Grid>

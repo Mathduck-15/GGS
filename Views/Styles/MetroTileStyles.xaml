@@ -27,8 +27,8 @@
          METRO TILE BUTTON STYLE
          ============================================= -->
     <Style x:Key="MetroTileButton" TargetType="Button">
-        <Setter Property="Width"            Value="150"/>
-        <Setter Property="Height"           Value="140"/>
+        <Setter Property="Width"            Value="200"/>
+        <Setter Property="Height"           Value="200"/>
         <Setter Property="Margin"           Value="10"/>
         <Setter Property="Cursor"           Value="Hand"/>
         <Setter Property="BorderThickness"  Value="0"/>

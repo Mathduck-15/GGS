@@ -24,9 +24,10 @@
 
             <!-- Header -->
             <StackPanel Grid.Row="0" Margin="0 0 0 24">
-                <TextBlock Text="System Settings" FontSize="28" FontWeight="Light"/>
+                <TextBlock Text="System Settings" FontSize="28" FontWeight="Light"  Foreground="#88FFFFFF"/>
                 <TextBlock Text="Configure database connections and backup options" 
-                           FontSize="13" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 4 0 0"/>
+                           
+                           FontSize="13" Foreground="#88FFFFFF" Margin="0 4 0 0"/>
             </StackPanel>
 
             <!-- GGMS Database Connection -->
@@ -35,8 +36,9 @@
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
                                                  VerticalAlignment="Center" Margin="0 0 8 0"
-                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                        <TextBlock Text="GGMS Database Connection" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                  Foreground="#88FFFFFF"
+                                                 />
+                        <TextBlock Text="GGMS Database Connection" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#88FFFFFF"/>
                     </StackPanel>
 
                     <!-- Preset Buttons -->
@@ -94,22 +96,26 @@
 
                     <!-- LAN IP Field -->
                     <TextBox materialDesign:HintAssist.Hint="LAN / Network IP (editable — changes per demo)"
-                             Text="{Binding LanIp, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding LanIp, UpdateSourceTrigger=PropertyChanged}" 
+                              Foreground="#88FFFFFF"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="0 0 0 16"/>
 
                     <TextBox materialDesign:HintAssist.Hint="Local Connection String"
                              Text="{Binding LocalConnectionString}"
+                              Foreground="#88FFFFFF"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="0 0 0 12"/>
 
                     <TextBox materialDesign:HintAssist.Hint="LAN Connection String"
                              Text="{Binding LanConnectionString}"
+                              Foreground="#88FFFFFF"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="0 0 0 12"/>
 
                     <TextBox materialDesign:HintAssist.Hint="Remote Connection String (Hostinger)"
                              Text="{Binding RemoteConnectionString}"
+                              Foreground="#88FFFFFF"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Margin="0 0 0 0"/>
                 </StackPanel>
@@ -122,7 +128,7 @@
                         <materialDesign:PackIcon Kind="DatabaseSearch" Width="22" Height="22" 
                                                  VerticalAlignment="Center" Margin="0 0 8 0"
                                                  Foreground="DarkOrange"/>
-                        <TextBlock Text="CRS Database Connection (Read Only)" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock  Foreground="#88FFFFFF" Text="CRS Database Connection (Read Only)" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <TextBlock Text="⚠ CRS is read-only for GGMS. All 4 fields are manually editable." 
@@ -138,16 +144,19 @@
                         <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="CRS Server / IP"
                                  Text="{Binding CrsServer, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                  Foreground="#88FFFFFF"
                                  Margin="0 0 0 12"/>
                         <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="Port"
                                  Text="{Binding CrsPort, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                  Foreground="#88FFFFFF"
                                  Margin="0 0 0 12"/>
                     </Grid>
 
                     <TextBox materialDesign:HintAssist.Hint="CRS Database Name"
                              Text="{Binding CrsDatabase, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                              Foreground="#88FFFFFF"
                              Margin="0 0 0 12"/>
 
                     <Grid>
@@ -158,9 +167,11 @@
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="CRS Username"
                                  Text="{Binding CrsUser, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                  Foreground="#88FFFFFF"/>
                         <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="CRS Password"
                                  Text="{Binding CrsPassword, UpdateSourceTrigger=PropertyChanged}"
+                                  Foreground="#88FFFFFF"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
                     </Grid>
                 </StackPanel>
@@ -172,8 +183,8 @@
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="CheckNetwork" Width="22" Height="22" 
                                                  VerticalAlignment="Center" Margin="0 0 8 0"
-                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                        <TextBlock Text="Test &amp; Save" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                  Foreground="#88FFFFFF"/>
+                        <TextBlock Text="Test &amp; Save" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#88FFFFFF"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">

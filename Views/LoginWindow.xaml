@@ -52,20 +52,20 @@
 
                 <TextBlock Text="{Binding Address}"
                 FontSize="17" FontWeight="Light"
-                Foreground="Black"
+                Foreground="#88FFFFFF"
                 HorizontalAlignment="Center"
                 TextAlignment="Center"
                 TextWrapping="Wrap"/>
 
 
                 <Separator Margin="24 20"
-                           Background="Purple"/>
+                           Background="Teal"/>
 
                 <TextBlock Text="Transparency · Accountability · Integrity"
                            FontSize="11"
-                           Foreground="Black"
                            HorizontalAlignment="Center"
-                           TextAlignment="Center"/>
+                           TextAlignment="Center"
+                            Foreground="#88FFFFFF"/>
             </StackPanel>
         </Border>
 
@@ -78,7 +78,8 @@
                     <TextBlock Text="Welcome Back"
                                FontSize="24" FontWeight="Bold"
                                Margin="0 0 0 8"
-                               HorizontalAlignment="Center"/>
+                               HorizontalAlignment="Center"
+                                Foreground="#88FFFFFF"/>
                     <TextBlock Text="Login to your account"
                                FontSize="14" Foreground="Gray"
                                Margin="0 0 0 24"
@@ -88,6 +89,7 @@
                     <TextBox materialDesign:HintAssist.Hint="Username or Email"
                              Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                              Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                              Foreground="#88FFFFFF"
                              Margin="0 0 0 16"/>
 
                     <!-- Password -->
@@ -95,7 +97,8 @@
                                  Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
                                  Name="PasswordBoxControl"
                                  Margin="0 0 0 8"
-                                 PasswordChanged="PasswordBox_PasswordChanged"/>
+                                 PasswordChanged="PasswordBox_PasswordChanged"
+                                  Foreground="#88FFFFFF"/>
 
                     <!-- Error / status message -->
                     <TextBlock Text="{Binding ErrorMessage}"
@@ -139,7 +142,7 @@
                             Command="{Binding OpenDbSettingsCommand}"
                             Style="{StaticResource MaterialDesignFlatButton}"
                             Margin="0 16 0 0"
-                            Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                             Foreground="#88FFFFFF"/>
                     
                     
                 </StackPanel>

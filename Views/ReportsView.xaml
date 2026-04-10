@@ -31,13 +31,14 @@
                 <ComboBox materialDesign:HintAssist.Hint="Select Report Type" 
                           ItemsSource="{Binding ReportTypes}" 
                           SelectedItem="{Binding SelectedReportType}" 
-                          Width="300" Margin="0 0 16 0" VerticalAlignment="Center" />
+                          Width="300" Margin="0 0 16 0" VerticalAlignment="Center" 
+                           Foreground="#88FFFFFF"/>
                 
                 <Button Content="REFRESH DATA" Command="{Binding GenerateReportCommand}" 
-                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 8 0" />
+                        Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 8 0"  />
                         
                 <Button Content="EXPORT / PRINT" Command="{Binding PrintExportCommand}" 
-                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                        Style="{StaticResource MaterialDesignFlatButton}"  Foreground="#88FFFFFF" />
             </StackPanel>
         </materialDesign:Card>
 
