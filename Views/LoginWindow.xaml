@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:GoodGovernanceApp.Views"
         mc:Ignorable="d"
-        Title="Good Governance Management - Login" Height="450" Width="830"
+        Title="Good Governance Management - Login" Height="642" Width="965"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -28,12 +28,11 @@
         <Border Grid.Column="0"
                 Background="{DynamicResource PrimaryHueMidBrush}">
             <StackPanel VerticalAlignment="Center"
-                        HorizontalAlignment="Center"
-                        Margin="32">
+                        HorizontalAlignment="Center" Height="358" Width="377">
 
                 <!-- Replace Source with your actual logo path -->
 
-                <Image Width="120" Height="120"
+                <Image Width="161" Height="161"
                 Stretch="Uniform"
                 HorizontalAlignment="Center"
                 Margin="0 0 0 24">
@@ -45,7 +44,7 @@
 
                 <TextBlock Text="{Binding GovernanceName}"
                            FontSize="26" FontWeight="Bold"
-                           Foreground="Black"
+                           Foreground="#88FFFFFF"
                            HorizontalAlignment="Center"
                            TextAlignment="Center"
                            TextWrapping="Wrap"/>
@@ -62,7 +61,7 @@
                            Background="Teal"/>
 
                 <TextBlock Text="Transparency · Accountability · Integrity"
-                           FontSize="11"
+                           FontSize="20"
                            HorizontalAlignment="Center"
                            TextAlignment="Center"
                             Foreground="#88FFFFFF"/>
@@ -72,9 +71,20 @@
         <!-- ── RIGHT PANEL ── -->
         <Grid Grid.Column="1">
             <materialDesign:Card VerticalAlignment="Center"
-                                 Margin="24"
-                                 Padding="24">
+                                 Margin="24,0,24,0"
+                                 Padding="24" Height="479">
                 <StackPanel>
+
+                    <Image Width="120" Height="120"
+                Stretch="Uniform"
+                HorizontalAlignment="Center"
+                 Margin="0 0 0 24">
+                        <Image.Source>
+                            <Binding Path="LogoSource">
+                            </Binding>
+                        </Image.Source>
+                    </Image>
+
                     <TextBlock Text="Welcome Back"
                                FontSize="24" FontWeight="Bold"
                                Margin="0 0 0 8"
@@ -143,8 +153,8 @@
                             Style="{StaticResource MaterialDesignFlatButton}"
                             Margin="0 16 0 0"
                              Foreground="#88FFFFFF"/>
-                    
-                    
+
+
                 </StackPanel>
             </materialDesign:Card>
         </Grid>

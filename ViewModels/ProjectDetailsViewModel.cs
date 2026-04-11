@@ -24,7 +24,7 @@ public class ProjectDetailsViewModel : ViewModelBase
         {
             _selectedDepartment = value;
             OnPropertyChanged();
-            FilterByOfficeCode(value?.OfficeCode);
+            _ = LoadAndFilterAsync(value?.OfficeCode); // ✅ changed from FilterByOfficeCode
         }
     }
 
@@ -41,17 +41,14 @@ public class ProjectDetailsViewModel : ViewModelBase
     public ProjectDetailsViewModel()
     {
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
-        _ = LoadDataAsync();
+        _ = LoadAndFilterAsync(null); // ✅ changed from LoadDataAsync
     }
 
-    private async Task LoadDataAsync()
+    // ✅ replaced LoadDataAsync + FilterByOfficeCode with this single method
+    private async Task LoadAndFilterAsync(string? officeCode)
     {
         _allProjects = await _context.ProjectDetails.ToListAsync();
-        FilterByOfficeCode(_selectedDepartment?.OfficeCode);
-    }
 
-    private void FilterByOfficeCode(string? officeCode)
-    {
         SelectedDepartmentRoles.Clear();
 
         var filtered = string.IsNullOrEmpty(officeCode)

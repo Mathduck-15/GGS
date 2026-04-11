@@ -18,14 +18,23 @@ namespace GoodGovernanceApp.Data
 
         private string GetConnectionString()
         {
+            // Always use the same source as AppDbContext (GgmsConfig.txt) so both
+            // services point at the same database. Fall back to appsettings.json only
+            // when GgmsConfig.txt doesn't exist yet (first run).
+            string dynamic = GoodGovernanceApp.Utilities.ConfigHelper.BuildConnectionString("GgmsConfig.txt");
+            if (!string.IsNullOrEmpty(dynamic))
+                return dynamic;
+
+            // Fallback: read from appsettings.json the same way as before
             string dbMode = _configuration["AppSettings:DatabaseMode"] ?? "Local";
             string connectionStringName = dbMode switch
             {
                 "Remote" => "RemoteConnection",
-                "LAN" => "LanConnection",
-                _ => "LocalConnection"
+                "LAN"    => "LanConnection",
+                _        => "LocalConnection"
             };
-            return _configuration.GetConnectionString(connectionStringName) ?? throw new InvalidOperationException($"Connection string '{connectionStringName}' not found.");
+            return _configuration.GetConnectionString(connectionStringName)
+                ?? throw new InvalidOperationException($"Connection string '{connectionStringName}' not found.");
         }
 
         public async Task<MySqlConnection> OpenConnectionAsync()

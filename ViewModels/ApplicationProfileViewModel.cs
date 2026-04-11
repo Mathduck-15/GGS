@@ -122,7 +122,7 @@ public class ApplicationProfileViewModel : ViewModelBase
 
                 File.Copy(selectedPath, newPath);
 
-                LogoAddress = newPath;
+                LogoAddress = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, newPath);
                 LoadLogoImage(newPath);
             }
             catch (Exception ex)
@@ -134,13 +134,17 @@ public class ApplicationProfileViewModel : ViewModelBase
 
     private void LoadLogoImage(string path)
     {
+        // Resolve relative path if needed
+        if (!Path.IsPathRooted(path))
+            path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+
         if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
         {
             try
             {
                 var bi = new BitmapImage();
                 bi.BeginInit();
-                bi.CacheOption = BitmapCacheOption.OnLoad; // allows file to be not locked
+                bi.CacheOption = BitmapCacheOption.OnLoad;
                 bi.UriSource = new Uri(path, UriKind.Absolute);
                 bi.EndInit();
                 LogoPreview = bi;

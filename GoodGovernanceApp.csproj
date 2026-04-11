@@ -29,4 +29,13 @@
     </None>
   </ItemGroup>
 
+  <!-- Exclude scratch/test files that live inside the project root folder -->
+  <ItemGroup>
+    <Compile Remove="scratch_db.cs" />
+    <Compile Remove="scratch_db2.cs" />
+    <Compile Remove="scratch_db3.cs" />
+    <Compile Remove="scratch_app\**" />
+    <Compile Remove="scratch_app2\**" />
+  </ItemGroup>
+
 </Project>
