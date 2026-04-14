@@ -43,7 +43,7 @@ public class MainViewModel : ViewModelBase
     private bool           _isDatabaseConnected = true;
     private string?        _profilePhotoPath;
     private BitmapImage?   _profilePhotoSource;
-    private string         _currentSectionTitle = "Dashboard";
+    private string         _currentSectionTitle = "Home";
 
     // ── public properties ─────────────────────────────────────────────────────
     public string CurrentUserName => _sessionService.CurrentUser?.Name ?? "Guest";
@@ -137,7 +137,7 @@ public class MainViewModel : ViewModelBase
         ShowDashboardCommand  = new RelayCommand(_ =>
         {
             IsShowingDashboard   = true;
-            CurrentSectionTitle  = "Dashboard";
+            CurrentSectionTitle  = "Home";
             CurrentView          = null!;
         });
 
@@ -181,22 +181,13 @@ public class MainViewModel : ViewModelBase
 
         // Start on the dashboard tile grid
         IsShowingDashboard  = true;
-        CurrentSectionTitle = "Dashboard";
+        CurrentSectionTitle = "Home";
     }
 
     // ── tile navigation ───────────────────────────────────────────────────────
     private void ExecuteNavigateTile(object? parameter)
     {
         if (parameter is not string viewToken) return;
-
-        // Dashboard tile → return to tile grid
-        if (viewToken == "Dashboard")
-        {
-            IsShowingDashboard  = true;
-            CurrentSectionTitle = "Dashboard";
-            CurrentView         = null!;
-            return;
-        }
 
         NavigateTo(viewToken);
         CurrentSectionTitle = NavigationItems.FirstOrDefault(i => i.ViewToken == viewToken)?.Name ?? viewToken;
@@ -209,8 +200,11 @@ public class MainViewModel : ViewModelBase
         switch (viewToken)
         {
             case "Dashboard":
+                CurrentView = new Views.DashboardView();
+                break;
+            case "Home":
                 IsShowingDashboard  = true;
-                CurrentSectionTitle = "Dashboard";
+                CurrentSectionTitle = "Home";
                 CurrentView         = null!;
                 break;
             case "Profile":
