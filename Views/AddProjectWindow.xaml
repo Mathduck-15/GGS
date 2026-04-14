@@ -42,7 +42,7 @@
                          IsReadOnly="True"
                          FontFamily="Consolas"
                          FontWeight="Bold"
-                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
                          materialDesign:HintAssist.Hint="Auto-generated"
                          Margin="0 0 0 16"/>
 
@@ -54,8 +54,9 @@
                          IsReadOnly="True"
                          FontFamily="Consolas"
                          FontWeight="Bold"
-                         Foreground="{DynamicResource PrimaryHueMidBrush}"
+                         
                          materialDesign:HintAssist.Hint="Auto-generated"
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
                          Margin="0 0 0 16"/>
 
                 <!-- Project Name * -->
@@ -84,7 +85,7 @@
                                    Foreground="{DynamicResource MaterialDesignBodyLight}"
                                    Margin="0 0 0 2"/>
                         <TextBlock Text="{Binding SelectedYear, StringFormat='Selected year: {0}', FallbackValue='No year selected'}"
-                                   FontSize="12" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                   FontSize="12"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                     </StackPanel>
 
                     <!-- Year picker popup button -->

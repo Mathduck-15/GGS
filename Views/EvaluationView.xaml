@@ -18,7 +18,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="File Evaluation Center" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+        <TextBlock Grid.Row="0" Text="File Evaluation Center" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>

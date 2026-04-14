@@ -23,7 +23,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="System Reports &amp; Analytics" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+        <TextBlock Grid.Row="0" Text="System Reports &amp; Analytics" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
 
         <!-- Controls Area -->
         <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="16">

@@ -18,7 +18,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="User Profile &amp; Account" FontSize="36" FontWeight="Light" Margin="0 0 0 32"/>
+        <TextBlock Grid.Row="0" Text="User Profile &amp; Account" FontSize="36" FontWeight="Light" Margin="0 0 0 32"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
 
         <materialDesign:Card Grid.Row="1" VerticalAlignment="Top" Padding="32">
             <Grid>
