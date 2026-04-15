@@ -44,6 +44,7 @@ public class MainViewModel : ViewModelBase
     private string?        _profilePhotoPath;
     private BitmapImage?   _profilePhotoSource;
     private string         _currentSectionTitle = "Home";
+    private BitmapImage?   _systemPhotoSource;
 
     // ── public properties ─────────────────────────────────────────────────────
     public string CurrentUserName => _sessionService.CurrentUser?.Name ?? "Guest";
@@ -87,6 +88,12 @@ public class MainViewModel : ViewModelBase
         set { _profilePhotoSource = value; OnPropertyChanged(); }
     }
 
+    public BitmapImage? SystemPhotoSource
+    {
+        get => _systemPhotoSource;
+        set { _systemPhotoSource = value; OnPropertyChanged(); }
+    }
+
     public string GovernanceName
     {
         get => _governanceName;
@@ -114,6 +121,7 @@ public class MainViewModel : ViewModelBase
     // ── commands ──────────────────────────────────────────────────────────────
     public ICommand LogoutCommand        { get; }
     public ICommand OpenAppProfileCommand{ get; }
+    public ICommand OpenSystemsProfileCommand { get; }
     public ICommand NavigateTileCommand  { get; }
     public ICommand ShowDashboardCommand { get; }
 
@@ -132,6 +140,7 @@ public class MainViewModel : ViewModelBase
 
         // Commands
         OpenAppProfileCommand = new RelayCommand(ExecuteOpenAppProfile);
+        OpenSystemsProfileCommand = new RelayCommand(ExecuteOpenSystemsProfile);
         LogoutCommand         = new RelayCommand(ExecuteLogout);
         NavigateTileCommand   = new RelayCommand(ExecuteNavigateTile);
         ShowDashboardCommand  = new RelayCommand(_ =>
@@ -143,6 +152,7 @@ public class MainViewModel : ViewModelBase
 
         LoadApplicationProfileAsync();
         LoadProfilePhotoAsync();
+        LoadSystemPhotoAsync();
 
         // ── Build navigation items with Metro tile colors ──────────────────
         var allItems = new List<NavigationItem>
@@ -287,7 +297,6 @@ public class MainViewModel : ViewModelBase
         }
     }
 
-    // ── governance name ───────────────────────────────────────────────────────
     private async System.Threading.Tasks.Task LoadApplicationProfileAsync()
     {
         try
@@ -301,6 +310,49 @@ public class MainViewModel : ViewModelBase
                 var goveName = dataTable.Rows[0]["GoveName"]?.ToString() ?? string.Empty;
                 if (!string.IsNullOrWhiteSpace(goveName))
                     GovernanceName = goveName;
+            }
+        }
+        catch { }
+    }
+
+    // ── system photo ──────────────────────────────────────────────────────────
+    private async System.Threading.Tasks.Task LoadSystemPhotoAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            
+            // Ensure table exists first to avoid Table doesn't exist exception
+            string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS systemsprofile (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    PhotoAddress NVARCHAR(500)
+                );";
+            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
+
+            string query = "SELECT PhotoAddress FROM systemsprofile LIMIT 1;";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
+                
+                // Resolve relative path if needed
+                if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
+                    path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+
+                if (!string.IsNullOrWhiteSpace(path) && System.IO.File.Exists(path))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.UriSource = new Uri(path, UriKind.Absolute);
+                        bitmap.EndInit();
+                        SystemPhotoSource = bitmap;
+                    });
+                }
             }
         }
         catch { }
@@ -324,6 +376,12 @@ public class MainViewModel : ViewModelBase
     private void ExecuteOpenAppProfile(object? parameter)
     {
         var window = new Views.ApplicationProfileWindow();
+        window.ShowDialog();
+    }
+
+    private void ExecuteOpenSystemsProfile(object? parameter)
+    {
+        var window = new Views.SystemsApplicationProfile();
         window.ShowDialog();
     }
 }

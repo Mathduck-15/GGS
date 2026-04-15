@@ -9,8 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-
-
 namespace GoodGovernanceApp.ViewModels;
 
 public class DashboardViewModel : ViewModelBase

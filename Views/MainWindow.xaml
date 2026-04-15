@@ -20,6 +20,7 @@
             <converters:StringToSolidColorBrushConverter  x:Key="ColorConverter"/>
             <converters:BoolToVisibilityConverter          x:Key="BoolToVis"/>
             <converters:InverseBoolToVisibilityConverter   x:Key="InvBoolToVis"/>
+            <converters:NullToVisibilityConverter x:Key="NullToVis"/>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -64,16 +65,20 @@
                     </Button>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{Binding GovernanceName}"
-                                   FontSize="15" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Text="Good Governance Management System"
-                                   FontSize="10" Foreground="#66FFFFFF"/>
+                                   FontSize="40" Foreground="White"/>
                     </StackPanel>
+                    
+
                 </StackPanel>
+                
+                
+                
+                
 
                 <!-- ── Live Clock ── -->
                 <Border Grid.Column="2" VerticalAlignment="Center" Margin="0 0 18 0">
                     <TextBlock Text="{Binding CurrentDate}"
-                               FontSize="12" Foreground="#AAFFFFFF"/>
+                               FontSize="20" Foreground="#AAFFFFFF"/>
                 </Border>
 
                 <!-- ── DB Connected badge ── -->
@@ -126,7 +131,7 @@
                                                  Width="20" Height="20"
                                                  Foreground="#FFEF9A9A"
                                                  VerticalAlignment="Center"/>
-                        <TextBlock Text="Log Out" FontSize="12"
+                        <TextBlock Text="Log Out" FontSize="20"
                                    Foreground="#FFEF9A9A"
                                    VerticalAlignment="Center"
                                    Margin="6 0 0 0"/>
@@ -154,11 +159,11 @@
                         Margin="0 0 12 0">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ArrowLeft"
-                                                 Width="16" Height="16"
+                                                 Width="20" Height="20"
                                                  Foreground="#88FFFFFF"
                                                  VerticalAlignment="Center"
                                                  Margin="0 0 5 0"/>
-                        <TextBlock Text="Home" FontSize="12"
+                        <TextBlock Text="Home" FontSize="20"
                                    Foreground="#88FFFFFF"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
@@ -189,67 +194,100 @@
 
                 <StackPanel Margin="36 30 36 36">
 
-                    <!-- Welcome banner -->
-                    <StackPanel Margin="0 0 0 30">
-                        <TextBlock FontSize="28" FontWeight="Light"
-                                   Foreground="White" LineHeight="38">
-                            <Run Text="Welcome back, "/>
-                            <Run Text="{Binding CurrentUserName, Mode=OneWay}"
-                                 FontWeight="Bold" Foreground="#FF4DD0E1"/>
-                        </TextBlock>
-                        <TextBlock Text="Select a module below to get started."
-                                   FontSize="13" Foreground="#66FFFFFF"
-                                   Margin="0 6 0 0"/>
-                    </StackPanel>
+                    <Grid Margin="36 30 36 36">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="1.4*"/>
+                        </Grid.ColumnDefinitions>
 
-                    <!-- Divider -->
-                    <Rectangle Height="1" Fill="#22FFFFFF" Margin="0 0 0 26"/>
+                        <!-- LEFT SIDE (UNCHANGED UI) -->
+                        <StackPanel Grid.Column="0">
 
-                    <!-- Section label -->
-                    <TextBlock Text="M O D U L E S"
-                               FontSize="11" FontWeight="Bold"
-                               Foreground="#44FFFFFF"
-                               Margin="4 0 0 18"/>
+                            <!-- Welcome banner -->
+                            <StackPanel Margin="0 0 0 30">
+                                <TextBlock FontSize="28" FontWeight="Light"
+                       Foreground="White" LineHeight="38">
+                <Run Text="Welcome back, "/>
+                <Run Text="{Binding CurrentUserName, Mode=OneWay}"
+                     FontWeight="Bold" Foreground="#FF4DD0E1"/>
+                                </TextBlock>
+                                <TextBlock Text="Select a module below to get started."
+                       FontSize="13" Foreground="#66FFFFFF"
+                       Margin="0 6 0 0"/>
+                            </StackPanel>
 
-                    <!-- ── Metro Tile Grid ── -->
-                    <ItemsControl ItemsSource="{Binding NavigationItems}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
+                            <!-- Divider -->
+                            <Rectangle Height="1" Fill="#22FFFFFF" Margin="0 0 0 26"/>
 
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type viewmodels:NavigationItem}">
-                                <Button Style="{StaticResource MetroTileButton}"
-                                        Background="{Binding TileColor,
-                                            Converter={StaticResource ColorConverter}}"
-                                        Command="{Binding DataContext.NavigateTileCommand,
-                                            RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding ViewToken}">
-                                    <StackPanel HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Margin="8">
-                                        <materialDesign:PackIcon Kind="{Binding Icon}"
-                                                                 Width="46" Height="46"
-                                                                 Foreground="White"
-                                                                 HorizontalAlignment="Center"
-                                                                 Margin="0 0 0 12"/>
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontSize="12"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="White"
-                                                   TextAlignment="Center"
-                                                   TextWrapping="Wrap"
-                                                   MaxWidth="124"/>
-                                    </StackPanel>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                            <!-- Section label -->
+                            <TextBlock Text="M O D U L E S"
+                   FontSize="11" FontWeight="Bold"
+                   Foreground="#44FFFFFF"
+                   Margin="4 0 0 18"/>
 
-                    <!-- Bottom padding -->
-                    <Rectangle Height="20"/>
+                            <!-- Tiles (UNCHANGED) -->
+                            <ItemsControl ItemsSource="{Binding NavigationItems}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type viewmodels:NavigationItem}">
+                                        <Button Style="{StaticResource MetroTileButton}"
+                            Background="{Binding TileColor,
+                                Converter={StaticResource ColorConverter}}"
+                            Command="{Binding DataContext.NavigateTileCommand,
+                                RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding ViewToken}">
+                                            <StackPanel HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Margin="8">
+                                                <materialDesign:PackIcon Kind="{Binding Icon}"
+                                                     Width="46" Height="46"
+                                                     Foreground="White"
+                                                     HorizontalAlignment="Center"
+                                                     Margin="0 0 0 12"/>
+                                                <TextBlock Text="{Binding Name}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="124"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Rectangle Height="20"/>
+
+                        </StackPanel>
+
+                        <!-- RIGHT SIDE PANEL (NEW, SAFE ADDITION) -->
+                        <Border Grid.Column="1"
+            Margin="20 0 0 0"
+            Background="#1AFFFFFF"
+            CornerRadius="14"
+            Padding="18">
+
+                            <StackPanel>
+
+                                <TextBlock Text="Dashboard Overview"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="White"
+                       Margin="0 0 0 12"/>
+
+                                <Border Background="#33FFFFFF" CornerRadius="10" Padding="8" MaxHeight="450" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}">
+                                    <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                    </Grid>
 
                 </StackPanel>
             </ScrollViewer>
@@ -289,9 +327,17 @@
                     </ControlTemplate>
                 </ContentControl.Template>
             </ContentControl>
+            
 
+            
+          
+            
         </Grid>
         <!-- /content area grid -->
+        
 
     </Grid>
 </Window>
+
+
+

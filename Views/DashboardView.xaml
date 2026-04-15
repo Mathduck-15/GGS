@@ -23,6 +23,7 @@
 
             <TextBlock Grid.Row="0" Text="Dashboard Overview" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
 
+
             <!-- Summary Cards -->
             <UniformGrid Grid.Row="1" Columns="4" Rows="1">
                 <!-- Total Budget Card -->

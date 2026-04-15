@@ -23,7 +23,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Application Profile" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" HorizontalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="Company Application Profile" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" HorizontalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
 
         <TextBox Grid.Row="1" materialDesign:HintAssist.Hint="Governance Name" 
                  Text="{Binding GoveName, UpdateSourceTrigger=PropertyChanged}" 

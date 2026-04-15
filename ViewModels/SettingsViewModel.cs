@@ -215,6 +215,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand BrowseBackupFolderCommand  { get; }
     public ICommand BrowseMySqlDumpCommand    { get; }
     public ICommand SaveBackupSettingsCommand { get; }
+    public ICommand OpenSystemsProfileCommand { get; }
 
     // Mode helpers kept for XAML compatibility
     public bool IsLocal  => DatabaseMode == "Local";
@@ -242,6 +243,8 @@ public class SettingsViewModel : ViewModelBase
         BrowseBackupFolderCommand  = new RelayCommand(_ => BrowseBackupFolder());
         BrowseMySqlDumpCommand    = new RelayCommand(_ => BrowseMySqlDump());
         SaveBackupSettingsCommand = new RelayCommand(_ => ExecuteSaveBackupSettings());
+        
+        OpenSystemsProfileCommand = new RelayCommand(_ => new GoodGovernanceApp.Views.SystemsApplicationProfile().ShowDialog());
     }
 
     // ── Preset Logic ─────────────────────────────────────────────────────────

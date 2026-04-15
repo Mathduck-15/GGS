@@ -20,18 +20,38 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
             <StackPanel Grid.Row="0" Margin="0 0 0 24">
                 <TextBlock Text="System Settings" FontSize="28" FontWeight="Light"  Foreground="#88FFFFFF"/>
-                <TextBlock Text="Configure database connections and backup options" 
-                           
+                <TextBlock Text="Configure database connections, backups, and app profile" 
                            FontSize="13" Foreground="#88FFFFFF" Margin="0 4 0 0"/>
             </StackPanel>
 
-            <!-- GGMS Database Connection -->
+            <!-- Application Profile -->
             <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="AccountFilter" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="#88FFFFFF"/>
+                        <TextBlock Text="System Application Profile" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#88FFFFFF"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Update the application logo, photos, and general governance identity shown on the main dashboard." 
+                               FontSize="13" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 16"/>
+
+                    <Button Content="⚙ CONFIGURE APPLICATION PROFILE" 
+                            Command="{Binding OpenSystemsProfileCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}" 
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- GGMS Database Connection -->
+            <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
@@ -122,7 +142,7 @@
             </materialDesign:Card>
 
             <!-- CRS Database Connection -->
-            <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="24">
+            <materialDesign:Card Grid.Row="3" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="DatabaseSearch" Width="22" Height="22" 
@@ -178,7 +198,7 @@
             </materialDesign:Card>
 
             <!-- Test + Save -->
-            <materialDesign:Card Grid.Row="3" Margin="0 0 0 16" Padding="24">
+            <materialDesign:Card Grid.Row="4" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="CheckNetwork" Width="22" Height="22" 
@@ -214,7 +234,7 @@
             <!-- ═══════════════════════════════════════════════════════════════ -->
         <!-- Backup Configuration                                           -->
         <!-- ═══════════════════════════════════════════════════════════════ -->
-        <materialDesign:Card Grid.Row="4" Margin="0 0 0 16" Padding="24">
+        <materialDesign:Card Grid.Row="5" Margin="0 0 0 16" Padding="24">
             <StackPanel>
 
                 <!-- Header -->
