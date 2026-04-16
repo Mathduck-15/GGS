@@ -75,15 +75,9 @@
                                  Padding="24" Height="479">
                 <StackPanel>
 
-                    <Image Width="120" Height="120"
-                Stretch="Uniform"
-                HorizontalAlignment="Center"
-                 Margin="0 0 0 24">
-                        <Image.Source>
-                            <Binding Path="LogoSource">
-                            </Binding>
-                        </Image.Source>
-                    </Image>
+                    <Border CornerRadius="10" Padding="8" MaxHeight="450" Height="138">
+                        <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" />
+                    </Border>
 
                     <TextBlock Text="Welcome Back"
                                FontSize="24" FontWeight="Bold"

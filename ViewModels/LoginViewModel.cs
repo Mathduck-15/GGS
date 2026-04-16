@@ -1,13 +1,14 @@
-using System;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Utilities;
 using GoodGovernanceApp.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -22,6 +23,7 @@ public class LoginViewModel : ViewModelBase
     private System.Windows.Media.Imaging.BitmapImage? _logoSource;
     private string _address = string.Empty;
     private readonly GoodGovernanceApp.Services.SessionService _sessionService;
+    private BitmapImage? _systemPhotoSource;
     public ICommand CheatCommand { get; }
 
     // ── Properties ───────────────────────────────────────────────────────────
@@ -87,6 +89,7 @@ public class LoginViewModel : ViewModelBase
 
         _ = LoadApplicationProfileAsync();
 
+        LoadSystemPhotoAsync();
         CheatCommand = new RelayCommand(_ => ExecuteCheat());
     }
 
@@ -232,5 +235,55 @@ public class LoginViewModel : ViewModelBase
         {
             // Non-fatal — fallback values apply via initial property values.
         }
+    }
+
+    public BitmapImage? SystemPhotoSource
+    {
+        get => _systemPhotoSource;
+        set { _systemPhotoSource = value; OnPropertyChanged(); }
+    }
+
+
+
+    private async System.Threading.Tasks.Task LoadSystemPhotoAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+
+            // Ensure table exists first to avoid Table doesn't exist exception
+            string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS systemsprofile (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    PhotoAddress NVARCHAR(500)
+                );";
+            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
+
+            string query = "SELECT PhotoAddress FROM systemsprofile LIMIT 1;";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
+
+                // Resolve relative path if needed
+                if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
+                    path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+
+                if (!string.IsNullOrWhiteSpace(path) && System.IO.File.Exists(path))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.UriSource = new Uri(path, UriKind.Absolute);
+                        bitmap.EndInit();
+                        SystemPhotoSource = bitmap;
+                    });
+                }
+            }
+        }
+        catch { }
     }
 }
