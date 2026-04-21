@@ -219,7 +219,7 @@
                     <TextBlock Text="{Binding GgmsTestResult}" FontSize="13" FontWeight="Medium" Margin="0 0 0 4"
                                Foreground="{DynamicResource MaterialDesignBody}"/>
                     <TextBlock Text="{Binding CrsTestResult}" FontSize="13" FontWeight="Medium" Margin="0 0 0 16"
-                               Foreground="{DynamicResource MaterialDesignBody}"/>
+                                Foreground="#88FFFFFF"/>
 
                     <Button Content="💾 SAVE SETTINGS (REQUIRES RESTART)"
                             Command="{Binding SaveSettingsCommand}"
@@ -241,9 +241,9 @@
                 <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                     <materialDesign:PackIcon Kind="DatabaseSync" Width="22" Height="22"
                                             VerticalAlignment="Center" Margin="0 0 8 0"
-                                            Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                             Foreground="#88FFFFFF"/>
                     <TextBlock Text="Automatic Database Backup" FontSize="18" FontWeight="SemiBold"
-                               VerticalAlignment="Center"/>
+                               VerticalAlignment="Center" Foreground="#88FFFFFF"/>
                 </StackPanel>
 
                 <!-- ── Row 1 : Backup Type + Schedule Type ─────────────── -->
@@ -317,11 +317,7 @@
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
-                        <TextBlock Text="Day of Month (1-28)" FontSize="12"
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 4"/>
-                        <TextBox Text="{Binding ScheduleDay, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
-                    </StackPanel>
+                        </StackPanel>
 
                     <!-- Start time (Next run): always visible -->
                     <StackPanel Grid.Column="2">
@@ -347,7 +343,8 @@
                     <TextBox Grid.Column="0"
                              materialDesign:HintAssist.Hint="e.g. C:\Backups\GGMS"
                              Text="{Binding BackupFolder, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                              Foreground="#88FFFFFF"/>
                     <Button Grid.Column="2" Content="📁 Browse"
                             Command="{Binding BrowseBackupFolderCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"/>
@@ -365,7 +362,8 @@
                     <TextBox Grid.Column="0"
                              materialDesign:HintAssist.Hint="e.g. C:\Program Files\MySQL\...\mysqldump.exe"
                              Text="{Binding MySqlDumpPath, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                              Foreground="#88FFFFFF"/>
                     <Button Grid.Column="2" Content="🔍 Browse"
                             Command="{Binding BrowseMySqlDumpCommand}"
                             Style="{StaticResource MaterialDesignOutlinedButton}"/>
@@ -377,7 +375,7 @@
                                   Style="{StaticResource MaterialDesignSwitchToggleButton}"
                                   VerticalAlignment="Center"/>
                     <TextBlock Text="Enable Automatic Backup" FontSize="14"
-                               VerticalAlignment="Center" Margin="12 0 0 0"/>
+                               VerticalAlignment="Center" Margin="12 0 0 0"  Foreground="#88FFFFFF"/>
                 </StackPanel>
 
                 <Button Content="💾 SAVE BACKUP SETTINGS"
