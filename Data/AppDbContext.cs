@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<ProgramProvision> ProgramProvisions { get; set; } = null!;
 
     // ── Transactions ──────────────────────────────────────────────────────────
+    public DbSet<ConsolidatedTransactions> ConsolidatedTransactions { get; set; } = null!;
     public DbSet<TblTransaction> TblTransactions { get; set; } = null!;
     public DbSet<CommunityRequest> CommunityRequests { get; set; } = null!;
     public DbSet<Ledger> Ledgers { get; set; } = null!;

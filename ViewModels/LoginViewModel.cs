@@ -15,16 +15,15 @@ namespace GoodGovernanceApp.ViewModels;
 public class LoginViewModel : ViewModelBase
 {
     // ── Fields ───────────────────────────────────────────────────────────────
-    private string _username     = string.Empty;
-    private string _password     = string.Empty;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
     private string _errorMessage = string.Empty;
-    private bool   _isLoggingIn  = false;
+    private bool _isLoggingIn = false;
     private string _governanceName = "Good Governance Management System";
-    private System.Windows.Media.Imaging.BitmapImage? _logoSource;
+    private BitmapImage? _logoSource;
     private string _address = string.Empty;
     private readonly GoodGovernanceApp.Services.SessionService _sessionService;
     private BitmapImage? _systemPhotoSource;
-    public ICommand CheatCommand { get; }
 
     // ── Properties ───────────────────────────────────────────────────────────
     public string Username
@@ -45,16 +44,10 @@ public class LoginViewModel : ViewModelBase
         set { _errorMessage = value; OnPropertyChanged(); }
     }
 
-    /// <summary>True while the async login is in progress (disables the button).</summary>
     public bool IsLoggingIn
     {
         get => _isLoggingIn;
         set { _isLoggingIn = value; OnPropertyChanged(); }
-    }
-
-    private void ExecuteCheat()
-    {
-        MessageBox.Show("Username: superadmin\nPassword: password", "Cheat Codes", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     public string GovernanceName
@@ -63,7 +56,7 @@ public class LoginViewModel : ViewModelBase
         set { _governanceName = value; OnPropertyChanged(); }
     }
 
-    public System.Windows.Media.Imaging.BitmapImage? LogoSource
+    public BitmapImage? LogoSource
     {
         get => _logoSource;
         set { _logoSource = value; OnPropertyChanged(); }
@@ -75,22 +68,34 @@ public class LoginViewModel : ViewModelBase
         set { _address = value; OnPropertyChanged(); }
     }
 
+    public BitmapImage? SystemPhotoSource
+    {
+        get => _systemPhotoSource;
+        set { _systemPhotoSource = value; OnPropertyChanged(); }
+    }
+
     // ── Commands ─────────────────────────────────────────────────────────────
-    public ICommand LoginCommand       { get; }
+    public ICommand LoginCommand { get; }
     public ICommand OpenDbSettingsCommand { get; }
+    public ICommand CheatCommand { get; }
 
     // ── Constructor ───────────────────────────────────────────────────────────
     public LoginViewModel(GoodGovernanceApp.Services.SessionService sessionService)
     {
         _sessionService = sessionService;
 
-        LoginCommand          = new RelayCommand(async p => await ExecuteLoginAsync(p), CanExecuteLogin);
+        LoginCommand = new RelayCommand(async p => await ExecuteLoginAsync(p), CanExecuteLogin);
         OpenDbSettingsCommand = new RelayCommand(_ => new DatabaseSettingsWindow().ShowDialog());
+        CheatCommand = new RelayCommand(_ => ExecuteCheat());
 
         _ = LoadApplicationProfileAsync();
+        _ = LoadSystemPhotoAsync();
+    }
 
-        LoadSystemPhotoAsync();
-        CheatCommand = new RelayCommand(_ => ExecuteCheat());
+    // ── Cheat ─────────────────────────────────────────────────────────────────
+    private void ExecuteCheat()
+    {
+        MessageBox.Show("Username: superadmin\nPassword: password", "Cheat Codes", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     // ── CanExecute ────────────────────────────────────────────────────────────
@@ -102,69 +107,46 @@ public class LoginViewModel : ViewModelBase
     private void ClearError() => ErrorMessage = string.Empty;
 
     // ── Login Logic ───────────────────────────────────────────────────────────
-    /// <summary>
-    /// Authenticates the user against the `users` table.
-    ///
-    /// Lookup strategy:
-    ///   1. Try matching the typed username against the `name` column (display name).
-    ///   2. If not found, retry with the `email` column — accommodates users who
-    ///      log in with their email address.
-    ///
-    /// Password verification:
-    ///   The stored hash must be a SHA-256 hex digest (produced by PasswordHasher.HashPassword).
-    ///   ⚠ If passwords were seeded via Laravel's bcrypt(), the comparison will always fail.
-    ///     In that case install BCrypt.Net-Next (NuGet) and use BCrypt.Verify() instead.
-    ///
-    /// Status check:
-    ///   Users with status = "inactive" or "suspended" are rejected with a clear message.
-    /// </summary>
     private async Task ExecuteLoginAsync(object? parameter)
     {
-        IsLoggingIn  = true;
+        IsLoggingIn = true;
         ErrorMessage = string.Empty;
 
         try
         {
             User? user = null;
 
-            // ── 1. Try to find user in the database ──────────────────────────
-            using var scope   = App.AppHost!.Services.CreateScope();
-            var context       = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             string inputLower = Username.Trim().ToLowerInvariant();
 
-            // First try: match by `name` (case-insensitive)
+            // First try: match by `name`
             user = await context.Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u =>
-                    u.Name.ToLower() == inputLower);
+                .FirstOrDefaultAsync(u => u.Name.ToLower() == inputLower);
 
-            // Second try: match by `email` — handles users who type their email
+            // Second try: match by `email`
             if (user == null)
             {
                 user = await context.Users
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(u =>
-                        u.Email.ToLower() == inputLower);
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == inputLower);
             }
 
-            // ── 2. Validate existence ────────────────────────────────────────
             if (user == null)
             {
                 ErrorMessage = "❌ No account found with that username or email.";
                 return;
             }
 
-            // ── 3. Validate password ─────────────────────────────────────────
             bool passwordOk = PasswordHasher.VerifyPassword(Password, user.Password);
-
             if (!passwordOk)
             {
                 ErrorMessage = "❌ Incorrect password. Please try again.";
                 return;
             }
 
-            // ── 4. Check account status ──────────────────────────────────────
             if (user.Status?.Equals("inactive", StringComparison.OrdinalIgnoreCase) == true)
             {
                 ErrorMessage = "⚠ Your account is inactive. Please contact an administrator.";
@@ -177,7 +159,7 @@ public class LoginViewModel : ViewModelBase
                 return;
             }
 
-            // ── 5. Login success ─────────────────────────────────────────────
+            // ── Login success ────────────────────────────────────────────────
             _sessionService.CurrentUser = user;
 
             var mainWindow = App.AppHost!.Services.GetService(typeof(MainWindow)) as MainWindow;
@@ -188,8 +170,6 @@ public class LoginViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            // Surface a user-friendly message; the raw exception helps diagnose
-            // connection or column-mapping issues during development.
             ErrorMessage = $"❌ Login error: {ex.Message}";
         }
         finally
@@ -209,10 +189,10 @@ public class LoginViewModel : ViewModelBase
 
             if (dataTable.Rows.Count > 0)
             {
-                var row        = dataTable.Rows[0];
+                var row = dataTable.Rows[0];
                 string govName = row["GoveName"]?.ToString() ?? "";
                 string logoUrl = row["LogoAddress"]?.ToString() ?? "";
-                string addr    = row["Address"]?.ToString() ?? "";
+                string addr = row["Address"]?.ToString() ?? "";
 
                 if (!string.IsNullOrWhiteSpace(govName))
                     GovernanceName = govName;
@@ -220,14 +200,24 @@ public class LoginViewModel : ViewModelBase
                 if (!string.IsNullOrWhiteSpace(addr))
                     Address = addr;
 
-                if (!string.IsNullOrWhiteSpace(logoUrl) && System.IO.File.Exists(logoUrl))
+                if (!string.IsNullOrWhiteSpace(logoUrl))
                 {
-                    var bi = new System.Windows.Media.Imaging.BitmapImage();
-                    bi.BeginInit();
-                    bi.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bi.UriSource   = new Uri(logoUrl, UriKind.Absolute);
-                    bi.EndInit();
-                    LogoSource = bi;
+                    // ✅ Resolve relative path to absolute — same pattern as LoadSystemPhotoAsync
+                    if (!System.IO.Path.IsPathRooted(logoUrl))
+                        logoUrl = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logoUrl);
+
+                    if (System.IO.File.Exists(logoUrl))
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            var bi = new BitmapImage();
+                            bi.BeginInit();
+                            bi.CacheOption = BitmapCacheOption.OnLoad;
+                            bi.UriSource = new Uri(logoUrl, UriKind.Absolute);
+                            bi.EndInit();
+                            LogoSource = bi;
+                        });
+                    }
                 }
             }
         }
@@ -237,21 +227,13 @@ public class LoginViewModel : ViewModelBase
         }
     }
 
-    public BitmapImage? SystemPhotoSource
-    {
-        get => _systemPhotoSource;
-        set { _systemPhotoSource = value; OnPropertyChanged(); }
-    }
-
-
-
-    private async System.Threading.Tasks.Task LoadSystemPhotoAsync()
+    // ── System Photo ─────────────────────────────────────────────────────────
+    private async Task LoadSystemPhotoAsync()
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            var dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
 
-            // Ensure table exists first to avoid Table doesn't exist exception
             string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS systemsprofile (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -266,7 +248,6 @@ public class LoginViewModel : ViewModelBase
             {
                 var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
 
-                // Resolve relative path if needed
                 if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
                     path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
 

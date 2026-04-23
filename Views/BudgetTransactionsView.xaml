@@ -19,7 +19,6 @@
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -40,216 +39,349 @@
                     Style="{StaticResource MaterialDesignOutlinedButton}"/>
         </Grid>
 
-        <!-- ── Filter Bar ── -->
-        <materialDesign:Card Grid.Row="1" Padding="12 8" Margin="0 0 0 12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- ── Tab Control ── -->
+        <TabControl Grid.Row="1"
+                    Background="Transparent"
+                    BorderThickness="0">
 
-                <TextBox Grid.Column="0"
-                         materialDesign:HintAssist.Hint="Search all columns…"
-                         Text="{Binding FilterFreeText, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Foreground="White"
-                         Margin="0 0 8 0"/>
+            <TabControl.Resources>
+                <Style TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
+                    <Setter Property="Foreground" Value="White"/>
+                </Style>
+            </TabControl.Resources>
 
-                <TextBox Grid.Column="1"
-                         materialDesign:HintAssist.Hint="Office Code"
-                         Text="{Binding FilterOfficeCode, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Foreground="White"
-                         Margin="0 0 8 0"/>
+            <!-- ── Tab 1: Budget Transactions ── -->
+            <TabItem Header="Budget Transactions">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <TextBox Grid.Column="2"
-                         materialDesign:HintAssist.Hint="Project Code or Name"
-                         Text="{Binding FilterProjectCode, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Foreground="White"
-                         Margin="0 0 8 0"/>
+                    <!-- Filter Bar -->
+                    <materialDesign:Card Grid.Row="0" Padding="12 8" Margin="0 0 0 12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                <ComboBox Grid.Column="3"
-                          materialDesign:HintAssist.Hint="Status"
-                          ItemsSource="{Binding StatusOptions}"
-                          SelectedItem="{Binding FilterStatus}"
-                          Style="{StaticResource MaterialDesignFloatingHintComboBox}"
-                          Foreground="White"
-                          Margin="0 0 8 0"/>
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Search all columns…"
+                                     Text="{Binding FilterFreeText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Foreground="White"
+                                     Margin="0 0 8 0"/>
 
-                <Button Grid.Column="4"
-                        Content="Clear"
-                        Command="{Binding ClearFilterCommand}"
-                        Style="{StaticResource MaterialDesignFlatButton}"
-                        VerticalAlignment="Bottom"/>
-            </Grid>
-        </materialDesign:Card>
+                            <TextBox Grid.Column="1"
+                                     materialDesign:HintAssist.Hint="Office Code"
+                                     Text="{Binding FilterOfficeCode, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Foreground="White"
+                                     Margin="0 0 8 0"/>
 
-        <!-- ── Transactions DataGrid ── -->
-        <materialDesign:Card Grid.Row="2" Padding="0">
-            <DataGrid AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      ItemsSource="{Binding TransactionsView}"
-                      RowHeight="40"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="None"
-                      Background="#FF1A2332"
-                      Foreground="White"
-                      BorderThickness="0">
+                            <TextBox Grid.Column="2"
+                                     materialDesign:HintAssist.Hint="Project Code or Name"
+                                     Text="{Binding FilterProjectCode, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Foreground="White"
+                                     Margin="0 0 8 0"/>
 
-                <!-- Header Style -->
-                <DataGrid.ColumnHeaderStyle>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="FontSize" Value="13"/>
-                        <Setter Property="Foreground" Value="White"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                        <Setter Property="Padding" Value="8"/>
-                        <Setter Property="Background" Value="#FF0D1B2A"/>
-                        <Setter Property="BorderBrush" Value="#33FFFFFF"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                    </Style>
-                </DataGrid.ColumnHeaderStyle>
+                            <ComboBox Grid.Column="3"
+                                      materialDesign:HintAssist.Hint="Status"
+                                      ItemsSource="{Binding StatusOptions}"
+                                      SelectedItem="{Binding FilterStatus}"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      Foreground="White"
+                                      Margin="0 0 8 0"/>
 
-                <!-- Row Style -->
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Setter Property="Margin" Value="0,2"/>
-                        <Setter Property="Background" Value="#FF1A2332"/>
-                        <Setter Property="Foreground" Value="White"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF243247"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#FF1E3A5F"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
+                            <Button Grid.Column="4"
+                                    Content="Clear"
+                                    Command="{Binding ClearFilterCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    VerticalAlignment="Bottom"/>
+                        </Grid>
+                    </materialDesign:Card>
 
-                <DataGrid.Columns>
+                    <!-- Transactions DataGrid -->
+                    <materialDesign:Card Grid.Row="1" Padding="0">
+                        <DataGrid AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  ItemsSource="{Binding TransactionsView}"
+                                  RowHeight="40"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="None"
+                                  Background="#FF1A2332"
+                                  Foreground="White"
+                                  BorderThickness="0">
 
-                    <!-- Project Code -->
-                    <DataGridTextColumn Header="Project Code"
-                                        Binding="{Binding ProjectCode}"
-                                        Width="170">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="5,0"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="13"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8"/>
+                                    <Setter Property="Background" Value="#FF0D1B2A"/>
+                                    <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
 
-                    <!-- Project Name -->
-                    <DataGridTextColumn Header="Project Name"
-                                        Binding="{Binding ProjectName}"
-                                        Width="230">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="5,0"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Margin" Value="0,2"/>
+                                    <Setter Property="Background" Value="#FF1A2332"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#FF243247"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#FF1E3A5F"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
 
-                    <!-- Voucher Code -->
-                    <DataGridTextColumn Header="Voucher Code"
-                                        Binding="{Binding VoucherCode}"
-                                        Width="210">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="5,0"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Project Code" Binding="{Binding ProjectCode}" Width="170">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="5,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
 
-                    <!-- Amount -->
-                    <DataGridTextColumn Header="Amount"
-                                        Binding="{Binding Amount, StringFormat='{}{0:C}'}"
-                                        Width="110">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#FF4DD0E1"/>
-                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                <Setter Property="TextAlignment" Value="Right"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="5,0"/>
+                                <DataGridTextColumn Header="Project Name" Binding="{Binding ProjectName}" Width="230">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="5,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Voucher Code" Binding="{Binding VoucherCode}" Width="210">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="5,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:C}'}" Width="110">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#FF4DD0E1"/>
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            <Setter Property="TextAlignment" Value="Right"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Margin" Value="5,0"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}" Width="120">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#AAFFFFFF"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTemplateColumn Header="Actions" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid HorizontalAlignment="Center">
+                                                <Button Content="Voucher"
+                                                        Padding="10,4"
+                                                        Cursor="Hand"
+                                                        Background="Teal"
+                                                        Foreground="White"
+                                                        BorderThickness="0"
+                                                        FontSize="12"
+                                                        HorizontalAlignment="Center"
+                                                        Command="{Binding DataContext.PrintVoucherCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                CornerRadius="6"
+                                                                                Padding="{TemplateBinding Padding}">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                              VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="#FF8E24AA"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </materialDesign:Card>
+                </Grid>
+            </TabItem>
+
+            <!-- ── Tab 2: Consolidated Transactions ── -->
+            <TabItem Header="Consolidated Transactions">
+                <materialDesign:Card Padding="0">
+                    <DataGrid AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              ItemsSource="{Binding ConsolidatedRows}"
+                              RowHeight="40"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              Background="#FF1A2332"
+                              Foreground="White"
+                              BorderThickness="0">
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="13"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="8"/>
+                                <Setter Property="Background" Value="#FF0D1B2A"/>
+                                <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
                             </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        </DataGrid.ColumnHeaderStyle>
 
-                    <!-- Date -->
-                    <DataGridTextColumn Header="Date"
-                                        Binding="{Binding Date, StringFormat='{}{0:yyyy-MM-dd}'}"
-                                        Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#AAFFFFFF"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Margin" Value="0,2"/>
+                                <Setter Property="Background" Value="#FF1A2332"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#FF243247"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#FF1E3A5F"/>
+                                    </Trigger>
+                                </Style.Triggers>
                             </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        </DataGrid.RowStyle>
 
-                    <!-- Actions -->
-                    <DataGridTemplateColumn Header="Actions" Width="130">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Grid HorizontalAlignment="Center">
-                                    <Button Content="Voucher"
-                                            Padding="10,4"
-                                            Cursor="Hand"
-                                            Background="Teal"
-                                            Foreground="White"
-                                            BorderThickness="0"
-                                            FontSize="12"
-                                            HorizontalAlignment="Center"
-                                            Command="{Binding DataContext.PrintVoucherCommand,
-                                                      RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border Background="{TemplateBinding Background}"
-                                                                    CornerRadius="6"
-                                                                    Padding="{TemplateBinding Padding}">
-                                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                                  VerticalAlignment="Center"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#FF8E24AA"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-                                </Grid>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Beneficiary ID" Binding="{Binding BeneficiaryId}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                </DataGrid.Columns>
-            </DataGrid>
-        </materialDesign:Card>
+                            <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="200">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Project Code" Binding="{Binding ProjectCode}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Office" Binding="{Binding OfficeName}" Width="160">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Transaction Type" Binding="{Binding TransactionType}" Width="150">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:C}'}" Width="110">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#FF4DD0E1"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="TextAlignment" Value="Right"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Date" Binding="{Binding TransactionDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#AAFFFFFF"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </materialDesign:Card>
+            </TabItem>
+
+        </TabControl>
 
         <!-- ── Loading Indicator ── -->
-        <StackPanel Grid.Row="3"
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0 8 0 0"

@@ -17,6 +17,14 @@ public class BudgetTransactionsViewModel : ViewModelBase
 {
     private readonly DatabaseHelper _db;
 
+    private ObservableCollection<ConsolidatedTransactionsViewModel> _consolidatedRows = new();
+    public ObservableCollection<ConsolidatedTransactionsViewModel> ConsolidatedRows
+    {
+        get => _consolidatedRows;
+        private set { _consolidatedRows = value; OnPropertyChanged(); }
+    }
+
+
     // ── Raw data loaded from DB ───────────────────────────────────────────────
     private ObservableCollection<TransactionRow> _allRows = new();
 
@@ -107,9 +115,13 @@ public class BudgetTransactionsViewModel : ViewModelBase
     // Constructor
     // =========================================================================
 
+    private string _currentDatabaseMode = string.Empty;
+
+
     public BudgetTransactionsViewModel()
     {
         _db = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+
 
         // Initialise an empty view so bindings don't throw before data arrives
         _allRows = new ObservableCollection<TransactionRow>();
@@ -129,7 +141,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
             }
         });
 
-
+        _ = LoadConsolidatedTransactionsAsync();
         _ = LoadTransactionsAsync();
     }
 
@@ -137,29 +149,88 @@ public class BudgetTransactionsViewModel : ViewModelBase
     // Data Loading (ADO.NET)
     // =========================================================================
 
+    private async Task LoadConsolidatedTransactionsAsync()
+    {
+        IsLoading = true;
 
+        try
+        {
+            const string sql = @"
+        SELECT
+            id, beneficiary_id, project_code, civil_registry_id,
+            full_name, first_name, middle_name, last_name,
+            office_id, office_name, transaction_type,
+            amount, transaction_date, status, created_at
+        FROM consolidated_transactions
+        ORDER BY transaction_date DESC;";
+
+            DataTable dt = await _db.ExecuteQueryAsync(sql);
+
+            var rows = new ObservableCollection<ConsolidatedTransactionsViewModel>();
+
+            foreach (DataRow row in dt.Rows)
+            {
+                rows.Add(new ConsolidatedTransactionsViewModel
+                {
+                    Id = Convert.ToInt32(row["id"]),
+                    BeneficiaryId = row["beneficiary_id"].ToString() ?? string.Empty,
+                    ProjectCode = row["project_code"].ToString() ?? string.Empty,
+                    CivilRegistryId = row["civil_registry_id"].ToString() ?? string.Empty,
+                    FullName = row["full_name"].ToString() ?? string.Empty,
+                    FirstName = row["first_name"].ToString() ?? string.Empty,
+                    MiddleName = row["middle_name"].ToString() ?? string.Empty,
+                    LastName = row["last_name"].ToString() ?? string.Empty,
+                    OfficeId = row["office_id"].ToString() ?? string.Empty,
+                    OfficeName = row["office_name"].ToString() ?? string.Empty,
+                    TransactionType = row["transaction_type"].ToString() ?? string.Empty,
+                    Amount = row["amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["amount"]),
+                    TransactionDate = row["transaction_date"] == DBNull.Value
+                        ? DateOnly.MinValue
+                        : DateOnly.FromDateTime(Convert.ToDateTime(row["transaction_date"])),
+                    Status = row["status"].ToString() ?? string.Empty,
+                    CreatedAt = row["created_at"] == DBNull.Value
+                        ? DateTime.MinValue
+                        : Convert.ToDateTime(row["created_at"])
+                });
+            }
+
+            ConsolidatedRows = rows;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[BudgetTransactionsViewModel] Consolidated load error: {ex.Message}"
+            );
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
     private async Task LoadTransactionsAsync()
     {
         IsLoading = true;
+
         try
         {
             const string sql = @"
-            SELECT
-                t.Id,
-                COALESCE(t.project_code, '')     AS ProjectCode,
-                COALESCE(pd.project, '')         AS ProjectName,
-                COALESCE(t.voucher_code, '')     AS VoucherCode,
-                t.Amount,
-                t.Date
-                FROM transactions t
-                LEFT JOIN project_details pd
-                ON t.project_code = pd.project_details_id
-            ORDER BY t.Date DESC;";
+        SELECT
+            t.Id,
+            COALESCE(t.project_code, '')     AS ProjectCode,
+            COALESCE(pd.project, '')         AS ProjectName,
+            COALESCE(t.voucher_code, '')     AS VoucherCode,
+            t.Amount,
+            t.Date
+        FROM transactions t
+        LEFT JOIN project_details pd
+            ON t.project_code = pd.project_details_id
+        ORDER BY t.Date DESC;";
 
             DataTable dt = await _db.ExecuteQueryAsync(sql);
 
             var rows = new ObservableCollection<TransactionRow>();
+
             foreach (DataRow row in dt.Rows)
             {
                 rows.Add(new TransactionRow
@@ -168,10 +239,10 @@ public class BudgetTransactionsViewModel : ViewModelBase
                     ProjectCode = row["ProjectCode"].ToString() ?? string.Empty,
                     ProjectName = row["ProjectName"].ToString() ?? string.Empty,
                     VoucherCode = row["VoucherCode"].ToString() ?? string.Empty,
-                    Amount = Convert.ToDecimal(row["Amount"]),
+                    Amount = row["Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Amount"]),
                     Date = row["Date"] == DBNull.Value
-                       ? DateTime.MinValue
-                       : Convert.ToDateTime(row["Date"]),
+                        ? DateTime.MinValue
+                        : Convert.ToDateTime(row["Date"])
                 });
             }
 
@@ -179,7 +250,9 @@ public class BudgetTransactionsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[BudgetTransactionsViewModel] Load error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine(
+                $"[BudgetTransactionsViewModel] Load error: {ex.Message}"
+            );
         }
         finally
         {
@@ -233,4 +306,6 @@ public class BudgetTransactionsViewModel : ViewModelBase
         FilterStatus      = string.Empty;
         FilterFreeText    = string.Empty;
     }
+
+
 }
