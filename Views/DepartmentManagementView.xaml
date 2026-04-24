@@ -18,7 +18,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Department &amp; Project Management" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="Department &amp; Project Management" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="#000000"/>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -35,7 +35,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="Departments" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"  Foreground="#88000000"/>
+                    <TextBlock Text="Departments" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"  Foreground="#000000"/>
 
                     <ListBox Grid.Row="1" ItemsSource="{Binding Departments}" SelectedItem="{Binding SelectedDepartment}" Margin="0 0 0 12">
                         <ListBox.ItemTemplate>
@@ -51,7 +51,7 @@
 
                     <StackPanel Grid.Row="2">
                         <!-- Auto-generated Office Code -->
-                        <TextBlock Text="Office ID" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 2"/>
+                        <TextBlock Text="Office ID" FontSize="11" Foreground="#000000" Margin="0 0 0 2"/>
                         <Grid Margin="0 0 0 8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -62,7 +62,7 @@
                                      materialDesign:HintAssist.Hint="Office Code (auto-generated)"
                                      IsReadOnly="True"
                                      FontFamily="Consolas"
-                                     Foreground="#88000000"
+                                     Foreground="#000000"
                                      FontWeight="Bold"/>
                             <Button Grid.Column="1" Content="↻" ToolTip="Generate new code"
                                     Command="{Binding RegenerateCodeCommand}"
@@ -70,8 +70,8 @@
                                     Margin="4 0 0 0"/>
                         </Grid>
 
-                        <TextBox materialDesign:HintAssist.Hint="New Department Name" Text="{Binding NewDepartmentName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 8"  Foreground="#88000000"/>
-                        <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding NewDepartmentDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"  Foreground="#88000000"/>
+                        <TextBox materialDesign:HintAssist.Hint="New Department Name" Text="{Binding NewDepartmentName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 8"  Foreground="#000000"/>
+                        <TextBox materialDesign:HintAssist.Hint="Description" Text="{Binding NewDepartmentDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"  Foreground="#000000"/>
                         <Button Content="Add Department" Command="{Binding AddDepartmentCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
                     </StackPanel>
                 </Grid>
@@ -104,7 +104,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Text="{Binding SelectedDepartment.Name}" FontSize="24" FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding SelectedDepartment.Description}" FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 4 0 0"/>
+                            <TextBlock Text="{Binding SelectedDepartment.Description}" FontSize="14" Foreground="#000000" Margin="0 4 0 0"/>
                         </StackPanel>
                         <Button Grid.Column="1" Content="Delete Department" Command="{Binding DeleteDepartmentCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="Red" BorderBrush="Red" VerticalAlignment="Bottom"/>
                     </Grid>
@@ -184,8 +184,8 @@
                     </Style>
                 </materialDesign:Card.Style>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <materialDesign:PackIcon Kind="OfficeBuilding" Width="64" Height="64" HorizontalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                    <TextBlock Text="Select a department to view or manage its projects." FontSize="18" Margin="0 16 0 0" Foreground="{DynamicResource MaterialDesignBodyLight}" TextAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="OfficeBuilding" Width="64" Height="64" HorizontalAlignment="Center" Foreground="#000000"/>
+                    <TextBlock Text="Select a department to view or manage its projects." FontSize="18" Margin="0 16 0 0" Foreground="#000000" TextAlignment="Center"/>
                 </StackPanel>
             </materialDesign:Card>
         </Grid>

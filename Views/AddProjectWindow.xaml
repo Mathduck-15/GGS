@@ -26,7 +26,7 @@
         <StackPanel Grid.Row="0" Margin="0 0 0 20">
             <TextBlock Text="Add New Project" FontSize="22" FontWeight="Light"/>
             <TextBlock Text="Fill in the details below. Fields marked * are required."
-                       FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"
+                       FontSize="12" Foreground="#000000"
                        Margin="0 4 0 0"/>
         </StackPanel>
 
@@ -36,19 +36,19 @@
 
                 <!-- Project ID (read-only) -->
                 <TextBlock Text="Project ID" FontSize="11"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           
                            Margin="0 0 0 2"/>
                 <TextBox Text="{Binding ProjectId, Mode=OneWay}"
                          IsReadOnly="True"
                          FontFamily="Consolas"
                          FontWeight="Bold"
-                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         Foreground="#000000"
                          materialDesign:HintAssist.Hint="Auto-generated"
                          Margin="0 0 0 16"/>
 
                 <!-- Voucher Code (read-only) -->
                 <TextBlock Text="Voucher Code" FontSize="11"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           
                            Margin="0 0 0 2"/>
                 <TextBox Text="{Binding VoucherCode, Mode=OneWay}"
                          IsReadOnly="True"
@@ -56,7 +56,7 @@
                          FontWeight="Bold"
                          
                          materialDesign:HintAssist.Hint="Auto-generated"
-                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         Foreground="#000000"
                          Margin="0 0 0 16"/>
 
                 <!-- Project Name * -->
@@ -82,10 +82,10 @@
 
                     <StackPanel>
                         <TextBlock Text="Filter Year (required)" FontSize="11"
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   Foreground="#000000"
                                    Margin="0 0 0 2"/>
                         <TextBlock Text="{Binding SelectedYear, StringFormat='Selected year: {0}', FallbackValue='No year selected'}"
-                                   FontSize="12"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                   FontSize="12"   Foreground="#000000"/>
                     </StackPanel>
 
                     <!-- Year picker popup button -->
@@ -106,7 +106,7 @@
                                 <StackPanel>
                                     <TextBlock Text="Select Year" FontSize="11" FontWeight="Bold"
                                                Margin="8 6 8 2"
-                                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                               Foreground="#000000"/>
                                     <ListBox x:Name="YearListBox"
                                              ItemsSource="{Binding AvailableYears}"
                                              SelectedItem="{Binding SelectedYear}"
@@ -126,7 +126,7 @@
 
                 <!-- Office Code * -->
                 <TextBlock Text="Office Code *" FontSize="11"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                          
                            Margin="0 0 0 2"/>
                 <ComboBox ItemsSource="{Binding FilteredOfficeCodes}"
                           SelectedItem="{Binding SelectedOfficeCode}"

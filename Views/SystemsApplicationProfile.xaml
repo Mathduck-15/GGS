@@ -28,7 +28,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Dashboard Display Photo" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" HorizontalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="Dashboard Display Photo" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" HorizontalAlignment="Center" Foreground="#000000"/>
 
         <Grid Grid.Row="1" Margin="0 0 0 16">
             <Grid.ColumnDefinitions>
@@ -39,7 +39,7 @@
                      Text="{Binding PhotoAddress}" 
                      IsReadOnly="True"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                     Foreground="#000000"
                      Margin="0 0 8 0"/>
             <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseCommand}" VerticalAlignment="Bottom"/>
         </Grid>

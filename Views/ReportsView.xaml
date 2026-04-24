@@ -23,7 +23,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="System Reports &amp; Analytics" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="System Reports &amp; Analytics" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="#000000"/>
 
         <!-- Controls Area -->
         <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="16">
@@ -32,13 +32,13 @@
                           ItemsSource="{Binding ReportTypes}" 
                           SelectedItem="{Binding SelectedReportType}" 
                           Width="300" Margin="0 0 16 0" VerticalAlignment="Center" 
-                           Foreground="#88000000"/>
+                           Foreground="#000000"/>
                 
                 <Button Content="REFRESH DATA" Command="{Binding GenerateReportCommand}" 
                         Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 8 0"  />
                         
                 <Button Content="EXPORT / PRINT" Command="{Binding PrintExportCommand}" 
-                        Style="{StaticResource MaterialDesignFlatButton}"  Foreground="#88000000" />
+                        Style="{StaticResource MaterialDesignFlatButton}"  Foreground="#000000" />
             </StackPanel>
         </materialDesign:Card>
 

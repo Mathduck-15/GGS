@@ -25,11 +25,11 @@
                 <materialDesign:PackIcon Kind="AccountGroup" Width="28" Height="28"
                                          VerticalAlignment="Center" Margin="0 0 10 0"
                                          
-                                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                <TextBlock Text="CRS Beneficiary Records" FontSize="28" FontWeight="Light" VerticalAlignment="Center"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                           Foreground="#000000"/>
+                <TextBlock Text="CRS Beneficiary Records" FontSize="28" FontWeight="Light" VerticalAlignment="Center"   Foreground="#000000"/>
             </StackPanel>
             <TextBlock Text="Civil Registry System — READ ONLY reference data" FontSize="13"
-                       Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="38 4 0 0"/>
+                       Foreground="#000000" Margin="38 4 0 0"/>
         </StackPanel>
 
         <!-- Status Bar -->

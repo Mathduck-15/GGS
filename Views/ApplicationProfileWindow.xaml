@@ -23,18 +23,18 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Company Application Profile" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" HorizontalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="Company Application Profile" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" HorizontalAlignment="Center" />
 
         <TextBox Grid.Row="1" materialDesign:HintAssist.Hint="Governance Name" 
                  Text="{Binding GoveName, UpdateSourceTrigger=PropertyChanged}" 
                  Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                 Foreground="#000000"
                  Margin="0 0 0 16" FontSize="16"/>
 
         <TextBox Grid.Row="2" materialDesign:HintAssist.Hint="Address" 
                  Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" 
                  Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                 Foreground="#000000"
                  Margin="0 0 0 16" FontSize="16"/>
 
         <Grid Grid.Row="3" Margin="0 0 0 16">
@@ -46,7 +46,7 @@
                      Text="{Binding LogoAddress}" 
                      IsReadOnly="True"
                      Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                     Foreground="#000000"
                      Margin="0 0 8 0"/>
             <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseCommand}" VerticalAlignment="Bottom"/>
         </Grid>

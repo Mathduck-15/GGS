@@ -25,7 +25,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Annual Budget Allocation" FontSize="28" FontWeight="Light" Margin="0 0 0 24" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="Annual Budget Allocation" FontSize="28" FontWeight="Light" Margin="0 0 0 24" Foreground="#000000"/>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -37,21 +37,21 @@
             <StackPanel Grid.Column="0" Margin="0 0 12 0">
                 <materialDesign:Card Padding="16" Margin="0 0 0 16">
                     <StackPanel>
-                        <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14" Foreground="#000000"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="2*"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Year"
-                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     Foreground="#000000"
                                      Text="{Binding NewBudgetYear}" Margin="0 0 8 12"/>
                             <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Total Amount"
-                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                     Foreground="#000000"
                                      Text="{Binding NewBudgetAmount}" Margin="0 0 0 12"/>
                         </Grid>
                         <TextBox materialDesign:HintAssist.Hint="Description"
-                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                 Foreground="#000000"
                                  Text="{Binding NewBudgetDescription}" Margin="0 0 0 14"/>
                         <Button Content="Set Yearly Budget" Command="{Binding AddYearlyBudgetCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"/>
@@ -60,7 +60,7 @@
 
                 <materialDesign:Card Padding="16">
                     <StackPanel>
-                        <TextBlock Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10" Foreground="#000000"/>
                         <ListBox ItemsSource="{Binding YearlyBudgets}" SelectedItem="{Binding SelectedYearlyBudget}" MinHeight="150">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -74,7 +74,7 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding TotalAmount, StringFormat=₱{0:N2}}"
                                                    VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                                   Foreground="#000000"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -100,7 +100,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Budget Distribution" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="Budget Distribution" FontSize="20" FontWeight="Bold" Margin="0 0 0 16" Foreground="#000000"/>
 
                         <!-- Summary Stats -->
                         <Grid Grid.Row="1" Margin="0 0 0 16">
@@ -110,21 +110,21 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Total Budget" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                <TextBlock Text="Total Budget" Foreground="#000000" FontSize="12"/>
                                 <TextBlock Text="{Binding SelectedYearlyBudget.TotalAmount, StringFormat=₱{0:N2}}"
-                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                 Foreground="#000000"
                                            FontSize="20" FontWeight="SemiBold"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="Unallocated" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                <TextBlock Text="Unallocated" Foreground="#000000" FontSize="12"/>
                                 <TextBlock Text="{Binding UnallocatedAmount, StringFormat=₱{0:N2}}"
                                            FontSize="20" FontWeight="SemiBold"
                                            Foreground="{Binding UnallocatedAmount, Converter={StaticResource AllocationColorConverter}}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Allocated %" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                <TextBlock Text="Allocated %" Foreground="#000000" FontSize="12"/>
                                 <TextBlock Text="{Binding AllocationPercent, StringFormat={}{0:N1}%}"
-                                 Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                 Foreground="#000000"
                                            FontSize="20" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Grid>

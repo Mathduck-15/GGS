@@ -18,7 +18,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="File Upload Center" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="File Upload Center" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="#000000"/>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -29,31 +29,31 @@
             <!-- Upload Section -->
             <materialDesign:Card Grid.Column="0" Margin="0 0 12 0" VerticalAlignment="Top">
                 <StackPanel Margin="16">
-                    <TextBlock Text="New File Upload" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#88000000"/>
+                    <TextBlock Text="New File Upload" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#000000"/>
 
                     <Grid Margin="0 0 0 16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox materialDesign:HintAssist.Hint="Selected File" Text="{Binding SelectedFilePath}" IsReadOnly="True" VerticalAlignment="Center"  Foreground="#88000000"/>
+                        <TextBox materialDesign:HintAssist.Hint="Selected File" Text="{Binding SelectedFilePath}" IsReadOnly="True" VerticalAlignment="Center"  Foreground="#000000"/>
                         <Button Grid.Column="1" Content="..." Command="{Binding SelectFileCommand}" Margin="8 0 0 0" Padding="8 0"/>
                     </Grid>
 
-                    <TextBox materialDesign:HintAssist.Hint="Friendly File Name" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 16"  Foreground="#88000000"/>
+                    <TextBox materialDesign:HintAssist.Hint="Friendly File Name" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 16"  Foreground="#000000"/>
 
                     <ComboBox materialDesign:HintAssist.Hint="Associate Department" 
                               ItemsSource="{Binding Departments}" 
                               SelectedItem="{Binding SelectedDepartment}" 
                               DisplayMemberPath="Name"
-                               Foreground="#88000000"
+                               Foreground="#000000"
                               Margin="0 0 0 16"/>
 
                     <ComboBox materialDesign:HintAssist.Hint="Associate Parameter" 
                               ItemsSource="{Binding Categories}" 
                               SelectedItem="{Binding SelectedCategory}" 
                               DisplayMemberPath="Name"
-                               Foreground="#88000000"
+                               Foreground="#000000"
                               Margin="0 0 0 24"/>
 
                     <Button Content="Upload File" Command="{Binding UploadFileCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
@@ -68,7 +68,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="Recently Uploaded" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"  Foreground="#88000000"/>
+                    <TextBlock Text="Recently Uploaded" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"  Foreground="#000000"/>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding UploadedFiles}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                         <DataGrid.Columns>

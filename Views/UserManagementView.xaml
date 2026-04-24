@@ -45,7 +45,7 @@
 
                         <TextBox Grid.Row="0" materialDesign:HintAssist.Hint="Search Users..." 
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16"  Foreground="#88000000">
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16"  Foreground="#000000">
                         </TextBox>
 
                         <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" AutoGenerateColumns="False" 
@@ -65,7 +65,7 @@
                 <!-- Right: Edit/Add Form -->
                 <materialDesign:Card Grid.Column="1" Margin="8" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="User Details" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#88000000"/>
+                        <TextBlock Text="User Details" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#000000"/>
 
                         <!-- Admin Profile Photo Upload -->
                         <Grid Width="120" Height="120" HorizontalAlignment="Center" Margin="0 0 0 8">
@@ -88,25 +88,25 @@
                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
 
                         <TextBox materialDesign:HintAssist.Hint="Username" 
-                         Foreground="#88000000"
+                         Foreground="#000000"
              Text="{Binding SelectedUser.Name}" 
              IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
 
                         <TextBox materialDesign:HintAssist.Hint="Email" 
-                                  Foreground="#88000000"
+                                  Foreground="#000000"
              Text="{Binding SelectedUser.Email}" 
              IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
 
                         <PasswordBox materialDesign:HintAssist.Hint="Password (Leave blank to keep)" 
-                 IsEnabled="{Binding IsEditing}" Margin="0 0 0 16"  Foreground="#88000000" />
+                 IsEnabled="{Binding IsEditing}" Margin="0 0 0 16"  Foreground="#000000" />
 
-                        <ComboBox materialDesign:HintAssist.Hint="System Role"  Foreground="#88000000"
+                        <ComboBox materialDesign:HintAssist.Hint="System Role"  Foreground="#000000"
               ItemsSource="{Binding Roles}" 
               SelectedItem="{Binding SelectedUser.Role}" 
               IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
 
                         <ComboBox materialDesign:HintAssist.Hint="Department" 
-                                   Foreground="#88000000"
+                                   Foreground="#000000"
               ItemsSource="{Binding Offices}" 
               DisplayMemberPath="Name" SelectedValuePath="Id"
               SelectedValue="{Binding SelectedOfficeId}" 
@@ -114,7 +114,7 @@
 
                         <CheckBox Content="Is Active" 
               IsChecked="{Binding SelectedUser.IsActive}" 
-              IsEnabled="{Binding IsEditing}" Margin="0 0 0 24"  Foreground="#88000000" />
+              IsEnabled="{Binding IsEditing}" Margin="0 0 0 24"  Foreground="#000000" />
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Content="ADD NEW" Command="{Binding AddCommand}" Margin="0 0 8 0" 

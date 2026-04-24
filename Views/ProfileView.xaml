@@ -18,7 +18,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="User Profile &amp; Account" FontSize="36" FontWeight="Light" Margin="0 0 0 32"   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+        <TextBlock Grid.Row="0" Text="User Profile &amp; Account" FontSize="36" FontWeight="Light" Margin="0 0 0 32"   Foreground="#000000"/>
 
         <materialDesign:Card Grid.Row="1" VerticalAlignment="Top" Padding="32">
             <Grid>
@@ -50,7 +50,7 @@
                             HorizontalAlignment="Center" Margin="0 0 0 24"/>
                     
                     <TextBlock Text="{Binding Username}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    <TextBlock Text="{Binding Role}" FontSize="20" Foreground="{DynamicResource MaterialDesignBodyLight}" HorizontalAlignment="Center" Margin="0 4 0 0"/>
+                    <TextBlock Text="{Binding Role}" FontSize="20" Foreground="#000000" HorizontalAlignment="Center" Margin="0 4 0 0"/>
                     
                     <Border Background="{DynamicResource PrimaryHueLightBrush}" CornerRadius="20" HorizontalAlignment="Center" Margin="0 16 0 0" Padding="12 4">
                         <TextBlock Text="{Binding DepartmentName}" Foreground="{DynamicResource PrimaryHueLightForegroundBrush}" FontWeight="SemiBold"/>
@@ -71,28 +71,28 @@
 
                 <!-- Right Column: Editing Form -->
                 <StackPanel Grid.Column="1" Margin="24 0 0 0">
-                    <TextBlock Text="Edit Profile Information" FontSize="24" FontWeight="SemiBold" Margin="0 0 0 24"  Foreground="#88000000"/>
+                    <TextBlock Text="Edit Profile Information" FontSize="24" FontWeight="SemiBold" Margin="0 0 0 24"  Foreground="#000000"/>
 
                     <Grid Margin="0 0 0 16">
-                        <materialDesign:PackIcon Kind="Account" VerticalAlignment="Center" Margin="0 0 12 0"  Foreground="#88000000"/>
+                        <materialDesign:PackIcon Kind="Account" VerticalAlignment="Center" Margin="0 0 12 0"  Foreground="#000000"/>
                         <TextBox materialDesign:HintAssist.Hint="Display Name / Username" 
                                  Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" 
                                  FontSize="18"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                  Margin="32 0 0 0"
-                                  Foreground="#88000000"/>
+                                  Foreground="#000000"/>
                     </Grid>
 
                     <Separator Margin="0 32 0 32"/>
 
-                    <TextBlock Text="Security Update" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 16"  Foreground="#88000000"/>
+                    <TextBlock Text="Security Update" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 16"  Foreground="#000000"/>
                     <TextBlock Text="Leave these blank if you do not wish to change your password." 
-                                Foreground="#88000000" FontSize="14" Margin="0 0 0 16"/>
+                                Foreground="#000000" FontSize="14" Margin="0 0 0 16"/>
 
                     <Grid Margin="0 0 0 16">
-                        <materialDesign:PackIcon Kind="Lock" VerticalAlignment="Center" Margin="0 0 12 0"  Foreground="#88000000"/>
+                        <materialDesign:PackIcon Kind="Lock" VerticalAlignment="Center" Margin="0 0 12 0"  Foreground="#000000"/>
                         <PasswordBox materialDesign:HintAssist.Hint="New Password"
-                                      Foreground="#88000000"
+                                      Foreground="#000000"
                                      x:Name="NewPasswordBox"
                                      FontSize="18"
                                      PasswordChanged="NewPasswordBox_PasswordChanged"
@@ -101,10 +101,10 @@
                     </Grid>
 
                     <Grid Margin="0 0 0 32">
-                        <materialDesign:PackIcon Kind="LockCheck" VerticalAlignment="Center" Margin="0 0 12 0"  Foreground="#88000000"/>
+                        <materialDesign:PackIcon Kind="LockCheck" VerticalAlignment="Center" Margin="0 0 12 0"  Foreground="#000000"/>
                         <PasswordBox materialDesign:HintAssist.Hint="Confirm New Password" 
                                      x:Name="ConfirmPasswordBox"
-                                      Foreground="#88000000"
+                                      Foreground="#000000"
                                      FontSize="18"
                                      PasswordChanged="ConfirmPasswordBox_PasswordChanged"
                                      Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"

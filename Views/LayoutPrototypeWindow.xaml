@@ -128,7 +128,7 @@
                 <!-- Middle: Nav Buttons -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="Transparent" BorderThickness="0">
                     <StackPanel>
-                        <TextBlock Text="NAVIGATION" Foreground="#64748B" FontSize="12" FontWeight="SemiBold" Margin="24,16,24,8"/>
+                        <TextBlock Text="NAVIGATION" Foreground="#000000" FontSize="12" FontWeight="SemiBold" Margin="24,16,24,8"/>
                         
                         <Button Style="{StaticResource NavButtonStyle}">
                             <Grid>
@@ -158,7 +158,7 @@
                             </Grid>
                         </Button>
 
-                        <TextBlock Text="OPERATIONS" Foreground="#64748B" FontSize="12" FontWeight="SemiBold" Margin="24,24,24,8"/>
+                        <TextBlock Text="OPERATIONS" Foreground="#000000" FontSize="12" FontWeight="SemiBold" Margin="24,24,24,8"/>
                         
                         <Button Style="{StaticResource NavButtonStyle}">
                             <Grid>
@@ -236,14 +236,14 @@
                 <!-- Left: Org name + Subtitle -->
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="Organization Name" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Governance Management System" FontSize="13" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                    <TextBlock Text="Governance Management System" FontSize="13" Foreground="#000000" Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <!-- Right: Username + Role + Avatar -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
                         <TextBlock Text="Admin User" Foreground="White" FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"/>
-                        <TextBlock Text="System Administrator" Foreground="#94A3B8" FontSize="12" HorizontalAlignment="Right"/>
+                        <TextBlock Text="System Administrator" Foreground="#000000" FontSize="12" HorizontalAlignment="Right"/>
                     </StackPanel>
                     
                     <Button Width="40" Height="40" BorderThickness="0" Background="Transparent" Padding="0">
@@ -284,11 +284,11 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#10B981">
+            <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#06B6D4">
                 <StackPanel>
-                    <materialDesign:PackIcon Kind="HandshakeOutline" Width="36" Height="36" Margin="0,0,0,12"/>
-                    <TextBlock Text="PROJECTS" FontSize="18" FontWeight="Bold"/>
-                    <TextBlock Text="Track milestones" FontSize="13" Opacity="0.8"/>
+                    <materialDesign:PackIcon Kind="Domain" Width="36" Height="36" Margin="0,0,0,12"/>
+                    <TextBlock Text="DEPARTMENTS" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock Text="Internal structures" FontSize="13" Opacity="0.8"/>
                 </StackPanel>
             </Button>
             
@@ -313,10 +313,10 @@
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <!-- Placeholder for branding Image -->
                     <Border Background="#F1F5F9" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16">
-                        <materialDesign:PackIcon Kind="ShieldCheck" Foreground="#94A3B8" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="ShieldCheck" Foreground="#000000" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <TextBlock Text="GGS PLATFORM" FontSize="20" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Version 2.0" FontSize="14" Foreground="#64748B" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Version 2.0" FontSize="14" Foreground="#000000" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
@@ -334,7 +334,7 @@
                     
                     <StackPanel Grid.Row="1" VerticalAlignment="Center">
                         <TextBlock Text="11:19 AM" FontSize="48" FontWeight="Light" Foreground="White"/>
-                        <TextBlock Text="Friday, April 24, 2026" FontSize="16" Foreground="#94A3B8"/>
+                        <TextBlock Text="Friday, April 24, 2026" FontSize="16" Foreground="#000000"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -357,15 +357,7 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#06B6D4">
-                <StackPanel>
-                    <materialDesign:PackIcon Kind="Domain" Width="36" Height="36" Margin="0,0,0,12"/>
-                    <TextBlock Text="DEPARTMENTS" FontSize="18" FontWeight="Bold"/>
-                    <TextBlock Text="Internal structures" FontSize="13" Opacity="0.8"/>
-                </StackPanel>
-            </Button>
-            
-            <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#EAB308">
+            <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EAB308">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="Finance" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="BUDGET TRANSACTIONS" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
@@ -373,7 +365,7 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="2" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#64748B">
+            <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#64748B">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="CogBox" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="PARAMETERS" FontSize="18" FontWeight="Bold"/>
@@ -419,20 +411,20 @@
 
                 <!-- Center-right / Right: Status and Time -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="DATABASE STATUS:" Foreground="#94A3B8" FontSize="12" Margin="0,0,4,0"/>
+                    <TextBlock Text="DATABASE STATUS:" Foreground="#000000" FontSize="12" Margin="0,0,4,0"/>
                     <TextBlock Text="ONLINE" Foreground="#34D399" FontSize="12" FontWeight="Bold" Margin="0,0,24,0"/>
 
                     <Button Command="{Binding NavigateTileCommand}" CommandParameter="Profile"
                             Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,24,0"
-                            Foreground="#94A3B8" Cursor="Hand">
+                            Foreground="#000000" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="AccountEditOutline" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="MY PROFILE" FontSize="12" FontWeight="Bold"/>
                         </StackPanel>
                     </Button>
 
-                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#94A3B8" Width="16" Height="16" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TxtCurrentTime" Text="11:19 AM" Foreground="#94A3B8" FontSize="12"/>
+                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#000000" Width="16" Height="16" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtCurrentTime" Text="11:19 AM" Foreground="#000000" FontSize="12"/>
                 </StackPanel>
             </Grid>
         </Border>

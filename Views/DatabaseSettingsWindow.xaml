@@ -22,9 +22,9 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0 0 0 16">
-            <TextBlock Text="Database Configuration" FontSize="24" FontWeight="Light" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+            <TextBlock Text="Database Configuration" FontSize="24" FontWeight="Light" Foreground="#000000"/>
             <TextBlock Text="Select a preset or manually enter your connection details." 
-                       FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 4 0 0"/>
+                       FontSize="12" Foreground="#000000" Margin="0 4 0 0"/>
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -36,13 +36,13 @@
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
                             <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
                                                      VerticalAlignment="Center" Margin="0 0 8 0"
-                                                     Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                            <TextBlock Text="GGMS Database" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                                     Foreground="#000000"/>
+                            <TextBlock Text="GGMS Database" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#000000"/>
                         </StackPanel>
 
                         <!-- Preset Buttons -->
                         <TextBlock Text="Quick Presets — fills both GGMS and CRS simultaneously:" FontSize="12"
-                                   Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 10"/>
+                                   Foreground="#000000" Margin="0 0 0 10"/>
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                             <Grid Margin="0 0 8 0" Width="100">
                                 <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
@@ -107,8 +107,8 @@
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
                             <materialDesign:PackIcon Kind="CheckNetwork" Width="20" Height="20" 
                                                      VerticalAlignment="Center" Margin="0 0 8 0"
-                                                     Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                            <TextBlock Text="Test Connections" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                                     Foreground="#000000"/>
+                            <TextBlock Text="Test Connections" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#000000"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 12">

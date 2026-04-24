@@ -162,7 +162,7 @@
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="Transparent" BorderThickness="0">
                     <StackPanel>
                         <!-- For the items control, group by "Group" property or just flat list -->
-                        <TextBlock Text="MODULES" Foreground="#64748B" FontSize="12" FontWeight="SemiBold" Margin="24,16,24,8"/>
+                        <TextBlock Text="MODULES" Foreground="#000000" FontSize="12" FontWeight="SemiBold" Margin="24,16,24,8"/>
                         
                         <ItemsControl ItemsSource="{Binding NavigationItems}">
                             <ItemsControl.ItemTemplate>
@@ -237,14 +237,14 @@
                 <!-- Left: Org name + Subtitle -->
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding GovernanceName}" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Governance Management System" FontSize="13" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                    <TextBlock Text="Governance Management System" FontSize="13" Foreground="#000000" Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <!-- Right: Username + Role + Avatar -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
                         <TextBlock Text="{Binding CurrentUserName}" Foreground="White" FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"/>
-                        <TextBlock Text="{Binding CurrentUserRole}" Foreground="#94A3B8" FontSize="12" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding CurrentUserRole}" Foreground="#000000" FontSize="12" HorizontalAlignment="Right"/>
                     </StackPanel>
                     
                     <Button Width="40" Height="40" BorderThickness="0" Background="Transparent" Padding="0" Command="{Binding NavigateTileCommand}" CommandParameter="Profile">
@@ -291,12 +291,12 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#10B981"
-                        Command="{Binding NavigateTileCommand}" CommandParameter="Projects">
+                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#06B6D4"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Departments">
                     <StackPanel>
-                        <materialDesign:PackIcon Kind="HandshakeOutline" Width="36" Height="36" Margin="0,0,0,12"/>
-                        <TextBlock Text="PROJECTS" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Track milestones" FontSize="13" Opacity="0.8"/>
+                        <materialDesign:PackIcon Kind="Domain" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="DEPARTMENTS" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Internal structures" FontSize="13" Opacity="0.8"/>
                     </StackPanel>
                 </Button>
                 
@@ -324,12 +324,12 @@
                         <!-- Binding the logo to SystemPhotoSource or fallback to icon -->
                         <Border Background="#F1F5F9" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16" ClipToBounds="True">
                             <Grid>
-                                <materialDesign:PackIcon Kind="ShieldCheck" Foreground="#94A3B8" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SystemPhotoSource, Converter={StaticResource InvBoolToVis}}"/>
+                                <materialDesign:PackIcon Kind="ShieldCheck" Foreground="#000000" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SystemPhotoSource, Converter={StaticResource InvBoolToVis}}"/>
                                 <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" Margin="8" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}"/>
                             </Grid>
                         </Border>
                         <TextBlock Text="GGS PLATFORM" FontSize="20" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Version 2.0" FontSize="14" Foreground="#64748B" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Version 2.0" FontSize="14" Foreground="#000000" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
@@ -371,16 +371,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#06B6D4"
-                        Command="{Binding NavigateTileCommand}" CommandParameter="Departments">
-                    <StackPanel>
-                        <materialDesign:PackIcon Kind="Domain" Width="36" Height="36" Margin="0,0,0,12"/>
-                        <TextBlock Text="DEPARTMENTS" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Internal structures" FontSize="13" Opacity="0.8"/>
-                    </StackPanel>
-                </Button>
-                
-                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#EAB308"
+                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EAB308"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Transactions">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="Finance" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -389,7 +380,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="2" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#64748B"
+                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#64748B"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Parameters">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="CogBox" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -436,13 +427,13 @@
                 <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,16">
                     <Button Background="Transparent" BorderThickness="0"
                             Command="{Binding ShowDashboardCommand}"
-                            Margin="0 0 12 0" Foreground="#64748B" Height="32" Padding="0">
+                            Margin="0 0 12 0" Foreground="#000000" Height="32" Padding="0">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ArrowLeft" Width="16" Height="16" VerticalAlignment="Center" Margin="0 0 5 0"/>
                             <TextBlock Text="Main" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <TextBlock Text="›" Foreground="#64748B" FontSize="18" VerticalAlignment="Center" Margin="0 0 12 0"/>
+                    <TextBlock Text="›" Foreground="#000000" FontSize="18" VerticalAlignment="Center" Margin="0 0 12 0"/>
                     <TextBlock Text="{Binding CurrentSectionTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
                 </StackPanel>
 
@@ -484,21 +475,21 @@
 
                 <!-- Center-right / Right: Status and Time -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="DATABASE STATUS:" Foreground="#94A3B8" FontSize="12" Margin="0,0,4,0"/>
+                    <TextBlock Text="DATABASE STATUS:" Foreground="#000000" FontSize="12" Margin="0,0,4,0"/>
                     <TextBlock Text="ONLINE" Foreground="#34D399" FontSize="12" FontWeight="Bold" Margin="0,0,24,0" Visibility="{Binding IsDatabaseConnected, Converter={StaticResource BoolToVis}}"/>
                     <TextBlock Text="OFFLINE" Foreground="#EF4444" FontSize="12" FontWeight="Bold" Margin="0,0,24,0" Visibility="{Binding IsDatabaseConnected, Converter={StaticResource InvBoolToVis}}"/>
 
                     <Button Command="{Binding NavigateTileCommand}" CommandParameter="Profile"
                             Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,24,0"
-                            Foreground="#94A3B8" Cursor="Hand">
+                            Foreground="#000000" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="AccountEdit" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="MY PROFILE" FontSize="12" FontWeight="Bold"/>
                         </StackPanel>
                     </Button>
 
-                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#94A3B8" Width="16" Height="16" Margin="0,0,8,0"/>
-                    <TextBlock Text="{Binding CurrentDate}" Foreground="#94A3B8" FontSize="12"/>
+                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#000000" Width="16" Height="16" Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding CurrentDate}" Foreground="#000000" FontSize="12"/>
                 </StackPanel>
             </Grid>
         </Border>

@@ -22,13 +22,13 @@
                    HorizontalAlignment="Center" Margin="0 0 0 6"/>
 
         <TextBlock x:Name="SubtitleText"
-                   FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"
+                   FontSize="12" Foreground="#000000"
                    HorizontalAlignment="Center" TextAlignment="Center"
                    TextWrapping="Wrap" Margin="0 0 0 20"/>
 
         <TextBox x:Name="OtpInput"
          materialDesign:HintAssist.Hint="Enter 6-digit OTP"
-         materialDesign:HintAssist.Foreground="#DF000000"
+         materialDesign:HintAssist.Foreground="#000000"
          materialDesign:HintAssist.IsFloating="False"
          Foreground="Black"
          Background="#888888"
