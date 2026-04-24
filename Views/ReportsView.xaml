@@ -32,13 +32,13 @@
                           ItemsSource="{Binding ReportTypes}" 
                           SelectedItem="{Binding SelectedReportType}" 
                           Width="300" Margin="0 0 16 0" VerticalAlignment="Center" 
-                           Foreground="#88FFFFFF"/>
+                           Foreground="#88000000"/>
                 
                 <Button Content="REFRESH DATA" Command="{Binding GenerateReportCommand}" 
                         Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 8 0"  />
                         
                 <Button Content="EXPORT / PRINT" Command="{Binding PrintExportCommand}" 
-                        Style="{StaticResource MaterialDesignFlatButton}"  Foreground="#88FFFFFF" />
+                        Style="{StaticResource MaterialDesignFlatButton}"  Foreground="#88000000" />
             </StackPanel>
         </materialDesign:Card>
 

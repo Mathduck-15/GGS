@@ -65,7 +65,7 @@
                     </Button>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{Binding GovernanceName}"
-                                   FontSize="40" Foreground="White"/>
+                                   FontSize="40" Foreground="#DF000000"/>
                     </StackPanel>
                     
 
@@ -97,14 +97,14 @@
                 <StackPanel Grid.Column="4" Orientation="Horizontal"
                             VerticalAlignment="Center" Margin="0 0 8 0">
                     <Border Width="36" Height="36" CornerRadius="18"
-                            Background="#33FFFFFF" Margin="0 0 10 0"
+                            Background="#1A000000" Margin="0 0 10 0"
                             ClipToBounds="True">
                         <Grid>
                             <Image Source="{Binding ProfilePhotoSource}"
                                    Stretch="UniformToFill"/>
                             <materialDesign:PackIcon Kind="Account"
                                                      Width="22" Height="22"
-                                                     Foreground="#88FFFFFF"
+                                                     Foreground="#88000000"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"
                                                      Visibility="{Binding ProfilePhotoSource,
@@ -114,7 +114,7 @@
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{Binding CurrentUserName, Mode=OneWay}"
                                    FontSize="13" FontWeight="SemiBold"
-                                   Foreground="White"/>
+                                   Foreground="#DF000000"/>
                         <TextBlock Text="{Binding CurrentUserRole, Mode=OneWay}"
                                    FontSize="10" Foreground="#77FFFFFF"/>
                     </StackPanel>
@@ -129,10 +129,10 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="LogoutVariant"
                                                  Width="20" Height="20"
-                                                 Foreground="#FFEF9A9A"
+                                                 Foreground="#FFD32F2F"
                                                  VerticalAlignment="Center"/>
                         <TextBlock Text="Log Out" FontSize="20"
-                                   Foreground="#FFEF9A9A"
+                                   Foreground="#FFD32F2F"
                                    VerticalAlignment="Center"
                                    Margin="6 0 0 0"/>
                     </StackPanel>
@@ -160,11 +160,11 @@
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="ArrowLeft"
                                                  Width="20" Height="20"
-                                                 Foreground="#88FFFFFF"
+                                                 Foreground="#88000000"
                                                  VerticalAlignment="Center"
                                                  Margin="0 0 5 0"/>
                         <TextBlock Text="Home" FontSize="20"
-                                   Foreground="#88FFFFFF"
+                                   Foreground="#88000000"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
@@ -206,23 +206,23 @@
                             <!-- Welcome banner -->
                             <StackPanel Margin="0 0 0 30">
                                 <TextBlock FontSize="28" FontWeight="Light"
-                       Foreground="White" LineHeight="38">
+                       Foreground="#DF000000" LineHeight="38">
                 <Run Text="Welcome back, "/>
                 <Run Text="{Binding CurrentUserName, Mode=OneWay}"
-                     FontWeight="Bold" Foreground="#FF4DD0E1"/>
+                     FontWeight="Bold" Foreground="#FF00838F"/>
                                 </TextBlock>
                                 <TextBlock Text="Select a module below to get started."
-                       FontSize="13" Foreground="#66FFFFFF"
+                       FontSize="13" Foreground="#88000000"
                        Margin="0 6 0 0"/>
                             </StackPanel>
 
                             <!-- Divider -->
-                            <Rectangle Height="1" Fill="#22FFFFFF" Margin="0 0 0 26"/>
+                            <Rectangle Height="1" Fill="#1A000000" Margin="0 0 0 26"/>
 
                             <!-- Section label -->
-                            <TextBlock Text="M O D U L E S"
+                               <TextBlock Text="M O D U L E S"
                    FontSize="11" FontWeight="Bold"
-                   Foreground="#44FFFFFF"
+                   Foreground="#88000000"
                    Margin="4 0 0 18"/>
 
                             <!-- Tiles (UNCHANGED) -->
@@ -269,7 +269,7 @@
                         <!-- RIGHT SIDE PANEL (NEW, SAFE ADDITION) -->
                         <Border Grid.Column="1"
             Margin="20 0 0 0"
-            Background="#1AFFFFFF"
+            Background="#0C000000"
             CornerRadius="14"
             Padding="18">
 
@@ -278,10 +278,10 @@
                                 <TextBlock Text="Dashboard Overview"
                        FontSize="16"
                        FontWeight="SemiBold"
-                       Foreground="White"
+                       Foreground="#DF000000"
                        Margin="0 0 0 12"/>
 
-                                <Border Background="#33FFFFFF" CornerRadius="10" Padding="8" MaxHeight="450" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}">
+                                <Border Background="#1A000000" CornerRadius="10" Padding="8" MaxHeight="450" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}">
                                     <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" />
                                 </Border>
                             </StackPanel>
