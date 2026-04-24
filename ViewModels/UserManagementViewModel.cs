@@ -25,6 +25,7 @@ public class UserManagementViewModel : ViewModelBase
     private string _searchText = string.Empty;
     private ICollectionView _usersView;
     private bool _isEditing;
+    private string _newPasswordInput = string.Empty;   // value from the PasswordBox
     private ObservableCollection<Office> _offices = new();
     private ObservableCollection<DepartmentRole> _allRoles = new();
     private ObservableCollection<DepartmentRole> _filteredRoles = new();
@@ -111,6 +112,14 @@ public class UserManagementViewModel : ViewModelBase
     }
 
     public bool IsNotEditing => !IsEditing;
+
+    /// <summary>Plain-text password typed in the PasswordBox. Reset after save/cancel.</summary>
+    public string NewPasswordInput
+    {
+        get => _newPasswordInput;
+        set { _newPasswordInput = value; OnPropertyChanged(); }
+    }
+
     public ObservableCollection<string> Roles { get; } = new() { "SuperAdmin", "Admin", "Evaluator", "User" };
 
     // ── ValidateUsers Properties ─────────────────────────────────────────────
@@ -350,17 +359,23 @@ public class UserManagementViewModel : ViewModelBase
     {
         if (SelectedUser.Id == 0)
         {
-            if (string.IsNullOrEmpty(SelectedUser.Password))
-                SelectedUser.Password = "defaultpass";
-            SelectedUser.Password = PasswordHasher.HashPassword(SelectedUser.Password);
+            // ── New user ──────────────────────────────────────────────────
+            string plainPw = string.IsNullOrWhiteSpace(NewPasswordInput)
+                ? "defaultpass"
+                : NewPasswordInput;
+
+            SelectedUser.Password = PasswordHasher.HashPassword(plainPw);
             _context.Users.Add(SelectedUser);
         }
-        else if (_context.Entry(SelectedUser).Property(u => u.Password).IsModified)
+        else
         {
-            SelectedUser.Password = PasswordHasher.HashPassword(SelectedUser.Password);
+            // ── Existing user — only update password if something was typed ─
+            if (!string.IsNullOrWhiteSpace(NewPasswordInput))
+                SelectedUser.Password = PasswordHasher.HashPassword(NewPasswordInput);
         }
 
         _context.SaveChanges();
+        NewPasswordInput = string.Empty;   // clear backing field (box is cleared by code-behind)
         IsEditing = false;
         LoadData();
     }
@@ -396,6 +411,7 @@ public class UserManagementViewModel : ViewModelBase
 
     private void ExecuteCancel(object? parameter)
     {
+        NewPasswordInput = string.Empty;
         IsEditing = false;
         SelectedUser = new User();
         foreach (var entry in _context.ChangeTracker.Entries().Where(e => e.State != EntityState.Unchanged))

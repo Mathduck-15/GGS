@@ -19,6 +19,7 @@ public class LoginViewModel : ViewModelBase
     private string _password = string.Empty;
     private string _errorMessage = string.Empty;
     private bool _isLoggingIn = false;
+    private bool _isPasswordVisible = false;
     private string _governanceName = "Good Governance Management System";
     private BitmapImage? _logoSource;
     private string _address = string.Empty;
@@ -48,6 +49,12 @@ public class LoginViewModel : ViewModelBase
     {
         get => _isLoggingIn;
         set { _isLoggingIn = value; OnPropertyChanged(); }
+    }
+
+    public bool IsPasswordVisible
+    {
+        get => _isPasswordVisible;
+        set { _isPasswordVisible = value; OnPropertyChanged(); }
     }
 
     public string GovernanceName
@@ -141,6 +148,7 @@ public class LoginViewModel : ViewModelBase
             }
 
             bool passwordOk = PasswordHasher.VerifyPassword(Password, user.Password);
+
             if (!passwordOk)
             {
                 ErrorMessage = "❌ Incorrect password. Please try again.";

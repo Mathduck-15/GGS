@@ -250,10 +250,73 @@
 
             <!-- ── Tab 2: Consolidated Transactions ── -->
             <TabItem Header="Consolidated Transactions">
-                <materialDesign:Card Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Consolidated Filter Bar -->
+                    <materialDesign:Card Grid.Row="0" Padding="12 8" Margin="0 0 0 12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="Search name, ID, type…"
+                                     Text="{Binding ConsolidatedFilterFreeText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Foreground="#000000"
+                                     Margin="0 0 8 0"/>
+
+                            <TextBox Grid.Column="1"
+                                     materialDesign:HintAssist.Hint="Full Name"
+                                     Text="{Binding ConsolidatedFilterName, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Foreground="#000000"
+                                     Margin="0 0 8 0"/>
+
+                            <TextBox Grid.Column="2"
+                                     materialDesign:HintAssist.Hint="Civil Registry ID"
+                                     Text="{Binding ConsolidatedFilterCivilId, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Foreground="#000000"
+                                     Margin="0 0 8 0"/>
+
+                            <TextBox Grid.Column="3"
+                                     materialDesign:HintAssist.Hint="Transaction Type"
+                                     Text="{Binding ConsolidatedFilterTransactionType, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Foreground="#000000"
+                                     Margin="0 0 8 0"/>
+
+                            <ComboBox Grid.Column="4"
+                                      materialDesign:HintAssist.Hint="Status"
+                                      ItemsSource="{Binding StatusOptions}"
+                                      SelectedItem="{Binding ConsolidatedFilterStatus}"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      Foreground="#000000"
+                                      Margin="0 0 8 0"/>
+
+                            <Button Grid.Column="5"
+                                    Content="Clear"
+                                    Command="{Binding ClearConsolidatedFilterCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    VerticalAlignment="Bottom"/>
+                        </Grid>
+                    </materialDesign:Card>
+
+                    <!-- Consolidated DataGrid -->
+                    <materialDesign:Card Grid.Row="1" Padding="0">
                     <DataGrid AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              ItemsSource="{Binding ConsolidatedRows}"
+                              ItemsSource="{Binding ConsolidatedTransactionsView}"
                               RowHeight="40"
                               HeadersVisibility="Column"
                               GridLinesVisibility="None"
@@ -291,6 +354,7 @@
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
+                            <!-- Identity -->
                             <DataGridTextColumn Header="Beneficiary ID" Binding="{Binding BeneficiaryId}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -301,6 +365,17 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
+                            <DataGridTextColumn Header="Civil Registry ID" Binding="{Binding CivilRegistryId}" Width="140">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Name columns -->
                             <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="200">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -311,6 +386,37 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
+                            <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Middle Name" Binding="{Binding MiddleName}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="130">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Project -->
                             <DataGridTextColumn Header="Project Code" Binding="{Binding ProjectCode}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -321,7 +427,8 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Office" Binding="{Binding OfficeName}" Width="160">
+                            <!-- Office -->
+                            <DataGridTextColumn Header="Office ID" Binding="{Binding OfficeId}" Width="100">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="White"/>
@@ -331,6 +438,17 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
+                            <DataGridTextColumn Header="Office Name" Binding="{Binding OfficeName}" Width="160">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="5,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Transaction details -->
                             <DataGridTextColumn Header="Transaction Type" Binding="{Binding TransactionType}" Width="150">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -341,7 +459,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:C}'}" Width="110">
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:C}'}" Width="120">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#FF4DD0E1"/>
@@ -373,10 +491,21 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Created At" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="150">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#AAFFFFFF"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </materialDesign:Card>
-            </TabItem>
+            </Grid>
+        </TabItem>
 
         </TabControl>
 

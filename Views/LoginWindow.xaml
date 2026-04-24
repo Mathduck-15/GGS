@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:GoodGovernanceApp.Views"
+        xmlns:converters="clr-namespace:GoodGovernanceApp.Converters"
         mc:Ignorable="d"
         Title="Good Governance Management - Login" Height="642" Width="965"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
@@ -16,6 +17,12 @@
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
         Name="LoginWin">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <!-- Inverse: True→Collapsed, False→Visible -->
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <!-- Left panel: logo/branding -->
@@ -96,13 +103,52 @@
                               Foreground="#000000"
                              Margin="0 0 0 16"/>
 
-                    <!-- Password -->
-                    <PasswordBox materialDesign:HintAssist.Hint="Password"
-                                 Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
-                                 Name="PasswordBoxControl"
-                                 Margin="0 0 0 8"
-                                 PasswordChanged="PasswordBox_PasswordChanged"
-                                  Foreground="#000000"/>
+                    <!-- Password with show/hide toggle -->
+                    <Grid Margin="0 0 0 8">
+                        <!-- Hidden password (masked) -->
+                        <PasswordBox materialDesign:HintAssist.Hint="Password"
+                                     Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
+                                     Name="PasswordBoxControl"
+                                     PasswordChanged="PasswordBox_PasswordChanged"
+                                     Foreground="#000000"
+                                     Padding="0,0,36,0"
+                                     Visibility="{Binding IsPasswordVisible,
+                                         Converter={StaticResource InverseBoolToVis},
+                                         FallbackValue=Visible}"/>
+
+                        <!-- Visible password (plain text) -->
+                        <TextBox materialDesign:HintAssist.Hint="Password"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                 Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                 Foreground="#000000"
+                                 Padding="0,0,36,0"
+                                 Visibility="{Binding IsPasswordVisible,
+                                     Converter={StaticResource BooleanToVisibilityConverter},
+                                     FallbackValue=Collapsed}"/>
+
+                        <!-- Eye toggle button -->
+                        <ToggleButton HorizontalAlignment="Right"
+                                      VerticalAlignment="Bottom"
+                                      Margin="0,0,0,4"
+                                      Width="28" Height="28"
+                                      Padding="0"
+                                      IsChecked="{Binding IsPasswordVisible}"
+                                      Style="{StaticResource MaterialDesignFlatToggleButton}"
+                                      ToolTip="Show / Hide Password">
+                            <materialDesign:PackIcon>
+                                <materialDesign:PackIcon.Style>
+                                    <Style TargetType="materialDesign:PackIcon">
+                                        <Setter Property="Kind" Value="EyeOutline"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                                <Setter Property="Kind" Value="EyeOffOutline"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                        </ToggleButton>
+                    </Grid>
 
                     <!-- Error / status message -->
                     <TextBlock Text="{Binding ErrorMessage}"

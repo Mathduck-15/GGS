@@ -19,9 +19,13 @@ namespace GoodGovernanceApp.Models
         [StringLength(45)]
         public string? BeneficiaryId { get; set; }
 
-        [Column("prooject_code")]
+        [Column("project_code")]
         [StringLength(45)]
         public string? ProjectCode { get; set; }
+
+        [Column("project_name")]
+        [StringLength(45)]
+        public string? ProjectName { get; set; }
 
         [Column("civil_registry_id")]
         [StringLength(45)]
@@ -66,7 +70,7 @@ namespace GoodGovernanceApp.Models
         public string? Status { get; set; }
 
         [Column("created_at")]
-        public DateTime? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; } 
 
     }
 }

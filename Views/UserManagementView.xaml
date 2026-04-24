@@ -64,7 +64,9 @@
 
                 <!-- Right: Edit/Add Form -->
                 <materialDesign:Card Grid.Column="1" Margin="8" Padding="16">
-                    <StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
                         <TextBlock Text="User Details" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#000000"/>
 
                         <!-- Admin Profile Photo Upload -->
@@ -97,8 +99,11 @@
              Text="{Binding SelectedUser.Email}" 
              IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
 
-                        <PasswordBox materialDesign:HintAssist.Hint="Password (Leave blank to keep)" 
-                 IsEnabled="{Binding IsEditing}" Margin="0 0 0 16"  Foreground="#000000" />
+                        <PasswordBox materialDesign:HintAssist.Hint="Password (Leave blank to keep)"
+                                     Name="UserPasswordBox"
+                                     IsEnabled="{Binding IsEditing}"
+                                     PasswordChanged="UserPasswordBox_PasswordChanged"
+                                     Margin="0 0 0 16" Foreground="#000000" />
 
                         <ComboBox materialDesign:HintAssist.Hint="System Role"  Foreground="#000000"
               ItemsSource="{Binding Roles}" 
@@ -136,7 +141,8 @@
                 Style="{StaticResource MaterialDesignFlatButton}" 
                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
                         </StackPanel>
-                    </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
                 </materialDesign:Card>
             </Grid>
         </TabItem>
