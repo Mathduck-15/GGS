@@ -120,8 +120,9 @@ public class BudgetTransactionsViewModel : ViewModelBase
 
     public BudgetTransactionsViewModel()
     {
-        _db = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+        if (App.AppHost == null) return;
 
+        _db = App.AppHost.Services.GetRequiredService<DatabaseHelper>();
 
         // Initialise an empty view so bindings don't throw before data arrives
         _allRows = new ObservableCollection<TransactionRow>();

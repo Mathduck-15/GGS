@@ -9,9 +9,10 @@
         MinHeight="640" MinWidth="960"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
+        Background="#F3F5F7"
         FontFamily="Segoe UI"
         Name="MainWin">
-
+    
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -20,324 +21,486 @@
             <converters:StringToSolidColorBrushConverter  x:Key="ColorConverter"/>
             <converters:BoolToVisibilityConverter          x:Key="BoolToVis"/>
             <converters:InverseBoolToVisibilityConverter   x:Key="InvBoolToVis"/>
-            <converters:NullToVisibilityConverter x:Key="NullToVis"/>
+            <converters:NullToVisibilityConverter          x:Key="NullToVis"/>
+
+            <!-- Nav Button Style -->
+            <Style x:Key="NavButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#94A3B8"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Height" Value="56"/>
+                <Setter Property="Margin" Value="16,4,16,4"/>
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="12" Padding="8,0">
+                                <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#1E293B"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#334155"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Tile Button Style -->
+            <Style x:Key="TileButtonStyle" TargetType="Button">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Margin" Value="8"/>
+                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="12" Padding="16">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="scale" ScaleX="1" ScaleY="1"/>
+                                </Border.RenderTransform>
+                                <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="1.02" Duration="0:0:0.1"/>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="1.02" Duration="0:0:0.1"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.1"/>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.1"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.ExitActions>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="0.98" Duration="0:0:0.05"/>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="0.98" Duration="0:0:0.05"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX" To="1.02" Duration="0:0:0.05"/>
+                                                <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY" To="1.02" Duration="0:0:0.05"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.ExitActions>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
-    <!-- ═══════════════════════════════════════════════════════════
-         ROOT GRID
-         ═══════════════════════════════════════════════════════════ -->
-    <Grid Background="{StaticResource AppBgBrush}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition>
+                <ColumnDefinition.Style>
+                    <Style TargetType="ColumnDefinition">
+                        <Setter Property="Width" Value="264"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsShowingDashboard}" Value="True">
+                                <Setter Property="Width" Value="0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ColumnDefinition.Style>
+            </ColumnDefinition>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="68"/>    <!-- Header          -->
-            <RowDefinition Height="Auto"/>  <!-- Back / Sub-bar  -->
-            <RowDefinition Height="*"/>     <!-- Content area    -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══════════════════════════════════════════
-             ROW 0  ·  HEADER BAR
-             ═══════════════════════════════════════════ -->
-        <Border Grid.Row="0" Background="{StaticResource AppHeaderBrush}">
-            <Border.Effect>
-                <DropShadowEffect Color="#000000" Opacity="0.55"
-                                  BlurRadius="18" ShadowDepth="2" Direction="270"/>
-            </Border.Effect>
+        <!-- Sidebar: Col 0, RowSpan 3 -->
+        <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <Grid Margin="22 0 16 0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>   <!-- Logo + Title  -->
-                    <ColumnDefinition Width="*"/>      <!-- Spacer        -->
-                    <ColumnDefinition Width="Auto"/>   <!-- Date/Clock    -->
-                    <ColumnDefinition Width="Auto"/>   <!-- DB Status     -->
-                    <ColumnDefinition Width="Auto"/>   <!-- User Info     -->
-                    <ColumnDefinition Width="Auto"/>   <!-- Logout        -->
-                </Grid.ColumnDefinitions>
-
-                <!-- ── Logo + Title ── -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource HeaderIconButton}"
-                            Command="{Binding OpenAppProfileCommand}"
+                <!-- Top: Logo and System Name -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="24,32,24,24">
+                    <Button Command="{Binding OpenAppProfileCommand}"
                             ToolTip="Application Profile"
-                            Margin="0 0 14 0">
-                        <materialDesign:PackIcon Kind="BankOutline"
-                                                 Width="34" Height="34"
-                                                 Foreground="#FF4DD0E1"/>
+                            Background="Transparent" BorderThickness="0" Padding="0">
+                        <Border Background="White" CornerRadius="8" Width="40" Height="40">
+                            <!-- Binding the logo to SystemPhotoSource or fallback to icon -->
+                            <Grid>
+                                <materialDesign:PackIcon Kind="BankOutline" Foreground="#0F172A" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SystemPhotoSource, Converter={StaticResource InvBoolToVis}}"/>
+                                <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" Margin="4" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}"/>
+                            </Grid>
+                        </Border>
                     </Button>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding GovernanceName}"
-                                   FontSize="40" Foreground="#DF000000"/>
+                    <TextBlock Text="GGS" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                </StackPanel>
+
+                <!-- Middle: Nav Buttons -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="Transparent" BorderThickness="0">
+                    <StackPanel>
+                        <!-- For the items control, group by "Group" property or just flat list -->
+                        <TextBlock Text="MODULES" Foreground="#64748B" FontSize="12" FontWeight="SemiBold" Margin="24,16,24,8"/>
+                        
+                        <ItemsControl ItemsSource="{Binding NavigationItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type viewmodels:NavigationItem}">
+                                    <Button Style="{StaticResource NavButtonStyle}"
+                                            Command="{Binding DataContext.NavigateTileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding ViewToken}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="12"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
+                                                <materialDesign:PackIcon Kind="{Binding Icon}" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" FontSize="14" TextWrapping="Wrap"/>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
+                </ScrollViewer>
+
+                <!-- Bottom: Divider, Settings, Logout -->
+                <StackPanel Grid.Row="2" Margin="0,0,0,16">
+                    <Border Height="1" Background="#273449" Margin="0,8,0,16"/>
                     
-
-                </StackPanel>
-                
-                
-                
-                
-
-                <!-- ── Live Clock ── -->
-                <Border Grid.Column="2" VerticalAlignment="Center" Margin="0 0 18 0">
-                    <TextBlock Text="{Binding CurrentDate}"
-                               FontSize="20" Foreground="#AAFFFFFF"/>
-                </Border>
-
-                <!-- ── DB Connected badge ── -->
-                <Border Grid.Column="3" CornerRadius="12"
-                        Background="#1A4CAF50" Padding="10 5"
-                        VerticalAlignment="Center" Margin="0 0 18 0">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse Style="{StaticResource DbStatusDot}"/>
-                        <TextBlock Text="Database Connected"
-                                   FontSize="11" Foreground="#BB4CAF50"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- ── User Avatar + Name ── -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal"
-                            VerticalAlignment="Center" Margin="0 0 8 0">
-                    <Border Width="36" Height="36" CornerRadius="18"
-                            Background="#1A000000" Margin="0 0 10 0"
-                            ClipToBounds="True">
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Command="{Binding OpenSystemsProfileCommand}">
                         <Grid>
-                            <Image Source="{Binding ProfilePhotoSource}"
-                                   Stretch="UniformToFill"/>
-                            <materialDesign:PackIcon Kind="Account"
-                                                     Width="22" Height="22"
-                                                     Foreground="#88000000"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center"
-                                                     Visibility="{Binding ProfilePhotoSource,
-                                                         Converter={StaticResource InvBoolToVis}}"/>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
+                                <materialDesign:PackIcon Kind="DatabaseSettings" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="2" Text="System Profile" VerticalAlignment="Center" FontSize="14"/>
                         </Grid>
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding CurrentUserName, Mode=OneWay}"
-                                   FontSize="13" FontWeight="SemiBold"
-                                   Foreground="#DF000000"/>
-                        <TextBlock Text="{Binding CurrentUserRole, Mode=OneWay}"
-                                   FontSize="10" Foreground="#77FFFFFF"/>
-                    </StackPanel>
-                </StackPanel>
+                    </Button>
 
-                <!-- ── Logout ── -->
-                <Button Grid.Column="5"
-                        Style="{StaticResource HeaderIconButton}"
-                        Command="{Binding LogoutCommand}"
-                        CommandParameter="{Binding ElementName=MainWin}"
-                        ToolTip="Log Out">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="LogoutVariant"
-                                                 Width="20" Height="20"
-                                                 Foreground="#FFD32F2F"
-                                                 VerticalAlignment="Center"/>
-                        <TextBlock Text="Log Out" FontSize="20"
-                                   Foreground="#FFD32F2F"
-                                   VerticalAlignment="Center"
-                                   Margin="6 0 0 0"/>
-                    </StackPanel>
-                </Button>
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Command="{Binding LogoutCommand}"
+                            CommandParameter="{Binding ElementName=MainWin}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
+                                <materialDesign:PackIcon Kind="Logout" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="2" Text="Logout" VerticalAlignment="Center" FontSize="14"/>
+                        </Grid>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <!-- ═══════════════════════════════════════════
-             ROW 1  ·  BREADCRUMB BAR
-             Visible only while a sub-view is active
-             ═══════════════════════════════════════════ -->
-        <Border Grid.Row="1"
-                Background="{StaticResource AppBgLightBrush}"
-                Height="46" Padding="22 0"
-                Visibility="{Binding IsShowingView, Converter={StaticResource BoolToVis}}">
-            <Border.Effect>
-                <DropShadowEffect Color="#000000" Opacity="0.3"
-                                  BlurRadius="8" ShadowDepth="2" Direction="270"/>
-            </Border.Effect>
+        <!-- Top Header Bar — Column 1, Row 0 -->
+        <Border Grid.Column="1" Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Left: Org name + Subtitle -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding GovernanceName}" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Governance Management System" FontSize="13" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                </StackPanel>
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Style="{StaticResource MetroBackButton}"
-                        Command="{Binding ShowDashboardCommand}"
-                        Margin="0 0 12 0">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ArrowLeft"
-                                                 Width="20" Height="20"
-                                                 Foreground="#88000000"
-                                                 VerticalAlignment="Center"
-                                                 Margin="0 0 5 0"/>
-                        <TextBlock Text="Home" FontSize="20"
-                                   Foreground="#88000000"
-                                   VerticalAlignment="Center"/>
+                <!-- Right: Username + Role + Avatar -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding CurrentUserName}" Foreground="White" FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding CurrentUserRole}" Foreground="#94A3B8" FontSize="12" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                    
+                    <Button Width="40" Height="40" BorderThickness="0" Background="Transparent" Padding="0" Command="{Binding NavigateTileCommand}" CommandParameter="Profile">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#3B82F6" CornerRadius="20" ClipToBounds="True">
+                                    <Grid>
+                                        <Image Source="{Binding ProfilePhotoSource}" Stretch="UniformToFill"/>
+                                        <materialDesign:PackIcon Kind="Account" Foreground="White" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding ProfilePhotoSource, Converter={StaticResource InvBoolToVis}}"/>
+                                    </Grid>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content — Column 1, Row 1 -->
+        <Grid Grid.Column="1" Grid.Row="1" Margin="16">
+            
+            <!-- Dashboard View -->
+            <Grid Visibility="{Binding IsShowingDashboard, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1.4*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Row 0: 4 Colored Tiles -->
+                <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#3B82F6"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="BudgetAllocation">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="ScaleBalance" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="BUDGET" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Manage allocations" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#10B981"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Projects">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="HandshakeOutline" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="PROJECTS" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Track milestones" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#F59E0B"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="CrsBeneficiary">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="AccountGroup" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="CITIZENS" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Registry &amp; feedback" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Grid.Row="0" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#8B5CF6"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Reports">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="FileChart" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="REPORTS" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Analytics &amp; data" FontSize="13" Opacity="0.8"/>
                     </StackPanel>
                 </Button>
 
-                <TextBlock Text="›" Foreground="#44FFFFFF"
-                           FontSize="18" VerticalAlignment="Center"
-                           Margin="0 0 12 0"/>
+                <!-- Column 4, Rows 0-1: Branding Panel -->
+                <Border Grid.Row="0" Grid.Column="4" Grid.RowSpan="2" Background="White" CornerRadius="12" Margin="8">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <!-- Binding the logo to SystemPhotoSource or fallback to icon -->
+                        <Border Background="#F1F5F9" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16" ClipToBounds="True">
+                            <Grid>
+                                <materialDesign:PackIcon Kind="ShieldCheck" Foreground="#94A3B8" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SystemPhotoSource, Converter={StaticResource InvBoolToVis}}"/>
+                                <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" Margin="8" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}"/>
+                            </Grid>
+                        </Border>
+                        <TextBlock Text="GGS PLATFORM" FontSize="20" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Version 2.0" FontSize="14" Foreground="#64748B" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
 
-                <TextBlock Text="{Binding CurrentSectionTitle}"
-                           FontSize="14" FontWeight="SemiBold"
-                           Foreground="#DDFFFFFF"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
-
-        <!-- ═══════════════════════════════════════════
-             ROW 2  ·  CONTENT AREA
-             ═══════════════════════════════════════════ -->
-        <Grid Grid.Row="2">
-
-            <!-- ─────────────────────────────────────
-                 PANEL A : METRO TILE DASHBOARD
-                 ───────────────────────────────────── -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          Visibility="{Binding IsShowingDashboard, Converter={StaticResource BoolToVis}}">
-
-                <StackPanel Margin="36 30 36 36">
-
-                    <Grid Margin="36 30 36 36">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="3*"/>
-                            <ColumnDefinition Width="1.4*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- LEFT SIDE (UNCHANGED UI) -->
-                        <StackPanel Grid.Column="0">
-
-                            <!-- Welcome banner -->
-                            <StackPanel Margin="0 0 0 30">
-                                <TextBlock FontSize="28" FontWeight="Light"
-                       Foreground="#DF000000" LineHeight="38">
-                <Run Text="Welcome back, "/>
-                <Run Text="{Binding CurrentUserName, Mode=OneWay}"
-                     FontWeight="Bold" Foreground="#FF00838F"/>
-                                </TextBlock>
-                                <TextBlock Text="Select a module below to get started."
-                       FontSize="13" Foreground="#88000000"
-                       Margin="0 6 0 0"/>
-                            </StackPanel>
-
-                            <!-- Divider -->
-                            <Rectangle Height="1" Fill="#1A000000" Margin="0 0 0 26"/>
-
-                            <!-- Section label -->
-                               <TextBlock Text="M O D U L E S"
-                   FontSize="11" FontWeight="Bold"
-                   Foreground="#88000000"
-                   Margin="4 0 0 18"/>
-
-                            <!-- Tiles (UNCHANGED) -->
-                            <ItemsControl ItemsSource="{Binding NavigationItems}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type viewmodels:NavigationItem}">
-                                        <Button Style="{StaticResource MetroTileButton}"
-                            Background="{Binding TileColor,
-                                Converter={StaticResource ColorConverter}}"
-                            Command="{Binding DataContext.NavigateTileCommand,
-                                RelativeSource={RelativeSource AncestorType=Window}}"
-                            CommandParameter="{Binding ViewToken}">
-                                            <StackPanel HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Margin="8">
-                                                <materialDesign:PackIcon Kind="{Binding Icon}"
-                                                     Width="46" Height="46"
-                                                     Foreground="White"
-                                                     HorizontalAlignment="Center"
-                                                     Margin="0 0 0 12"/>
-                                                <TextBlock Text="{Binding Name}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="White"
-                                       TextAlignment="Center"
-                                       TextWrapping="Wrap"
-                                       MaxWidth="124"/>
-                                            </StackPanel>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <Rectangle Height="20"/>
-
+                <!-- Row 1, Columns 0-1: Dark Date/Time & Label -->
+                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#0F172A" CornerRadius="12" Margin="8" Padding="24">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Border Grid.Row="0" Background="#064E3B" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" Margin="0,0,0,16">
+                            <TextBlock Text="SYSTEM READY" Foreground="#34D399" FontSize="12" FontWeight="Bold"/>
+                        </Border>
+                        
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentDate}" FontSize="28" FontWeight="Light" Foreground="White" TextWrapping="Wrap"/>
                         </StackPanel>
-
-                        <!-- RIGHT SIDE PANEL (NEW, SAFE ADDITION) -->
-                        <Border Grid.Column="1"
-            Margin="20 0 0 0"
-            Background="#0C000000"
-            CornerRadius="14"
-            Padding="18">
-
-                            <StackPanel>
-
-                                <TextBlock Text="Dashboard Overview"
-                       FontSize="16"
-                       FontWeight="SemiBold"
-                       Foreground="#DF000000"
-                       Margin="0 0 0 12"/>
-
-                                <Border Background="#1A000000" CornerRadius="10" Padding="8" MaxHeight="450" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}">
-                                    <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" />
-                                </Border>
-                            </StackPanel>
-                        </Border>
-
                     </Grid>
+                </Border>
 
+                <!-- Row 1, Column 2: Users Tile -->
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#6366F1"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Users">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="AccountGroup" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="USERS" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Manage accounts" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Row 2: 4 Colored Tiles -->
+                <Button Grid.Row="2" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#EC4899"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Evaluation">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="FileDocumentEdit" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="EVALUATION" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Performance metrics" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#06B6D4"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Departments">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="Domain" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="DEPARTMENTS" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="Internal structures" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#EAB308"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Transactions">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="Finance" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="BUDGET TRANSACTIONS" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
+                        <TextBlock Text="Financial records" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Grid.Row="2" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#64748B"
+                        Command="{Binding NavigateTileCommand}" CommandParameter="Parameters">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="CogBox" Width="36" Height="36" Margin="0,0,0,12"/>
+                        <TextBlock Text="PARAMETERS" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="System variables" FontSize="13" Opacity="0.8"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Row 2, Column 4: Split Settings & Exit Tiles -->
+                <Grid Grid.Row="2" Grid.Column="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Button Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#475569" Margin="8,8,4,8"
+                            Command="{Binding NavigateTileCommand}" CommandParameter="Settings">
+                        <StackPanel>
+                            <materialDesign:PackIcon Kind="Cog" Width="36" Height="36" Margin="0,0,0,12"/>
+                            <TextBlock Text="SETTINGS" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock Text="System config" FontSize="12" Opacity="0.8"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EF4444" Margin="4,8,8,8"
+                            Command="{Binding LogoutCommand}" CommandParameter="{Binding ElementName=MainWin}">
+                        <StackPanel>
+                            <materialDesign:PackIcon Kind="Power" Width="36" Height="36" Margin="0,0,0,12"/>
+                            <TextBlock Text="EXIT" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock Text="Close app" FontSize="12" Opacity="0.8"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
+
+            <!-- Active Module View -->
+            <Grid Visibility="{Binding IsShowingView, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Breadcrumb for active view -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,16">
+                    <Button Background="Transparent" BorderThickness="0"
+                            Command="{Binding ShowDashboardCommand}"
+                            Margin="0 0 12 0" Foreground="#64748B" Height="32" Padding="0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ArrowLeft" Width="16" Height="16" VerticalAlignment="Center" Margin="0 0 5 0"/>
+                            <TextBlock Text="Main" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Text="›" Foreground="#64748B" FontSize="18" VerticalAlignment="Center" Margin="0 0 12 0"/>
+                    <TextBlock Text="{Binding CurrentSectionTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
                 </StackPanel>
-            </ScrollViewer>
 
-            <!-- ─────────────────────────────────────
-                 PANEL B : ACTIVE MODULE VIEW
-                 Fade-in slide-up animation on load
-                 ───────────────────────────────────── -->
-            <ContentControl Content="{Binding CurrentView}"
-                            Visibility="{Binding IsShowingView,
-                                Converter={StaticResource BoolToVis}}">
-                <ContentControl.Template>
-                    <ControlTemplate TargetType="ContentControl">
-                        <Border x:Name="Bd" Opacity="0">
-                            <ContentPresenter/>
-                            <Border.Triggers>
-                                <EventTrigger RoutedEvent="Loaded">
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation
-                                                Storyboard.TargetName="Bd"
-                                                Storyboard.TargetProperty="Opacity"
-                                                From="0" To="1"
-                                                Duration="0:0:0.22"
-                                                EasingFunction="{StaticResource CubicEaseOut}"/>
-                                            <ThicknessAnimation
-                                                Storyboard.TargetName="Bd"
-                                                Storyboard.TargetProperty="Margin"
-                                                From="0,22,0,0" To="0,0,0,0"
-                                                Duration="0:0:0.28"
-                                                EasingFunction="{StaticResource CubicEaseOut}"/>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </EventTrigger>
-                            </Border.Triggers>
-                        </Border>
-                    </ControlTemplate>
-                </ContentControl.Template>
-            </ContentControl>
-            
-
-            
-          
-            
+                <!-- Frame / ContentControl -->
+                <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="8">
+                    <ContentControl Content="{Binding CurrentView}">
+                        <ContentControl.Template>
+                            <ControlTemplate TargetType="ContentControl">
+                                <Border x:Name="Bd" Opacity="0">
+                                    <ContentPresenter/>
+                                    <Border.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.22"/>
+                                                    <ThicknessAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="Margin" From="0,22,0,0" To="0,0,0,0" Duration="0:0:0.28"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Border.Triggers>
+                                </Border>
+                            </ControlTemplate>
+                        </ContentControl.Template>
+                    </ContentControl>
+                </Border>
+            </Grid>
         </Grid>
-        <!-- /content area grid -->
-        
 
+        <!-- Status Footer — Column 1, Row 2 -->
+        <Border Grid.Column="1" Grid.Row="2" Background="#111827" Padding="16,8">
+            <Grid>
+                <!-- Left: System Ready -->
+                <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Foreground="#34D399" Padding="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="CheckCircleOutline" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="SYSTEM READY" FontSize="12" FontWeight="Bold"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Center-right / Right: Status and Time -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="DATABASE STATUS:" Foreground="#94A3B8" FontSize="12" Margin="0,0,4,0"/>
+                    <TextBlock Text="ONLINE" Foreground="#34D399" FontSize="12" FontWeight="Bold" Margin="0,0,24,0" Visibility="{Binding IsDatabaseConnected, Converter={StaticResource BoolToVis}}"/>
+                    <TextBlock Text="OFFLINE" Foreground="#EF4444" FontSize="12" FontWeight="Bold" Margin="0,0,24,0" Visibility="{Binding IsDatabaseConnected, Converter={StaticResource InvBoolToVis}}"/>
+
+                    <Button Command="{Binding NavigateTileCommand}" CommandParameter="Profile"
+                            Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,24,0"
+                            Foreground="#94A3B8" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="AccountEdit" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <TextBlock Text="MY PROFILE" FontSize="12" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#94A3B8" Width="16" Height="16" Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding CurrentDate}" Foreground="#94A3B8" FontSize="12"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
-
-
-
