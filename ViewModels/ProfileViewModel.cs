@@ -20,7 +20,9 @@ public class ProfileViewModel : ViewModelBase
     private readonly SessionService _sessionService;
     
     private string _username = string.Empty;
-    private string _newPassword = string.Empty;
+    private string _email    = string.Empty;
+    private string _oldPassword     = string.Empty;
+    private string _newPassword     = string.Empty;
     private string _confirmPassword = string.Empty;
     private string _role = string.Empty;
     private string _officeName = "None";
@@ -32,6 +34,18 @@ public class ProfileViewModel : ViewModelBase
     {
         get => _username;
         set { _username = value; OnPropertyChanged(); }
+    }
+
+    public string Email
+    {
+        get => _email;
+        set { _email = value; OnPropertyChanged(); }
+    }
+
+    public string OldPassword
+    {
+        get => _oldPassword;
+        set { _oldPassword = value; OnPropertyChanged(); }
     }
 
     public string NewPassword
@@ -128,8 +142,9 @@ public class ProfileViewModel : ViewModelBase
         var currentUser = _sessionService.CurrentUser;
         if (currentUser != null)
         {
-            Username = currentUser.Name;
-            Role = currentUser.Role;
+            Username  = currentUser.Name;
+            Email     = currentUser.Email;
+            Role      = currentUser.Role;
             OfficeName = currentUser.Office?.Name ?? "General / Unassigned";
             
             if (!string.IsNullOrEmpty(currentUser.ProfilePhoto) && File.Exists(currentUser.ProfilePhoto))
@@ -152,7 +167,14 @@ public class ProfileViewModel : ViewModelBase
     private bool CanSave()
     {
         if (string.IsNullOrWhiteSpace(Username)) return false;
-        if (!string.IsNullOrEmpty(NewPassword) && NewPassword != ConfirmPassword) return false;
+
+        // If a new password is entered, old password must also be provided
+        if (!string.IsNullOrEmpty(NewPassword))
+        {
+            if (string.IsNullOrEmpty(OldPassword))    return false;
+            if (NewPassword != ConfirmPassword)       return false;
+        }
+
         return true;
     }
 
@@ -170,9 +192,22 @@ public class ProfileViewModel : ViewModelBase
                 return;
             }
 
-            user.Name = Username;
+            user.Name  = Username;
+            user.Email = Email;
+
             if (!string.IsNullOrEmpty(NewPassword))
             {
+                // Verify old password before allowing the change
+                if (!PasswordHasher.VerifyPassword(OldPassword, user.Password))
+                {
+                    MessageBox.Show(
+                        "❌ Old password is incorrect. Password was not changed.",
+                        "Verification Failed",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
                 user.Password = PasswordHasher.HashPassword(NewPassword);
             }
 
@@ -185,10 +220,12 @@ public class ProfileViewModel : ViewModelBase
             await _context.SaveChangesAsync();
 
             // Update session
-            sessionUser.Name = Username;
+            sessionUser.Name  = Username;
+            sessionUser.Email = Email;
             if (_profilePhotoPath != null) sessionUser.ProfilePhoto = _profilePhotoPath;
-            
-            NewPassword = string.Empty;
+
+            OldPassword     = string.Empty;
+            NewPassword     = string.Empty;
             ConfirmPassword = string.Empty;
             
             MessageBox.Show("Profile updated successfully!");

@@ -161,6 +161,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
     public ICommand RefreshCommand             { get; }
     public ICommand ClearFilterCommand         { get; }
     public ICommand ClearConsolidatedFilterCommand { get; }
+    public ICommand OpenAnalyticsCommand { get; }
 
     // =========================================================================
     // Constructor
@@ -188,6 +189,16 @@ public class BudgetTransactionsViewModel : ViewModelBase
         RefreshCommand                 = new RelayCommand(async _ => await LoadTransactionsAsync());
         ClearFilterCommand             = new RelayCommand(_ => ClearFilters());
         ClearConsolidatedFilterCommand = new RelayCommand(_ => ClearConsolidatedFilters());
+        
+        OpenAnalyticsCommand = new RelayCommand(row =>
+        {
+            if (row is ConsolidatedTransactionsViewModel t && !string.IsNullOrWhiteSpace(t.BeneficiaryId))
+            {
+                var vm = new BeneficiaryAnalyticsViewModel(_dbContext, t.BeneficiaryId, t.FullName);
+                var window = new BeneficiaryAnalyticsWindow(vm);
+                window.ShowDialog();
+            }
+        });
 
 
         PrintVoucherCommand = new RelayCommand(row =>

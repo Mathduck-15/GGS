@@ -355,15 +355,19 @@
 
                         <DataGrid.Columns>
                             <!-- Identity -->
-                            <DataGridTextColumn Header="Beneficiary ID" Binding="{Binding BeneficiaryId}" Width="130">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="5,0"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Beneficiary ID" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock VerticalAlignment="Center" Margin="5,0">
+                                            <Hyperlink Command="{Binding DataContext.OpenAnalyticsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                       CommandParameter="{Binding}"
+                                                       Foreground="#4DD0E1" TextDecorations="Underline">
+                                                <TextBlock Text="{Binding BeneficiaryId}"/>
+                                            </Hyperlink>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTextColumn Header="Civil Registry ID" Binding="{Binding CivilRegistryId}" Width="140">
                                 <DataGridTextColumn.ElementStyle>
@@ -376,15 +380,19 @@
                             </DataGridTextColumn>
 
                             <!-- Name columns -->
-                            <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="200">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="White"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="5,0"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Full Name" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock VerticalAlignment="Center" Margin="5,0">
+                                            <Hyperlink Command="{Binding DataContext.OpenAnalyticsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                       CommandParameter="{Binding}"
+                                                       Foreground="#4DD0E1" TextDecorations="Underline">
+                                                <TextBlock Text="{Binding FullName}"/>
+                                            </Hyperlink>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="130">
                                 <DataGridTextColumn.ElementStyle>

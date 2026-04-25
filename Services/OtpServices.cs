@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,6 +6,9 @@ namespace GoodGovernanceApp.Services
 {
     public class OtpService
     {
+        // Set to true before demo / final build
+        public const bool OtpEnabled = true;
+
         private string? _generatedOtp;
         private DateTime _otpExpiry;
 

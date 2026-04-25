@@ -53,4 +53,15 @@ public static class ConfigHelper
 
         File.WriteAllLines(path, lines);
     }
+
+    public static bool IsRemoteDatabase()
+    {
+        var config = ReadConfig("GgmsConfig.txt");
+        if (config.TryGetValue("Server", out var server))
+        {
+            // Simple check: if it's the specific Hostinger IP or not localhost/LAN IP
+            return server == "194.59.164.58" || (!server.Equals("localhost", StringComparison.OrdinalIgnoreCase) && !server.StartsWith("192.168."));
+        }
+        return false;
+    }
 }

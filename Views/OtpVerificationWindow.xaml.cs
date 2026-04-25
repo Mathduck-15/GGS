@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -23,16 +23,19 @@ namespace GoodGovernanceApp.Views
             private readonly OtpService _otpService;
             private readonly EmailService _emailService;
             private readonly string _userEmail;
+            private readonly string _actionContext;
 
             public bool IsVerified { get; private set; } = false;
 
-            public OtpVerificationWindow(string userEmail)
+            public OtpVerificationWindow(string userEmail, string actionContext = "Backup")
             {
                 InitializeComponent();
                 _otpService = new OtpService();
                 _emailService = new EmailService();
                 _userEmail = userEmail;
+                _actionContext = actionContext;
 
+                TitleText.Text = actionContext == "Login" ? "Login Verification" : "Backup Verification";
                 SubtitleText.Text = $"A verification code will be sent to:\n{userEmail}";
                 SendOtp();
             }
@@ -46,7 +49,7 @@ namespace GoodGovernanceApp.Views
 
             try
             {
-                await _emailService.SendOtpAsync(_userEmail, otp);
+                await _emailService.SendOtpAsync(_userEmail, otp, _actionContext);
                 StatusText.Text = "✅ OTP sent! Check your email.";
             }
             catch (Exception ex)
