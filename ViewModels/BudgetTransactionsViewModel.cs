@@ -229,13 +229,26 @@ public class BudgetTransactionsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(
-                $"[BudgetTransactionsViewModel] Consolidated load error: {ex.Message}");
+            var msg = $"[BudgetTransactionsViewModel] Consolidated load error: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine(msg);
+            LogToFile(msg);
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.MessageBox.Show(msg, "Database Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error));
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    private void LogToFile(string message)
+    {
+        try
+        {
+            string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db_error_log.txt");
+            System.IO.File.AppendAllText(path, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}\n");
+        }
+        catch { }
     }
 
     private async Task LoadTransactionsAsync()

@@ -3,6 +3,7 @@ using GoodGovernanceApp.Services;
 using GoodGovernanceApp.Utilities;
 using GoodGovernanceApp.Views;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Win32;
 using MySqlConnector;
 using System;
@@ -19,16 +20,17 @@ namespace GoodGovernanceApp.ViewModels
         private readonly SessionService _sessionService;
         private readonly BackupService _backupService;
         private readonly BackupSchedulerService _scheduler;
-
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _config;
 
         public SettingsViewModel()
-      : this(App.AppHost!.Services.GetRequiredService<SessionService>())
+      : this(App.AppHost!.Services.GetRequiredService<SessionService>(), App.AppHost!.Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>())
         {
         }
         // ── Constructor ──────────────────────────────────────────────────────
-        public SettingsViewModel(SessionService sessionService)
+        public SettingsViewModel(SessionService sessionService, Microsoft.Extensions.Configuration.IConfiguration config)
         {
             _sessionService = sessionService;
+            _config = config;
             _backupService = new BackupService();
             _scheduler = new BackupSchedulerService();
 
@@ -166,7 +168,7 @@ namespace GoodGovernanceApp.ViewModels
             {
                 _lanIp = value;
                 OnPropertyChanged();
-                LanConnectionString = BuildGgmsConnStr(value, "governance");
+                LanConnectionString = _config?.GetConnectionString("LanConnection") ?? "";
                 CrsServer = value;
             }
         }
@@ -305,22 +307,22 @@ namespace GoodGovernanceApp.ViewModels
             switch (mode)
             {
                 case "Local":
-                    LocalConnectionString = BuildGgmsConnStr("localhost", "governance");
-                    LanConnectionString = BuildGgmsConnStr(LanIp, "governance");
-                    RemoteConnectionString = BuildGgmsRemoteConnStr();
+                    LocalConnectionString = _config.GetConnectionString("LocalConnection") ?? "";
+                    LanConnectionString = _config.GetConnectionString("LanConnection") ?? "";
+                    RemoteConnectionString = _config.GetConnectionString("RemoteConnection") ?? "";
                     CrsServer = "localhost"; CrsPort = "3306";
                     CrsDatabase = "crs_db"; CrsUser = "root"; CrsPassword = "root";
                     break;
 
                 case "LAN":
                     if (string.IsNullOrWhiteSpace(LanIp)) LanIp = "192.168.1.1";
-                    LanConnectionString = BuildGgmsConnStr(LanIp, "governance");
+                    LanConnectionString = _config.GetConnectionString("LanConnection") ?? "";
                     CrsServer = LanIp; CrsPort = "3306";
                     CrsDatabase = "crs_db"; CrsUser = "root"; CrsPassword = "root";
                     break;
 
                 case "Remote":
-                    RemoteConnectionString = BuildGgmsRemoteConnStr();
+                    RemoteConnectionString = _config.GetConnectionString("RemoteConnection") ?? "";
                     CrsServer = "194.59.164.58"; CrsPort = "3306";
                     CrsDatabase = "u621755393_crs"; CrsUser = "u621755393_crs_user";
                     CrsPassword = "Crs@2026";
@@ -330,19 +332,22 @@ namespace GoodGovernanceApp.ViewModels
             StatusMessage = $"{mode} preset applied. Edit the LAN IP if needed, then TEST BOTH.";
         }
 
-        private static string BuildGgmsConnStr(string server, string db)
-            => $"Server={server};Port=3306;Database={db};User=root;Password=root;" +
-               "AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
-
-        private static string BuildGgmsRemoteConnStr()
-            => "Server=194.59.164.58;Port=3306;Database=u621755393_ggms;" +
-               "User=u621755393_ggms_user;Password=Ggms@2026;" +
-               "AllowZeroDateTime=True;ConvertZeroDateTime=True;Connection Timeout=15;SslMode=None;";
-
         public string BuildCrsConnStr()
-            => $"Server={CrsServer};Port={CrsPort};Database={CrsDatabase};User={CrsUser};" +
-               $"Password={CrsPassword};AllowZeroDateTime=True;ConvertZeroDateTime=True;" +
-               "Connection Timeout=15;SslMode=None;";
+        {
+            var builder = new MySqlConnectionStringBuilder
+            {
+                Server = CrsServer,
+                Port = uint.TryParse(CrsPort, out var p) ? p : 3306,
+                Database = CrsDatabase,
+                UserID = CrsUser,
+                Password = CrsPassword,
+                AllowZeroDateTime = true,
+                ConvertZeroDateTime = true,
+                ConnectionTimeout = 15,
+                SslMode = MySqlSslMode.None
+            };
+            return builder.ConnectionString;
+        }
 
         private string ActiveGgmsConnStr => DatabaseMode switch
         {
@@ -387,27 +392,19 @@ namespace GoodGovernanceApp.ViewModels
         {
             try
             {
-                var ggmsConfig = ConfigHelper.ReadConfig("GgmsConfig.txt");
-                var crsConfig = ConfigHelper.ReadConfig("CrsConfig.txt");
+                // Read current mode from appsettings.json
+                string dbMode = _config["AppSettings:DatabaseMode"] ?? "Local";
 
-                if (crsConfig.ContainsKey("Server"))
-                {
-                    CrsServer = crsConfig.GetValueOrDefault("Server", "localhost");
-                    CrsPort = crsConfig.GetValueOrDefault("Port", "3306");
-                    CrsDatabase = crsConfig.GetValueOrDefault("Database", "crs_db");
-                    CrsUser = crsConfig.GetValueOrDefault("User", "root");
-                    CrsPassword = crsConfig.GetValueOrDefault("Password", "");
-                }
+                // Load CRS fields from appsettings.json CrsConnection section
+                CrsServer   = _config["CrsConnection:Server"]   ?? "localhost";
+                CrsPort     = _config["CrsConnection:Port"]     ?? "3306";
+                CrsDatabase = _config["CrsConnection:Database"] ?? "crs_db";
+                CrsUser     = _config["CrsConnection:User"]     ?? "root";
+                CrsPassword = _config["CrsConnection:Password"] ?? "";
 
-                string currentServer = ggmsConfig.GetValueOrDefault("Server", "localhost");
-                if (currentServer == "194.59.164.58")
-                    ApplyPreset("Remote");
-                else if (currentServer != "localhost" && currentServer.Contains('.'))
-                { LanIp = currentServer; ApplyPreset("LAN"); }
-                else
-                    ApplyPreset("Local");
+                ApplyPreset(dbMode);
             }
-            catch { StatusMessage = "Error loading settings from config files."; }
+            catch { StatusMessage = "Error loading settings."; }
         }
 
         private void LoadBackupSettings()
@@ -442,28 +439,17 @@ namespace GoodGovernanceApp.ViewModels
                     return;
                 }
 
-                string server = "localhost", port = "3306", db = "governance", user = "root", pass = "";
-                foreach (var part in ActiveGgmsConnStr.Split(';', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    var kv = part.Split('=', 2);
-                    if (kv.Length != 2) continue;
-                    string k = kv[0].Trim().ToLower(), v = kv[1].Trim();
-                    if (k == "server") server = v;
-                    else if (k == "port") port = v;
-                    else if (k == "database") db = v;
-                    else if (k == "user") user = v;
-                    else if (k == "password") pass = v;
-                }
-
-                ConfigHelper.WriteConfig("GgmsConfig.txt", server, port, db, user, pass);
-                ConfigHelper.WriteConfig("CrsConfig.txt", CrsServer, CrsPort, CrsDatabase, CrsUser, CrsPassword);
+                // Write updated settings to appsettings.json (single source of truth)
+                Data.DatabaseConfig.SaveToAppsettings(
+                    DatabaseMode, ActiveGgmsConnStr,
+                    CrsServer, CrsPort, CrsDatabase, CrsUser, CrsPassword);
 
                 StatusMessage = "Settings saved. Please restart the application.";
                 MessageBox.Show(
                     "Settings saved successfully!\n\nPlease restart the application to apply the changes.",
                     "Restart Required", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            catch { StatusMessage = "Error saving settings to config files."; }
+            catch (Exception ex) { StatusMessage = $"Error saving settings: {ex.Message}"; }
         }
 
         // ── Backup: Browse ────────────────────────────────────────────────────

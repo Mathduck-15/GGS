@@ -10,9 +10,8 @@ namespace GoodGovernanceApp.Services
     {
         public async Task SendOtpAsync(string toEmail, string otp, string context = "Backup")
         {
-            var config = GoodGovernanceApp.Utilities.ConfigHelper.ReadConfig("SmtpConfig.txt");
-            string gmailAddress = config.GetValueOrDefault("EmailAddress", "bryanluy822@gmail.com");
-            string gmailAppPassword = config.GetValueOrDefault("AppPassword", "nxwtwytteuffhhjp");
+            string gmailAddress = App.Config?["SmtpConnection:EmailAddress"] ?? "bryanluy822@gmail.com";
+            string gmailAppPassword = App.Config?["SmtpConnection:AppPassword"] ?? "nxwtwytteuffhhjp";
 
             string subject = context == "Login" ? "GGMS — Login Verification Code" : "GGMS — Backup Verification OTP";
             string title = context == "Login" ? "GGMS Login Verification" : "GGMS Backup Verification";

@@ -22,16 +22,14 @@ public class BackupSchedulerService : IDisposable
 {
     private Timer? _timer;
     private BackupSettings _settings = new();
-    private string _activeConnectionString = string.Empty;
     private readonly BackupService _backupService = new();
 
     // ── Public API ────────────────────────────────────────────────────────────
 
     /// <summary>Start (or restart) the scheduler with the given settings.</summary>
-    public void Start(BackupSettings settings, string connectionString)
+    public void Start(BackupSettings settings, string connectionString = "")
     {
         _settings = settings;
-        _activeConnectionString = connectionString;
         _backupService.MySqlDumpPath = settings.MySqlDumpPath;
 
         // Stop any running timer before restarting.
@@ -64,11 +62,12 @@ public class BackupSchedulerService : IDisposable
                 ? Path.Combine(AppContext.BaseDirectory, "Backups")
                 : _settings.BackupFolder;
 
+            string connStr = GoodGovernanceApp.Data.DatabaseConfig.ConnectionString;
             bool success = _settings.BackupType switch
             {
-                "Differential" => await _backupService.CreateDifferentialBackupAsync(_activeConnectionString, folder),
-                "Incremental"  => await _backupService.CreateIncrementalBackupAsync(_activeConnectionString, folder),
-                _              => await _backupService.CreateFullBackupAsync(_activeConnectionString, folder)
+                "Differential" => await _backupService.CreateDifferentialBackupAsync(connStr, folder),
+                "Incremental"  => await _backupService.CreateIncrementalBackupAsync(connStr, folder),
+                _              => await _backupService.CreateFullBackupAsync(connStr, folder)
             };
 
             string logLine = success

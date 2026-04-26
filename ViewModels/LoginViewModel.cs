@@ -201,7 +201,14 @@ public class LoginViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"❌ Login error: {ex.Message}";
+            try 
+            { 
+                System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db_error_log.txt"), 
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Login Error:\n{ex}\n\n"); 
+            } catch { }
+
+            string realError = ex.InnerException?.Message ?? ex.Message;
+            ErrorMessage = $"❌ Login error: {realError}";
         }
         finally
         {

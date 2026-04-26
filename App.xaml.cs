@@ -14,6 +14,7 @@ namespace GoodGovernanceApp;
 public partial class App : Application
 {
     public static IHost? AppHost { get; private set; }
+    public static IConfiguration Config { get; set; } = null!;
 
     public App()
     {
@@ -29,29 +30,17 @@ public partial class App : Application
         AppHost = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
+                // Clear default sources to avoid loading appsettings.json from wrong directory
+                config.Sources.Clear();
                 config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
             })
             .ConfigureServices((context, services) =>
             {
-                IConfiguration config = context.Configuration;
-
-                // We now read from GgmsConfig.txt inside the options builder
-                // so it fetches the latest connection string every time a DbContext is created.
-
-                // Configure DbContext
+                // Configure DbContext — uses DatabaseConfig (single source of truth)
                 services.AddDbContext<AppDbContext>(options =>
                 {
-                    string dynamicConnStr = GoodGovernanceApp.Utilities.ConfigHelper.BuildConnectionString("GgmsConfig.txt");
-                    
-                    if (string.IsNullOrEmpty(dynamicConnStr))
-                    {
-                        // Fallback if config doesn't exist yet
-                        dynamicConnStr = "Server=localhost;Port=3306;Database=governance;User=root;Password=root;AllowZeroDateTime=True;ConvertZeroDateTime=True;";
-                    }
-
-                    // Use explicit version to avoid performance hit of AutoDetect on every context spawn
-                    options.UseMySql(dynamicConnStr, new MySqlServerVersion(new Version(8, 0, 31)),
+                    options.UseMySql(DatabaseConfig.ConnectionString, new MySqlServerVersion(new Version(8, 0, 31)),
                         mysqlOptions => mysqlOptions.EnableRetryOnFailure());
                 }, ServiceLifetime.Transient, ServiceLifetime.Transient);
 
@@ -68,6 +57,9 @@ public partial class App : Application
                 services.AddTransient<GoodGovernanceApp.ViewModels.LoginViewModel>();
             })
             .Build();
+
+        // Set Config to the host's IConfiguration so every class uses the SAME instance
+        Config = AppHost.Services.GetRequiredService<IConfiguration>();
     }
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -90,18 +82,30 @@ public partial class App : Application
             {
                 var dbContext = services.GetRequiredService<AppDbContext>();
 
+                Exception? connError = null;
                 bool canConn = await Task.Run(() =>
                 {
                     try   { return dbContext.Database.CanConnect(); }
-                    catch { return false; }
+                    catch (Exception ex) { connError = ex; return false; }
                 });
 
                 if (!canConn)
                 {
-                    var config = services.GetRequiredService<IConfiguration>();
-                    string dbMode   = config["AppSettings:DatabaseMode"] ?? "Local";
+                    string dbMode = Config["AppSettings:DatabaseMode"] ?? "Local";
                     string errorMsg = "Database Connection Failed!\n\nThe application could not reach the database. " +
                                       "Check your connection settings (Settings → Database).";
+
+                    if (connError != null)
+                    {
+                        string realErr = connError.InnerException?.Message ?? connError.Message;
+                        errorMsg += $"\n\nError Details:\n{realErr}";
+                        
+                        try 
+                        { 
+                            System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db_error_log.txt"), 
+                                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Startup Connection Error:\n{connError}\n\n"); 
+                        } catch { }
+                    }
 
                     if (dbMode == "Remote")
                         errorMsg += "\n\nFor Hostinger remote:\n" +

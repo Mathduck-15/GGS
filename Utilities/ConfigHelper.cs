@@ -29,13 +29,19 @@ public static class ConfigHelper
         
         if (!config.ContainsKey("Server")) return string.Empty;
 
-        return $"Server={config["Server"]};" +
-               $"Port={config.GetValueOrDefault("Port", "3306")};" +
-               $"Database={config.GetValueOrDefault("Database", "")};" +
-               $"User={config.GetValueOrDefault("User", "root")};" +
-               $"Password={config.GetValueOrDefault("Password", "")};" +
-               "AllowZeroDateTime=True;ConvertZeroDateTime=True;" +
-               "Connection Timeout=15;SslMode=None;";
+        var builder = new MySqlConnector.MySqlConnectionStringBuilder
+        {
+            Server = config["Server"],
+            Port = uint.TryParse(config.GetValueOrDefault("Port", "3306"), out var p) ? p : 3306,
+            Database = config.GetValueOrDefault("Database", ""),
+            UserID = config.GetValueOrDefault("User", "root"),
+            Password = config.GetValueOrDefault("Password", ""),
+            AllowZeroDateTime = true,
+            ConvertZeroDateTime = true,
+            ConnectionTimeout = 15,
+            SslMode = MySqlConnector.MySqlSslMode.None
+        };
+        return builder.ConnectionString;
     }
 
     public static void WriteConfig(string fileName, string server, string port, string database, string user, string password)
@@ -56,12 +62,7 @@ public static class ConfigHelper
 
     public static bool IsRemoteDatabase()
     {
-        var config = ReadConfig("GgmsConfig.txt");
-        if (config.TryGetValue("Server", out var server))
-        {
-            // Simple check: if it's the specific Hostinger IP or not localhost/LAN IP
-            return server == "194.59.164.58" || (!server.Equals("localhost", StringComparison.OrdinalIgnoreCase) && !server.StartsWith("192.168."));
-        }
-        return false;
+        string dbMode = App.Config?["AppSettings:DatabaseMode"] ?? "Local";
+        return dbMode.Equals("Remote", StringComparison.OrdinalIgnoreCase);
     }
 }

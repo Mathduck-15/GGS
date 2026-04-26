@@ -106,7 +106,7 @@ public class CrsBeneficiaryViewModel : ViewModelBase
         {
             Beneficiaries.Clear();
 
-            using var conn = new MySqlConnection(ConfigHelper.BuildConnectionString("CrsConfig.txt"));
+            using var conn = new MySqlConnection(GoodGovernanceApp.Data.DatabaseConfig.CrsConnectionString);
             await conn.OpenAsync();
 
             const string sql = @"

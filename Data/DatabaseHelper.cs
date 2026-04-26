@@ -2,45 +2,14 @@ using System;
 using System.Data;
 using System.Threading.Tasks;
 using MySqlConnector;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace GoodGovernanceApp.Data
 {
     public class DatabaseHelper
     {
-        private readonly IConfiguration _configuration;
-
-        public DatabaseHelper(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
-
-        private string GetConnectionString()
-        {
-            // Always use the same source as AppDbContext (GgmsConfig.txt) so both
-            // services point at the same database. Fall back to appsettings.json only
-            // when GgmsConfig.txt doesn't exist yet (first run).
-            string dynamic = GoodGovernanceApp.Utilities.ConfigHelper.BuildConnectionString("GgmsConfig.txt");
-            if (!string.IsNullOrEmpty(dynamic))
-                return dynamic;
-
-            // Fallback: read from appsettings.json the same way as before
-            string dbMode = _configuration["AppSettings:DatabaseMode"] ?? "Local";
-            string connectionStringName = dbMode switch
-            {
-                "Remote" => "RemoteConnection",
-                "LAN"    => "LanConnection",
-                _        => "LocalConnection"
-            };
-            return _configuration.GetConnectionString(connectionStringName)
-                ?? throw new InvalidOperationException($"Connection string '{connectionStringName}' not found.");
-        }
-
         public async Task<MySqlConnection> OpenConnectionAsync()
         {
-            string connectionString = GetConnectionString();
-            MySqlConnection connection = new MySqlConnection(connectionString);
+            MySqlConnection connection = new MySqlConnection(DatabaseConfig.ConnectionString);
             await connection.OpenAsync();
             return connection;
         }
@@ -49,17 +18,16 @@ namespace GoodGovernanceApp.Data
         {
             try
             {
-                string connectionString = connectionStringOverride ?? GetConnectionString();
+                string connectionString = connectionStringOverride ?? DatabaseConfig.ConnectionString;
                 using (var connection = new MySqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
-                    return (true, "Connection to Hostinger remote database successful!");
+                    return (true, "Connection successful!");
                 }
             }
             catch (MySqlException ex)
             {
-                // Providing explicit troubleshooting for Hostinger if it fails
-                return (false, $"MySQL Error [{ex.Number}]: {ex.Message}\n\nTroubleshooting:\n1. Ensure your current IP is added to the 'Remote MySQL' section in Hostinger hPanel.\n2. Ensure the remote database user has full privileges.");
+                return (false, $"MySQL Error [{ex.Number}]: {ex.Message}");
             }
             catch (Exception ex)
             {
