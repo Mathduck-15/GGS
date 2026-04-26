@@ -102,17 +102,20 @@ public class ApplicationProfileViewModel : ViewModelBase
             try
             {
                 string selectedPath = dialog.FileName;
-                string appDataFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AppData", "Logos");
+
+                // ✅ Use AppData\Roaming instead of Program Files
+                string appDataFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "GoodGovernanceApp",
+                    "Logos");
 
                 if (!Directory.Exists(appDataFolder))
-                {
                     Directory.CreateDirectory(appDataFolder);
-                }
 
                 string fileName = Path.GetFileName(selectedPath);
                 string newPath = Path.Combine(appDataFolder, fileName);
 
-                // If file already exists in dest, append a guid
+                // If file already exists, append guid to avoid overwrite
                 if (File.Exists(newPath))
                 {
                     string name = Path.GetFileNameWithoutExtension(fileName);
@@ -122,12 +125,14 @@ public class ApplicationProfileViewModel : ViewModelBase
 
                 File.Copy(selectedPath, newPath);
 
-                LogoAddress = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, newPath);
+                // ✅ Save absolute path — no more relative path issues
+                LogoAddress = newPath; // or PhotoAddress for SystemsApplicationProfile
                 LoadLogoImage(newPath);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to copy image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to copy image: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

@@ -111,13 +111,14 @@ public class ProfileViewModel : ViewModelBase
         {
             try
             {
-                // Create ProfilePhotos directory if it doesn't exist
-                string appDir = AppDomain.CurrentDomain.BaseDirectory;
-                string photosDir = Path.Combine(appDir, "ProfilePhotos");
+                // ✅ Use AppData\Roaming instead of Program Files (no admin rights needed)
+                string photosDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "GoodGovernanceApp",
+                    "ProfilePhotos");
+
                 if (!Directory.Exists(photosDir))
-                {
                     Directory.CreateDirectory(photosDir);
-                }
 
                 // Copy selected file to the directory
                 string ext = Path.GetExtension(openFileDialog.FileName);
@@ -126,15 +127,24 @@ public class ProfileViewModel : ViewModelBase
 
                 File.Copy(openFileDialog.FileName, destinationPath, overwrite: true);
 
-                // Update properties
+                // ✅ Save absolute path so it works from any run location
                 _profilePhotoPath = destinationPath;
-                ProfilePhotoSource = new BitmapImage(new Uri(destinationPath, UriKind.Absolute));
+
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.UriSource = new Uri(destinationPath, UriKind.Absolute);
+                bitmap.EndInit();
+                ProfilePhotoSource = bitmap;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not upload photo: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Could not upload photo: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+
     }
 
     private void LoadUserData()

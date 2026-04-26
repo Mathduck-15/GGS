@@ -66,9 +66,19 @@ public partial class App : Application
     {
         await AppHost!.StartAsync();
 
-        // Show the login window immediately — never block the UI thread for DB work
+        // ✅ ADD THESE LINES — ensure folders always exist on startup
+        string appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "GoodGovernanceApp");
+
+        Directory.CreateDirectory(Path.Combine(appData, "Logos"));
+        Directory.CreateDirectory(Path.Combine(appData, "ProfilePhotos"));
+
+        // ... rest of your existing code stays the same
         var loginWindow = AppHost.Services.GetRequiredService<GoodGovernanceApp.Views.LoginWindow>();
         loginWindow.Show();
+        // ...
+
 
         base.OnStartup(e);
 

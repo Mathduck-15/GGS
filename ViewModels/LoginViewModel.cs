@@ -222,6 +222,17 @@ public class LoginViewModel : ViewModelBase
         try
         {
             var dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+
+            // ✅ ADD THIS — create table first before querying
+            string createTableQuery = @"
+            CREATE TABLE IF NOT EXISTS goveprofile (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                GoveName NVARCHAR(255),
+                Address NVARCHAR(255),
+                LogoAddress NVARCHAR(500)
+            );";
+            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
+
             string query = "SELECT GoveName, LogoAddress, Address FROM goveprofile LIMIT 1;";
             var dataTable = await dbHelper.ExecuteQueryAsync(query);
 
@@ -240,7 +251,6 @@ public class LoginViewModel : ViewModelBase
 
                 if (!string.IsNullOrWhiteSpace(logoUrl))
                 {
-                    // ✅ Resolve relative path to absolute — same pattern as LoadSystemPhotoAsync
                     if (!System.IO.Path.IsPathRooted(logoUrl))
                         logoUrl = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logoUrl);
 
@@ -259,11 +269,13 @@ public class LoginViewModel : ViewModelBase
                 }
             }
         }
-        catch
+        catch (Exception ex) // ✅ CHANGE THIS TOO — never silently swallow errors
         {
-            // Non-fatal — fallback values apply via initial property values.
+            System.Diagnostics.Debug.WriteLine($"[MethodName] Error: {ex.Message}");
         }
     }
+      
+    
 
     // ── System Photo ─────────────────────────────────────────────────────────
     private async Task LoadSystemPhotoAsync()

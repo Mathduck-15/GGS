@@ -38,7 +38,11 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
         BrowseCommand = new RelayCommand(_ => ExecuteBrowse());
         SaveCommand = new RelayCommand(async _ => await ExecuteSaveAsync());
 
-        _ = InitializeAsync();
+        // Fix: ensure async init runs on UI thread properly
+        Application.Current.Dispatcher.InvokeAsync(async () =>
+        {
+            await InitializeAsync();
+        });
     }
 
     private async Task InitializeAsync()
@@ -68,7 +72,18 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Error loading systems application profile: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                MessageBox.Show(
+                    $"Profile load error:\n\n" +
+                    $"Type: {ex.GetType().Name}\n" +
+                    $"Message: {ex.Message}\n\n" +
+                    $"Inner: {ex.InnerException?.Message ?? "none"}\n\n" +
+                    $"Stack: {ex.StackTrace}",
+                    "Debug Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            });
         }
     }
 
@@ -76,7 +91,7 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Select Dashboard Photo",
+            Title = "Select Logo",
             Filter = "Image Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg"
         };
 
@@ -85,17 +100,20 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
             try
             {
                 string selectedPath = dialog.FileName;
-                string appDataFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AppData", "Logos");
+
+                // ✅ Use AppData\Roaming instead of Program Files
+                string appDataFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "GoodGovernanceApp",
+                    "Logos");
 
                 if (!Directory.Exists(appDataFolder))
-                {
                     Directory.CreateDirectory(appDataFolder);
-                }
 
                 string fileName = Path.GetFileName(selectedPath);
                 string newPath = Path.Combine(appDataFolder, fileName);
 
-                // If file already exists in dest, append a guid
+                // If file already exists, append guid to avoid overwrite
                 if (File.Exists(newPath))
                 {
                     string name = Path.GetFileNameWithoutExtension(fileName);
@@ -105,12 +123,14 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
 
                 File.Copy(selectedPath, newPath);
 
-                PhotoAddress = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, newPath);
+                // ✅ Save absolute path — no more relative path issues
+                PhotoAddress = newPath;
                 LoadPhoto(newPath);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to copy image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Failed to copy image: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
