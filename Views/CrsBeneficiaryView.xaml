@@ -32,22 +32,77 @@
                        Foreground="#000000" Margin="38 4 0 0"/>
         </StackPanel>
 
-        <!-- Status Bar -->
+        <!-- Toolbar: Search + Load -->
         <materialDesign:Card Grid.Row="1" Padding="16" Margin="0 0 0 16">
-            <StackPanel Orientation="Horizontal">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 16 0">
-                    <TextBlock Text="{Binding StatusMessage}" FontSize="13" FontWeight="Medium"
-                               Foreground="{DynamicResource MaterialDesignBody}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Beneficiary ID Label + Box -->
+                <TextBlock Grid.Column="0" Text="Beneficiary ID:" VerticalAlignment="Center"
+                           FontWeight="Medium" Foreground="#000000" Margin="0 0 8 0"/>
+                <TextBox Grid.Column="1"
+                         materialDesign:HintAssist.Hint="e.g. BEN-00123"
+                         Text="{Binding BeneficiaryIdFilter, UpdateSourceTrigger=PropertyChanged}"
+                         Foreground="#000000"
+                         VerticalAlignment="Center"
+                         x:Name="BeneficiaryIdBox"/>
+                <Button Grid.Column="2"
+                        Content="Search"
+                        Command="{Binding SearchByIdCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        VerticalAlignment="Center"
+                        Margin="8 0 0 0"/>
+
+                <!-- Divider -->
+                <Separator Grid.Column="3" Style="{StaticResource MaterialDesignDarkSeparator}"
+                           Margin="0" VerticalAlignment="Stretch"/>
+
+                <!-- Free-text search -->
+                <TextBox Grid.Column="4"
+                         materialDesign:HintAssist.Hint="Filter by name, address…"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Foreground="#000000"
+                         VerticalAlignment="Center"/>
+
+                <!-- Status + spinner -->
+                <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="8 0">
+                    <ProgressBar IsIndeterminate="True" Width="20" Height="20"
+                                 Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                 Margin="0 0 8 0"
+                                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBody}"
+                               VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
-                <ProgressBar IsIndeterminate="True" Width="24" Height="24" VerticalAlignment="Center"
-                             Style="{StaticResource MaterialDesignCircularProgressBar}" Margin="0 0 16 0"
-                             Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                <Button Content="🔄 Load from CRS" Command="{Binding LoadCommand}"
+
+                <!-- Clear -->
+                <Button Grid.Column="7"
+                        Content="Clear"
+                        Command="{Binding ClearCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        VerticalAlignment="Center"/>
+
+                <!-- Load -->
+                <Button Grid.Column="9"
+                        Content="🔄 Load First 50"
+                        Command="{Binding LoadCommand}"
                         Style="{StaticResource MaterialDesignOutlinedButton}"
                         IsEnabled="{Binding IsLoading, Converter={StaticResource InvertBooleanConverter}}"
-                        HorizontalAlignment="Right"/>
-            </StackPanel>
+                        VerticalAlignment="Center"/>
+            </Grid>
         </materialDesign:Card>
+
 
         <!-- Data Grid -->
         <materialDesign:Card Grid.Row="2" Padding="8">

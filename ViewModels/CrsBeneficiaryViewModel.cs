@@ -14,9 +14,10 @@ namespace GoodGovernanceApp.ViewModels;
 public class CrsBeneficiaryViewModel : ViewModelBase
 {
     // ── Backing Fields ─────────────────────────────────────────────────────────
-    private string _statusMessage = "Press Load to fetch beneficiaries.";
-    private bool _isLoading;
-    private string _searchText = string.Empty;
+    private string _statusMessage        = "Press Load to fetch beneficiaries.";
+    private bool   _isLoading;
+    private string _searchText           = string.Empty;
+    private string _beneficiaryIdFilter  = string.Empty;
 
     // ── Collections ────────────────────────────────────────────────────────────
 
@@ -58,9 +59,16 @@ public class CrsBeneficiaryViewModel : ViewModelBase
         }
     }
 
+    public string BeneficiaryIdFilter
+    {
+        get => _beneficiaryIdFilter;
+        set { _beneficiaryIdFilter = value; OnPropertyChanged(); }
+    }
+
     // ── Commands ───────────────────────────────────────────────────────────────
-    public ICommand LoadCommand { get; }
-    public ICommand ClearCommand { get; }
+    public ICommand LoadCommand       { get; }
+    public ICommand ClearCommand      { get; }
+    public ICommand SearchByIdCommand { get; }
 
     // ── Constructor ────────────────────────────────────────────────────────────
     public CrsBeneficiaryViewModel()
@@ -68,8 +76,11 @@ public class CrsBeneficiaryViewModel : ViewModelBase
         BeneficiariesView = CollectionViewSource.GetDefaultView(Beneficiaries);
         BeneficiariesView.Filter = FilterBeneficiary;
 
-        LoadCommand = new RelayCommand(async _ => await LoadBeneficiariesAsync());
-        ClearCommand = new RelayCommand(_ => ClearSearch());
+        LoadCommand       = new RelayCommand(async _ => await LoadBeneficiariesAsync());
+        ClearCommand      = new RelayCommand(_ => ClearSearch());
+        SearchByIdCommand = new RelayCommand(
+            async _ => await SearchByBeneficiaryIdAsync(),
+            _        => !string.IsNullOrWhiteSpace(BeneficiaryIdFilter));
     }
 
     // ── Filter Logic ───────────────────────────────────────────────────────────
@@ -93,7 +104,8 @@ public class CrsBeneficiaryViewModel : ViewModelBase
 
     private void ClearSearch()
     {
-        SearchText = string.Empty;
+        SearchText          = string.Empty;
+        BeneficiaryIdFilter = string.Empty;
     }
 
     // ── Data Loading ───────────────────────────────────────────────────────────
@@ -118,7 +130,8 @@ public class CrsBeneficiaryViewModel : ViewModelBase
                     disability_type, cause_of_disability,
                     created_at, updated_at
                 FROM val_beneficiaries
-                ORDER BY last_name, first_name";
+                ORDER BY last_name, first_name
+                LIMIT 50;";
 
             using var cmd = new MySqlCommand(sql, conn);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -167,11 +180,84 @@ public class CrsBeneficiaryViewModel : ViewModelBase
                 });
             }
 
-            StatusMessage = $"✅ Loaded {Beneficiaries.Count:N0} beneficiaries.";
+            StatusMessage = $"✅ Loaded {Beneficiaries.Count:N0} beneficiaries (showing first 50).";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"❌ Failed to load beneficiaries: {ex.Message}";
+            StatusMessage = $"❌ Failed to load: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    // ── Search by Beneficiary ID ────────────────────────────────────────────────
+    private async Task SearchByBeneficiaryIdAsync()
+    {
+        string id = BeneficiaryIdFilter.Trim();
+        if (string.IsNullOrWhiteSpace(id)) return;
+
+        IsLoading     = true;
+        StatusMessage = $"Searching for Beneficiary ID: {id}…";
+        Beneficiaries.Clear();
+
+        const string sql = @"
+            SELECT
+                id, residents_id, beneficiary_id, user_id, civilregistry_id,
+                last_name, first_name, middle_name, full_name,
+                sex, date_of_birth, age, marital_status, address,
+                is_pwd, pwd_id_no, is_senior, senior_id_no,
+                disability_type, cause_of_disability,
+                created_at, updated_at
+            FROM val_beneficiaries
+            WHERE beneficiary_id LIKE @id
+            ORDER BY last_name, first_name
+            LIMIT 50;";
+
+        try
+        {
+            using var conn = new MySqlConnection(GoodGovernanceApp.Data.DatabaseConfig.CrsConnectionString);
+            await conn.OpenAsync();
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", $"%{id}%");
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                Beneficiaries.Add(new Beneficiary
+                {
+                    Id             = reader.GetInt64("id"),
+                    ResidentsId    = reader.GetInt64("residents_id"),
+                    BeneficiaryId  = reader["beneficiary_id"]?.ToString() ?? "",
+                    UserId         = reader.IsDBNull(reader.GetOrdinal("user_id")) ? null : reader.GetInt32("user_id"),
+                    CivilRegistryId= reader["civilregistry_id"]?.ToString(),
+                    LastName       = reader["last_name"]?.ToString(),
+                    FirstName      = reader["first_name"]?.ToString(),
+                    MiddleName     = reader["middle_name"]?.ToString(),
+                    FullName       = reader["full_name"]?.ToString(),
+                    Sex            = reader["sex"]?.ToString(),
+                    DateOfBirthRaw = reader["date_of_birth"]?.ToString(),
+                    AgeRaw         = reader["age"]?.ToString(),
+                    MaritalStatus  = reader["marital_status"]?.ToString(),
+                    Address        = reader["address"]?.ToString(),
+                    IsPwd          = reader.GetInt32("is_pwd") == 1,
+                    PwdIdNo        = reader["pwd_id_no"]?.ToString(),
+                    IsSenior       = reader.GetInt32("is_senior") == 1,
+                    SeniorIdNo     = reader["senior_id_no"]?.ToString(),
+                    DisabilityType     = reader["disability_type"]?.ToString(),
+                    CauseOfDisability  = reader["cause_of_disability"]?.ToString(),
+                    CreatedAt      = reader.IsDBNull(reader.GetOrdinal("created_at")) ? null : reader.GetDateTime("created_at"),
+                    UpdatedAt      = reader.IsDBNull(reader.GetOrdinal("updated_at")) ? null : reader.GetDateTime("updated_at"),
+                });
+            }
+
+            StatusMessage = Beneficiaries.Count > 0
+                ? $"✅ Found {Beneficiaries.Count:N0} result(s) for ID '{id}'."
+                : $"⚠️ No beneficiary found with ID '{id}'.";        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"❌ Search failed: {ex.Message}";
         }
         finally
         {

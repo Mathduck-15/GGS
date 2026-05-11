@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using GoodGovernanceApp.ViewModels;
 
 namespace GoodGovernanceApp.Views;
@@ -31,6 +32,16 @@ public partial class AddProjectWindow : Window
     {
         ViewModel.SelectedYear = null;
         YearPopup.IsOpen = false;
+    }
+
+    // ── Beneficiary ID – press Enter to search ───────────────────────────────────
+    private void BeneficiaryIdBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && ViewModel.LookupBeneficiaryCommand.CanExecute(null))
+        {
+            ViewModel.LookupBeneficiaryCommand.Execute(null);
+            e.Handled = true;
+        }
     }
 
     // ── Buttons ──────────────────────────────────────────────────────────────────

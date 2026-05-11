@@ -18,25 +18,6 @@ public class BudgetTransactionsViewModel : ViewModelBase
     private readonly DatabaseHelper _db;
     private readonly AppDbContext _dbContext;
 
-    private ObservableCollection<ConsolidatedTransactionsViewModel> _consolidatedRows = new();
-    private ICollectionView _consolidatedTransactionsView = null!;
-
-    public ObservableCollection<ConsolidatedTransactionsViewModel> ConsolidatedRows
-    {
-        get => _consolidatedRows;
-        private set 
-        { 
-            _consolidatedRows = value; 
-            OnPropertyChanged(); 
-            _consolidatedTransactionsView = CollectionViewSource.GetDefaultView(_consolidatedRows);
-            _consolidatedTransactionsView.Filter = ApplyConsolidatedFilter;
-            OnPropertyChanged(nameof(ConsolidatedTransactionsView));
-        }
-    }
-
-    public ICollectionView ConsolidatedTransactionsView => _consolidatedTransactionsView;
-
-
     // ── Raw data loaded from DB ───────────────────────────────────────────────
     private ObservableCollection<TransactionRow> _allRows = new();
 
@@ -48,13 +29,6 @@ public class BudgetTransactionsViewModel : ViewModelBase
     private string _filterProjectCode  = string.Empty;
     private string _filterStatus       = string.Empty;
     private string _filterFreeText     = string.Empty;
-
-    // ── Tab 2 (Consolidated) filter fields ────────────────────────────────────
-    private string _consolidatedFilterFreeText     = string.Empty;
-    private string _consolidatedFilterName         = string.Empty;
-    private string _consolidatedFilterCivilId      = string.Empty;
-    private string _consolidatedFilterTransactionType = string.Empty;
-    private string _consolidatedFilterStatus       = string.Empty;
 
     // ── Selected row ──────────────────────────────────────────────────────────
     private TransactionRow? _selectedTransaction;
@@ -98,7 +72,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
     public string FilterOfficeCode
     {
         get => _filterOfficeCode;
-        set { _filterOfficeCode = value; OnPropertyChanged(); _transactionsView?.Refresh(); _consolidatedTransactionsView?.Refresh(); }
+        set { _filterOfficeCode = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
     }
 
     public ICommand PrintVoucherCommand { get; }
@@ -106,62 +80,28 @@ public class BudgetTransactionsViewModel : ViewModelBase
     public string FilterProjectCode
     {
         get => _filterProjectCode;
-        set { _filterProjectCode = value; OnPropertyChanged(); _transactionsView?.Refresh(); _consolidatedTransactionsView?.Refresh(); }
+        set { _filterProjectCode = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
     }
 
     public string FilterStatus
     {
         get => _filterStatus;
-        set { _filterStatus = value; OnPropertyChanged(); _transactionsView?.Refresh(); _consolidatedTransactionsView?.Refresh(); }
+        set { _filterStatus = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
     }
 
     /// <summary>Free-text search across all visible columns.</summary>
     public string FilterFreeText
     {
         get => _filterFreeText;
-        set { _filterFreeText = value; OnPropertyChanged(); _transactionsView?.Refresh(); _consolidatedTransactionsView?.Refresh(); }
+        set { _filterFreeText = value; OnPropertyChanged(); _transactionsView?.Refresh(); }
     }
 
     // ── Status dropdown choices (empty string = no filter) ────────────────────
     public ObservableCollection<string> StatusOptions { get; } =
         new() { string.Empty, "Active", "Inactive", "Pending", "Completed" };
 
-    // ── Consolidated filter properties ────────────────────────────────────────
-    public string ConsolidatedFilterFreeText
-    {
-        get => _consolidatedFilterFreeText;
-        set { _consolidatedFilterFreeText = value; OnPropertyChanged(); _consolidatedTransactionsView?.Refresh(); }
-    }
-
-    public string ConsolidatedFilterName
-    {
-        get => _consolidatedFilterName;
-        set { _consolidatedFilterName = value; OnPropertyChanged(); _consolidatedTransactionsView?.Refresh(); }
-    }
-
-    public string ConsolidatedFilterCivilId
-    {
-        get => _consolidatedFilterCivilId;
-        set { _consolidatedFilterCivilId = value; OnPropertyChanged(); _consolidatedTransactionsView?.Refresh(); }
-    }
-
-    public string ConsolidatedFilterTransactionType
-    {
-        get => _consolidatedFilterTransactionType;
-        set { _consolidatedFilterTransactionType = value; OnPropertyChanged(); _consolidatedTransactionsView?.Refresh(); }
-    }
-
-    public string ConsolidatedFilterStatus
-    {
-        get => _consolidatedFilterStatus;
-        set { _consolidatedFilterStatus = value; OnPropertyChanged(); _consolidatedTransactionsView?.Refresh(); }
-    }
-
-    // ── Commands ──────────────────────────────────────────────────────────────
     public ICommand RefreshCommand             { get; }
     public ICommand ClearFilterCommand         { get; }
-    public ICommand ClearConsolidatedFilterCommand { get; }
-    public ICommand OpenAnalyticsCommand { get; }
 
     // =========================================================================
     // Constructor
@@ -182,23 +122,8 @@ public class BudgetTransactionsViewModel : ViewModelBase
         _transactionsView = CollectionViewSource.GetDefaultView(_allRows);
         _transactionsView.Filter = ApplyFilter;
 
-        _consolidatedRows = new ObservableCollection<ConsolidatedTransactionsViewModel>();
-        _consolidatedTransactionsView = CollectionViewSource.GetDefaultView(_consolidatedRows);
-        _consolidatedTransactionsView.Filter = ApplyConsolidatedFilter;
-
         RefreshCommand                 = new RelayCommand(async _ => await LoadTransactionsAsync());
         ClearFilterCommand             = new RelayCommand(_ => ClearFilters());
-        ClearConsolidatedFilterCommand = new RelayCommand(_ => ClearConsolidatedFilters());
-        
-        OpenAnalyticsCommand = new RelayCommand(row =>
-        {
-            if (row is ConsolidatedTransactionsViewModel t && !string.IsNullOrWhiteSpace(t.BeneficiaryId))
-            {
-                var vm = new BeneficiaryAnalyticsViewModel(_dbContext, t.BeneficiaryId, t.FullName);
-                var window = new BeneficiaryAnalyticsWindow(vm);
-                window.ShowDialog();
-            }
-        });
 
 
         PrintVoucherCommand = new RelayCommand(row =>
@@ -210,35 +135,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
             }
         });
 
-        _ = LoadConsolidatedTransactionsAsync();
         _ = LoadTransactionsAsync();
-    }
-
-    // =========================================================================
-    // Data Loading
-    // =========================================================================
-
-    private async Task LoadConsolidatedTransactionsAsync()
-    {
-        IsLoading = true;
-
-        try
-        {
-            var rowsList = await ConsolidatedTransactionsViewModel.GetTransactionsAsync(_dbContext);
-            ConsolidatedRows = new ObservableCollection<ConsolidatedTransactionsViewModel>(rowsList);
-        }
-        catch (Exception ex)
-        {
-            var msg = $"[BudgetTransactionsViewModel] Consolidated load error: {ex.Message}";
-            System.Diagnostics.Debug.WriteLine(msg);
-            LogToFile(msg);
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                System.Windows.MessageBox.Show(msg, "Database Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error));
-        }
-        finally
-        {
-            IsLoading = false;
-        }
     }
 
     private void LogToFile(string message)
@@ -349,53 +246,6 @@ public class BudgetTransactionsViewModel : ViewModelBase
         return true;
     }
 
-    private bool ApplyConsolidatedFilter(object obj)
-    {
-        if (obj is not ConsolidatedTransactionsViewModel row) return false;
-
-        // Full name filter
-        if (!string.IsNullOrWhiteSpace(ConsolidatedFilterName) &&
-            !row.FullName.Contains(ConsolidatedFilterName, StringComparison.OrdinalIgnoreCase) &&
-            !row.FirstName.Contains(ConsolidatedFilterName, StringComparison.OrdinalIgnoreCase) &&
-            !row.LastName.Contains(ConsolidatedFilterName, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        // Civil registry ID filter
-        if (!string.IsNullOrWhiteSpace(ConsolidatedFilterCivilId) &&
-            !row.CivilRegistryId.Contains(ConsolidatedFilterCivilId, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        // Transaction type filter
-        if (!string.IsNullOrWhiteSpace(ConsolidatedFilterTransactionType) &&
-            !row.TransactionType.Contains(ConsolidatedFilterTransactionType, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        // Status filter
-        if (!string.IsNullOrWhiteSpace(ConsolidatedFilterStatus) &&
-            !row.Status.Equals(ConsolidatedFilterStatus, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        // Free-text search across all key columns
-        if (!string.IsNullOrWhiteSpace(ConsolidatedFilterFreeText))
-        {
-            string q = ConsolidatedFilterFreeText;
-            bool hit = row.BeneficiaryId.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.CivilRegistryId.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.FullName.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.FirstName.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.MiddleName.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.LastName.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.OfficeName.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.Status.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.Amount.ToString().Contains(q, StringComparison.OrdinalIgnoreCase);
-            if (!hit) return false;
-        }
-
-        return true;
-    }
-
     private void ClearFilters()
     {
         FilterOfficeCode  = string.Empty;
@@ -403,15 +253,4 @@ public class BudgetTransactionsViewModel : ViewModelBase
         FilterStatus      = string.Empty;
         FilterFreeText    = string.Empty;
     }
-
-    private void ClearConsolidatedFilters()
-    {
-        ConsolidatedFilterFreeText        = string.Empty;
-        ConsolidatedFilterName            = string.Empty;
-        ConsolidatedFilterCivilId         = string.Empty;
-        ConsolidatedFilterTransactionType = string.Empty;
-        ConsolidatedFilterStatus          = string.Empty;
-    }
-
-
 }

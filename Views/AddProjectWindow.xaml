@@ -1,4 +1,5 @@
 <Window x:Class="GoodGovernanceApp.Views.AddProjectWindow"
+        xmlns:converters="clr-namespace:GoodGovernanceApp.Converters"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -14,6 +15,10 @@
     <Window.DataContext>
         <viewmodels:AddProjectViewModel />
     </Window.DataContext>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
 
     <Grid Margin="28">
         <Grid.RowDefinitions>
@@ -139,10 +144,39 @@
                          Text="{Binding TotalBudget, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0 0 0 16"/>
 
-                <!-- Contact Person -->
-                <TextBox materialDesign:HintAssist.Hint="Contact Person"
-                         Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="0 0 0 0"/>
+                <!-- Beneficiary ID Lookup -->
+                <TextBlock Text="Beneficiary" FontSize="11" Foreground="#000000" Margin="0 0 0 4"/>
+                <Grid Margin="0 0 0 8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             materialDesign:HintAssist.Hint="Enter Beneficiary ID"
+                             Text="{Binding BeneficiaryId, UpdateSourceTrigger=PropertyChanged}"
+                             Foreground="#000000"
+                             Margin="0 0 8 0"
+                             KeyDown="BeneficiaryIdBox_KeyDown"
+                             x:Name="BeneficiaryIdBox"/>
+                    <Button Grid.Column="1"
+                            Content="Search"
+                            Command="{Binding LookupBeneficiaryCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            VerticalAlignment="Bottom"/>
+                </Grid>
+
+                <!-- Resolved Beneficiary Name (read-only) -->
+                <Border Background="#F5F5F5" CornerRadius="4" Padding="10 8" Margin="0 0 0 4"
+                        Visibility="{Binding HasBeneficiary, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AccountCheck" Foreground="#388E3C" VerticalAlignment="Center" Margin="0 0 6 0"/>
+                        <TextBlock Text="{Binding BeneficiaryName}" Foreground="#388E3C" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="No beneficiary found for that ID."
+                           Foreground="#D32F2F" FontSize="11"
+                           Visibility="{Binding ShowNotFound, Converter={StaticResource BoolToVis}}"
+                           Margin="0 0 0 4"/>
 
             </StackPanel>
         </materialDesign:Card>

@@ -16,9 +16,6 @@ public class BudgetAllocationViewModel : ViewModelBase
     private readonly AppDbContext _context;
 
     // ── Yearly Budget Form ────────────────────────────────────────────────────
-    private int _newBudgetYear = DateTime.Now.Year;
-    private decimal _newBudgetAmount;
-    private string _newBudgetDescription = string.Empty;
     private YearlyBudget? _selectedYearlyBudget;
     private decimal _unallocatedAmount;
     private decimal _allocationPercent;
@@ -27,29 +24,13 @@ public class BudgetAllocationViewModel : ViewModelBase
     private OfficeAllocationItemViewModel? _selectedOffice;
     private string _transactionPanelHeader = string.Empty;
 
-    public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
+    // public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
     public ObservableCollection<OfficeAllocationItemViewModel> DepartmentAllocations { get; } = new();
     public ObservableCollection<TblTransaction> OfficeTransactions { get; } = new();
     public ObservableCollection<ProjectDetail> OfficeProjects { get; } = new();
 
     // ── Properties ───────────────────────────────────────────────────────────
-    public int NewBudgetYear
-    {
-        get => _newBudgetYear;
-        set { _newBudgetYear = value; OnPropertyChanged(); }
-    }
-
-    public decimal NewBudgetAmount
-    {
-        get => _newBudgetAmount;
-        set { _newBudgetAmount = value; OnPropertyChanged(); CalculateUnallocated(); }
-    }
-
-    public string NewBudgetDescription
-    {
-        get => _newBudgetDescription;
-        set { _newBudgetDescription = value; OnPropertyChanged(); }
-    }
+    // Removed Year creation properties
 
     public YearlyBudget? SelectedYearlyBudget
     {
@@ -92,17 +73,19 @@ public class BudgetAllocationViewModel : ViewModelBase
     }
 
     // ── Commands ─────────────────────────────────────────────────────────────
-    public ICommand AddYearlyBudgetCommand { get; }
+    // public ICommand AddYearlyBudgetCommand { get; }
     public ICommand SaveAllocationsCommand { get; }
 
     public BudgetAllocationViewModel()
     {
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
 
-        AddYearlyBudgetCommand = new RelayCommand(async _ => await AddYearlyBudgetAsync());
         SaveAllocationsCommand = new RelayCommand(async _ => await SaveAllocationsAsync(), _ => SelectedYearlyBudget != null);
+    }
 
-        _ = LoadInitialDataAsync();
+    public void InitializeWithBudget(YearlyBudget budget)
+    {
+        SelectedYearlyBudget = budget;
     }
 
     public void ActivateForOffice(string officeCode)
@@ -123,13 +106,6 @@ public class BudgetAllocationViewModel : ViewModelBase
     }
 
     // ── Data Loading ─────────────────────────────────────────────────────────
-    private async Task LoadInitialDataAsync()
-    {
-        var budgets = await _context.YearlyBudgets.OrderByDescending(b => b.Year).ToListAsync();
-        YearlyBudgets.Clear();
-        foreach (var b in budgets) YearlyBudgets.Add(b);
-        if (YearlyBudgets.Any()) SelectedYearlyBudget = YearlyBudgets[0];
-    }
 
     private async Task LoadAllocationsAsync()
     {
@@ -241,33 +217,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             : 0;
     }
 
-    // ── Add Yearly Budget ─────────────────────────────────────────────────────
-    private async Task AddYearlyBudgetAsync()
-    {
-        if (NewBudgetAmount <= 0) return;
-
-        var existing = await _context.YearlyBudgets.FirstOrDefaultAsync(b => b.Year == NewBudgetYear);
-        if (existing != null)
-        {
-            MessageBox.Show($"Budget for {NewBudgetYear} already exists.");
-            return;
-        }
-
-        var budget = new YearlyBudget
-        {
-            Year = NewBudgetYear,
-            TotalAmount = NewBudgetAmount,
-            Description = NewBudgetDescription
-        };
-
-        _context.YearlyBudgets.Add(budget);
-        await _context.SaveChangesAsync();
-
-        YearlyBudgets.Insert(0, budget);
-        SelectedYearlyBudget = budget;
-        NewBudgetAmount = 0;
-        NewBudgetDescription = string.Empty;
-    }
+    // Removed AddYearlyBudgetAsync
 
     // ── Save Allocations ──────────────────────────────────────────────────────
     private async Task SaveAllocationsAsync()

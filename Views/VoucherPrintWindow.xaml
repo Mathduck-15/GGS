@@ -125,6 +125,11 @@
                        FontSize="9" Foreground="#000000"
                        HorizontalAlignment="Center" TextWrapping="Wrap"/>
 
+                    <Button Content="Download PDF"
+                         Command="{Binding DownloadPdfCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Margin="8 0 0 0"/>
+
                 </StackPanel>
             </Border>
         </ScrollViewer>

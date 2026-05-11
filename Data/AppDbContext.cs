@@ -10,7 +10,6 @@ public class AppDbContext : DbContext
     public DbSet<ValidateUser> ValidateUsers { get; set; } = null!;
     public DbSet<AuditTrail> AuditTrails { get; set; } = null!;
     public DbSet<Office> Offices { get; set; } = null!;
-    public DbSet<Setting> Settings { get; set; } = null!;
 
     // ── Budget ────────────────────────────────────────────────────────────────
     public DbSet<MasterBudget> MasterBudgets { get; set; } = null!;
@@ -20,19 +19,12 @@ public class AppDbContext : DbContext
     // ── Transactions ──────────────────────────────────────────────────────────
     public DbSet<ConsolidatedTransactions> ConsolidatedTransactions { get; set; } = null!;
     public DbSet<TblTransaction> TblTransactions { get; set; } = null!;
-    public DbSet<CommunityRequest> CommunityRequests { get; set; } = null!;
-    public DbSet<Ledger> Ledgers { get; set; } = null!;
 
     // ── People & Organization ─────────────────────────────────────────────────
-    public DbSet<Constituent> Constituents { get; set; } = null!;
-    public DbSet<Employee> Employees { get; set; } = null!;
-    public DbSet<Position> Positions { get; set; } = null!;
-    public DbSet<Designation> Designations { get; set; } = null!;
     public DbSet<DepartmentRole> DepartmentRoles { get; set; } = null!;
 
     // ── Services & Requests ───────────────────────────────────────────────────
     public DbSet<TblService> TblServices { get; set; } = null!;
-    public DbSet<ServiceRequest> ServiceRequests { get; set; } = null!;
 
     // ── Files & Evaluations ──────────────────────────────────────────────────
     public DbSet<UploadedFile> UploadedFiles { get; set; } = null!;
@@ -130,63 +122,13 @@ public class AppDbContext : DbContext
             entity.HasOne(t => t.Service).WithMany().HasForeignKey(t => t.ServicesId).OnDelete(DeleteBehavior.SetNull);
         });
 
-        // ── Community Requests ────────────────────────────────────────────────
-        modelBuilder.Entity<CommunityRequest>(entity =>
-        {
-            entity.ToTable("community_requests");
-            entity.HasKey(c => c.Id);
-            entity.HasOne(c => c.CreatedBy).WithMany().HasForeignKey(c => c.CreatedById).OnDelete(DeleteBehavior.SetNull);
-            entity.HasOne(c => c.ApprovedBy).WithMany().HasForeignKey(c => c.ApprovedById).OnDelete(DeleteBehavior.SetNull);
-            entity.HasOne(c => c.Office).WithMany().HasForeignKey(c => c.OfficeId).OnDelete(DeleteBehavior.Restrict);
-        });
 
-        // ── Ledger ────────────────────────────────────────────────────────────
-        modelBuilder.Entity<Ledger>(entity =>
-        {
-            entity.ToTable("ledger");
-            entity.HasKey(l => l.Id);
-            entity.HasOne(l => l.User).WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(l => l.Request).WithMany(r => r.Ledgers).HasForeignKey(l => l.RequestId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(l => l.Office).WithMany().HasForeignKey(l => l.OfficeId).OnDelete(DeleteBehavior.Restrict);
-        });
 
-        // ── Constituents ──────────────────────────────────────────────────────
-        modelBuilder.Entity<Constituent>(entity =>
-        {
-            entity.ToTable("tbl_constituents");
-            entity.HasKey(c => c.Id);
-        });
 
-        // ── Employees ─────────────────────────────────────────────────────────
-        modelBuilder.Entity<Employee>(entity =>
-        {
-            entity.ToTable("tbl_employees");
-            entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.Position).WithMany().HasForeignKey(e => e.PositionId).OnDelete(DeleteBehavior.SetNull);
-            entity.HasOne(e => e.Designation).WithMany().HasForeignKey(e => e.DesignationId).OnDelete(DeleteBehavior.SetNull);
-            entity.HasOne(e => e.Office).WithMany().HasForeignKey(e => e.OfficeId).OnDelete(DeleteBehavior.SetNull);
-        });
-
-        // ── Positions & Designations ──────────────────────────────────────────
-        modelBuilder.Entity<Position>(entity => { entity.ToTable("tbl_positions"); entity.HasKey(p => p.Id); });
-        modelBuilder.Entity<Designation>(entity => { entity.ToTable("tbl_designations"); entity.HasKey(d => d.Id); });
 
         // ── Services & Requests ───────────────────────────────────────────────
         modelBuilder.Entity<TblService>(entity => { entity.ToTable("tbl_services"); entity.HasKey(s => s.ServicesId); });
-        modelBuilder.Entity<ServiceRequest>(entity =>
-        {
-            entity.ToTable("tbl_requests");
-            entity.HasKey(r => r.Id);
-            entity.HasOne(r => r.Constituent).WithMany().HasForeignKey(r => r.ConstituentId).OnDelete(DeleteBehavior.SetNull);
-        });
 
-        // ── Settings ──────────────────────────────────────────────────────────
-        modelBuilder.Entity<Setting>(entity =>
-        {
-            entity.ToTable("settings");
-            entity.HasKey(s => s.Id);
-            entity.HasIndex(s => s.Key).IsUnique();
-        });
 
         // ── Project Details ───────────────────────────────────────────────────
         modelBuilder.Entity<ProjectDetail>(entity => { entity.ToTable("project_details"); entity.HasKey(p => p.Id); });
@@ -208,5 +150,16 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<OfficeAllocation>().HasOne(da => da.Office).WithMany().HasPrincipalKey(o => o.OfficeCode).HasForeignKey(da => da.OfficeCode).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Evaluation>().HasOne(e => e.UploadedFile).WithMany().HasForeignKey(e => e.UploadedFileId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Evaluation>().HasOne(e => e.Evaluator).WithMany().HasForeignKey(e => e.EvaluatorId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class AppDbContextFactory : Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory<AppDbContext>
+{
+    public AppDbContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+        optionsBuilder.UseMySql("Server=127.0.0.1;Port=3306;Database=governance;User=root;Password=root;SslMode=None;AllowPublicKeyRetrieval=True;", new MySqlServerVersion(new Version(8, 0, 31)));
+
+        return new AppDbContext(optionsBuilder.Options);
     }
 }

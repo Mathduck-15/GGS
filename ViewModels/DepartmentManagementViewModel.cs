@@ -281,7 +281,9 @@ public class DepartmentManagementViewModel : ViewModelBase
     {
         var window = new AddProjectWindow
         {
-            Owner = System.Windows.Application.Current.MainWindow
+            Owner = System.Windows.Application.Current.Windows
+                        .OfType<Views.MainWindow>()
+                        .FirstOrDefault()
         };
 
         bool? result = window.ShowDialog();
@@ -296,8 +298,14 @@ public class DepartmentManagementViewModel : ViewModelBase
     private void AllocateBudget()
     {
         if (SelectedRole == null || SelectedDepartment == null) return;
-        
-        var mainVm = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.ViewModels.MainViewModel>();
-        mainVm.NavigateTo("BudgetAllocation", SelectedDepartment.OfficeCode);
+
+        var mainWindow = System.Windows.Application.Current.Windows
+            .OfType<Views.MainWindow>()
+            .FirstOrDefault();
+
+        if (mainWindow?.DataContext is MainViewModel mainVm)
+        {
+            mainVm.NavigateTo("BudgetAllocation", SelectedDepartment.OfficeCode);
+        }
     }
 }

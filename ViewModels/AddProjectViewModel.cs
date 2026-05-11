@@ -20,7 +20,10 @@ public class AddProjectViewModel : ViewModelBase
     private string _projectName     = string.Empty;
     private string _description     = string.Empty;
     private string _totalBudget     = string.Empty;
-    private string _contactPerson   = string.Empty;
+    private string _beneficiaryId   = string.Empty;
+    private string _beneficiaryName  = string.Empty;
+    private bool   _hasBeneficiary   = false;
+    private bool   _showNotFound     = false;
     private int?   _selectedYear;
     private string _selectedOfficeCode = string.Empty;
     private int?   _resolvedYearlyBudgetId;
@@ -57,10 +60,36 @@ public class AddProjectViewModel : ViewModelBase
         set { _totalBudget = value; OnPropertyChanged(); }
     }
 
-    public string ContactPerson
+    public string BeneficiaryId
     {
-        get => _contactPerson;
-        set { _contactPerson = value; OnPropertyChanged(); }
+        get => _beneficiaryId;
+        set
+        {
+            _beneficiaryId = value;
+            OnPropertyChanged();
+            // Clear previous result when the ID is edited
+            HasBeneficiary = false;
+            ShowNotFound   = false;
+            BeneficiaryName = string.Empty;
+        }
+    }
+
+    public string BeneficiaryName
+    {
+        get => _beneficiaryName;
+        private set { _beneficiaryName = value; OnPropertyChanged(); }
+    }
+
+    public bool HasBeneficiary
+    {
+        get => _hasBeneficiary;
+        private set { _hasBeneficiary = value; OnPropertyChanged(); }
+    }
+
+    public bool ShowNotFound
+    {
+        get => _showNotFound;
+        private set { _showNotFound = value; OnPropertyChanged(); }
     }
 
     public int? SelectedYear
@@ -90,8 +119,9 @@ public class AddProjectViewModel : ViewModelBase
     public ObservableCollection<string> FilteredOfficeCodes   { get; } = new();
 
     // ── Commands ─────────────────────────────────────────────────────────────────
-    public ICommand SaveCommand   { get; }
-    public ICommand CancelCommand { get; }
+    public ICommand SaveCommand              { get; }
+    public ICommand CancelCommand            { get; }
+    public ICommand LookupBeneficiaryCommand { get; }
 
     // Raised when save succeeds – the Window subscribes to close itself
     public event EventHandler? SaveSucceeded;
@@ -101,9 +131,11 @@ public class AddProjectViewModel : ViewModelBase
     {
         _db = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
 
-        SaveCommand   = new RelayCommand(async _ => await SaveAsync(),
-                                         _ => CanSave());
-        CancelCommand = new RelayCommand(_ => /* handled by view */ { });
+        SaveCommand              = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
+        CancelCommand            = new RelayCommand(_ => { });
+        LookupBeneficiaryCommand = new RelayCommand(
+            async _ => await LookupBeneficiaryAsync(),
+            _  => !string.IsNullOrWhiteSpace(BeneficiaryId));
 
         _ = InitializeAsync();
     }
@@ -261,11 +293,56 @@ public class AddProjectViewModel : ViewModelBase
         });
     }
 
+    // ── Beneficiary lookup ───────────────────────────────────────────────────────
+    private async Task LookupBeneficiaryAsync()
+    {
+        HasBeneficiary  = false;
+        ShowNotFound    = false;
+        BeneficiaryName = string.Empty;
+
+        string id = BeneficiaryId.Trim();
+        if (string.IsNullOrWhiteSpace(id)) return;
+
+        const string sql = @"
+            SELECT full_name
+            FROM val_beneficiaries
+            WHERE beneficiary_id = @id
+            LIMIT 1;";
+        try
+        {
+            using var conn = new MySqlConnection(GoodGovernanceApp.Data.DatabaseConfig.CrsConnectionString);
+            await conn.OpenAsync();
+
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            var result = await cmd.ExecuteScalarAsync();
+            string? name = result?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                BeneficiaryName = name;
+                HasBeneficiary  = true;
+            }
+            else
+            {
+                ShowNotFound = true;
+            }
+        }
+        catch
+        {
+            ShowNotFound = true;
+        }
+
+        System.Windows.Application.Current?.Dispatcher.Invoke(
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested);
+    }
+
     // ── Validation ───────────────────────────────────────────────────────────────
     private bool CanSave()
     {
-        return !string.IsNullOrWhiteSpace(ProjectId)       // async generator must have finished
-            && !string.IsNullOrWhiteSpace(VoucherCode)     // async generator must have finished
+        return !string.IsNullOrWhiteSpace(ProjectId)
+            && !string.IsNullOrWhiteSpace(VoucherCode)
             && !string.IsNullOrWhiteSpace(ProjectName)
             && !string.IsNullOrWhiteSpace(SelectedOfficeCode)
             && (string.IsNullOrWhiteSpace(TotalBudget) || decimal.TryParse(TotalBudget, out _));
@@ -321,13 +398,15 @@ public class AddProjectViewModel : ViewModelBase
         try
         {
             rowsAffected = await _db.ExecuteNonQueryAsync(insertSql,
-                new MySqlParameter("@pid", ProjectId),
+                new MySqlParameter("@pid",     ProjectId),
                 new MySqlParameter("@project", ProjectName),
-                new MySqlParameter("@desc", (object?)Description ?? DBNull.Value),
-                new MySqlParameter("@code", SelectedOfficeCode),
-                new MySqlParameter("@budget", (object?)budget ?? DBNull.Value),
-                new MySqlParameter("@contact", (object?)ContactPerson ?? DBNull.Value),
-                new MySqlParameter("@ybid", (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
+                new MySqlParameter("@desc",    (object?)Description ?? DBNull.Value),
+                new MySqlParameter("@code",    SelectedOfficeCode),
+                new MySqlParameter("@budget",  (object?)budget ?? DBNull.Value),
+                new MySqlParameter("@contact", string.IsNullOrWhiteSpace(BeneficiaryId)
+                                                   ? DBNull.Value
+                                                   : (object)BeneficiaryId.Trim()),
+                new MySqlParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
                 new MySqlParameter("@voucher", VoucherCode));
         }
         catch (Exception ex)
