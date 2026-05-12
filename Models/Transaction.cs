@@ -14,9 +14,8 @@ public class Transaction
     [StringLength(45)]
     public string? ProjectCode { get; set; }
 
-    [Required]
-    public decimal Amount { get; set; }
-
+    [Column("Amount")]
+    public decimal? Amount { get; set; }
 
     [Column("voucher_code")]
     [StringLength(10)]
@@ -24,8 +23,8 @@ public class Transaction
 
     [Column("transaction_type")]
     [StringLength(45)]
-    public string TransactionType { get; set; } = "Expense";
+    public string? TransactionType { get; set; } = "Expense";
 
-    [Required]
-    public DateTime Date { get; set; } = DateTime.Now;
+    [Column("date")]
+    public DateTime? Date { get; set; } = DateTime.Now;
 }

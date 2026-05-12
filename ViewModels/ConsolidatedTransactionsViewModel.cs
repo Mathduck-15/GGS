@@ -1,4 +1,4 @@
-﻿using GoodGovernanceApp.Data;
+using GoodGovernanceApp.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ namespace GoodGovernanceApp.ViewModels
         public DateOnly TransactionDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public string Source { get; set; } = "Consolidated";
 
         // 2. Query goes inside a method
         public static async Task<List<ConsolidatedTransactionsViewModel>> GetTransactionsAsync(AppDbContext context)

@@ -58,6 +58,22 @@ public class AppDbContext : DbContext
             entity.Property(u => u.Status).HasDefaultValue("active");
         });
 
+        // ── Transaction ───────────────────────────────────────────────────────
+        // Explicitly map only the 5 physical columns that exist in the DB.
+        // This prevents EF from injecting shadow properties (e.g. CategoryId)
+        // from any accidental navigation property on related entities.
+        modelBuilder.Entity<Transaction>(entity =>
+        {
+            entity.ToTable("transactions");
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.Id).HasColumnName("Id");
+            entity.Property(t => t.ProjectCode).HasColumnName("project_code").HasMaxLength(45);
+            entity.Property(t => t.Amount).HasColumnName("Amount");
+            entity.Property(t => t.VoucherCode).HasColumnName("voucher_code").HasMaxLength(10);
+            entity.Property(t => t.TransactionType).HasColumnName("transaction_type").HasMaxLength(45);
+            entity.Property(t => t.Date).HasColumnName("date");
+        });
+
         // ── ValidateUsers ─────────────────────────────────────────────────────
         modelBuilder.Entity<ValidateUser>(entity =>
         {
@@ -135,7 +151,7 @@ public class AppDbContext : DbContext
 
         // ── Legacy Retained Relations ─────────────────────────────────────────
         modelBuilder.Entity<Parameter>().ToTable("parameters");
-        modelBuilder.Entity<Category>().ToTable("categories");  // ← add this
+        modelBuilder.Entity<Category>().ToTable("categories");
         modelBuilder.Entity<YearlyBudget>().ToTable("yearlybudgets");
         modelBuilder.Entity<Budget>().HasOne(b => b.Category).WithMany(c => c.Budgets).HasForeignKey(b => b.CategoryId);
         modelBuilder.Entity<Budget>().HasOne(b => b.Office).WithMany().HasForeignKey(b => b.OfficeId).OnDelete(DeleteBehavior.SetNull);

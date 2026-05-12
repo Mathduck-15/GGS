@@ -7,6 +7,7 @@ using System.Windows.Input;
 using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Utilities;
 using GoodGovernanceApp.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using MySqlConnector;
 
 namespace GoodGovernanceApp.ViewModels;
@@ -69,6 +70,7 @@ public class CrsBeneficiaryViewModel : ViewModelBase
     public ICommand LoadCommand       { get; }
     public ICommand ClearCommand      { get; }
     public ICommand SearchByIdCommand { get; }
+    public ICommand OpenAnalyticsCommand { get; }
 
     // ── Constructor ────────────────────────────────────────────────────────────
     public CrsBeneficiaryViewModel()
@@ -81,6 +83,7 @@ public class CrsBeneficiaryViewModel : ViewModelBase
         SearchByIdCommand = new RelayCommand(
             async _ => await SearchByBeneficiaryIdAsync(),
             _        => !string.IsNullOrWhiteSpace(BeneficiaryIdFilter));
+        OpenAnalyticsCommand = new RelayCommand(ExecuteOpenAnalytics);
     }
 
     // ── Filter Logic ───────────────────────────────────────────────────────────
@@ -109,6 +112,17 @@ public class CrsBeneficiaryViewModel : ViewModelBase
     }
 
     // ── Data Loading ───────────────────────────────────────────────────────────
+    private void ExecuteOpenAnalytics(object? parameter)
+    {
+        if (parameter is Beneficiary b && !string.IsNullOrWhiteSpace(b.BeneficiaryId))
+        {
+            var fullName = b.DisplayName;
+            var dbContext = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.AppDbContext>();
+            var vm = new GoodGovernanceApp.ViewModels.BeneficiaryAnalyticsViewModel(dbContext, b.BeneficiaryId, fullName);
+            var window = new GoodGovernanceApp.Views.BeneficiaryAnalyticsWindow(vm);
+            window.Show();
+        }
+    }
     private async Task LoadBeneficiariesAsync()
     {
         IsLoading = true;

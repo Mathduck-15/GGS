@@ -126,13 +126,21 @@ public class ReportsViewModel : ViewModelBase
                     break;
 
                 case "Budget Summary by Category":
-                    var categories = await _context.Categories.Include(c => c.Budgets).Include(c => c.Transactions).ToListAsync();
+                    // Note: Transaction has no CategoryId FK, so expenses cannot be
+                    // broken down per category. We load each category's budget total
+                    // and pair it with the global expense total from the transactions table.
+                    var categories = await _context.Categories
+                        .Include(c => c.Budgets)
+                        .ToListAsync();
+                    var totalExpenses = await _context.Transactions
+                        .Where(t => t.TransactionType == "Expense")
+                        .SumAsync(t => t.Amount ?? 0);
                     var summaries = categories.Select(c => new
                     {
                         CategoryName = c.Name,
                         TotalBudget = c.Budgets.Sum(b => b.Amount),
-                        TotalExpenses = c.Transactions.Where(t => t.TransactionType == "Expense").Sum(t => t.Amount),
-                        RemainingBalance = c.Budgets.Sum(b => b.Amount) - c.Transactions.Where(t => t.TransactionType == "Expense").Sum(t => t.Amount)
+                        TotalExpenses = totalExpenses,
+                        RemainingBalance = c.Budgets.Sum(b => b.Amount) - totalExpenses
                     }).ToList();
                     BudgetSummaries = new ObservableCollection<object>(summaries);
                     break;
@@ -161,7 +169,7 @@ public class ReportsViewModel : ViewModelBase
                 case "System Overview":
                     var totalUsers = await _context.Users.CountAsync();
                     var totalBudgets = await _context.Budgets.SumAsync(b => b.Amount);
-                    var totalExp = await _context.Transactions.Where(t => t.TransactionType == "Expense").SumAsync(t => t.Amount);
+                    var totalExp = await _context.Transactions.Where(t => t.TransactionType == "Expense").SumAsync(t => t.Amount ?? 0);
                     
                     SystemOverview = new ObservableCollection<object>
                     {

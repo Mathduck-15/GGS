@@ -43,6 +43,20 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
         set { _totalAmount = value; OnPropertyChanged(); }
     }
 
+    private decimal _consolidatedAmount;
+    public decimal ConsolidatedAmount
+    {
+        get => _consolidatedAmount;
+        set { _consolidatedAmount = value; OnPropertyChanged(); }
+    }
+
+    private decimal _departmentBudgetAmount;
+    public decimal DepartmentBudgetAmount
+    {
+        get => _departmentBudgetAmount;
+        set { _departmentBudgetAmount = value; OnPropertyChanged(); }
+    }
+
     private decimal _averageAmount;
     public decimal AverageAmount
     {
@@ -98,111 +112,146 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var baseQuery = _dbContext.ConsolidatedTransactions
-                .Where(t => t.BeneficiaryId == BeneficiaryId);
+            // ── Step 1: Find all dept projects linked to this Beneficiary ID ─────
+            var linkedProjects = await _dbContext.ProjectDetails
+                .Where(pd => pd.ContactPerson == BeneficiaryId && pd.ProjectDetailsID != null)
+                .ToListAsync();
 
-            // Fetch raw data needed for aggregations
-            // We use ToListAsync() here because some aggregations (like grouping by DateOnly components) 
-            // might not translate perfectly to all SQL dialects.
-            var transactions = await baseQuery.ToListAsync();
-
-            if (!transactions.Any()) return;
-
-            TotalTransactions = transactions.Count;
-            TotalAmount = transactions.Sum(t => t.Amount ?? 0);
-            AverageAmount = TotalTransactions > 0 ? TotalAmount / TotalTransactions : 0;
-
-            // Load recent transactions (top 10)
-            var recent = transactions
-                .OrderByDescending(t => t.TransactionDate)
-                .ThenByDescending(t => t.CreatedAt)
-                .Take(10)
-                .Select(t => new ConsolidatedTransactionsViewModel
-                {
-                    Id = t.Id,
-                    BeneficiaryId = t.BeneficiaryId ?? "",
-                    FullName = t.FullName ?? "",
-                    TransactionType = t.TransactionType ?? "",
-                    Amount = t.Amount ?? 0,
-                    TransactionDate = t.TransactionDate ?? DateOnly.MinValue,
-                    Status = t.Status ?? ""
-                });
-
-            foreach (var r in recent)
-            {
-                RecentTransactions.Add(r);
-            }
-
-            // Pie Chart: Transaction Types
-            var types = transactions
-                .GroupBy(t => t.TransactionType ?? "Unknown")
-                .Select(g => new { Type = g.Key, Amount = g.Sum(x => x.Amount ?? 0) })
+            var projectCodes = linkedProjects
+                .Select(pd => pd.ProjectDetailsID!)
                 .ToList();
 
+            // ── Step 2: Load dept budget transactions (transactions table) ────────
+            var departmentTransactions = projectCodes.Any()
+                ? await _dbContext.Transactions
+                    .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
+                    .ToListAsync()
+                : new System.Collections.Generic.List<Transaction>();
+
+            // ── Step 3: Load consolidated transactions by beneficiary_id ──────────
+            var consolidatedTransactions = await _dbContext.ConsolidatedTransactions
+                .Where(ct => ct.BeneficiaryId == BeneficiaryId)
+                .ToListAsync();
+
+            // ── Step 4: Map dept transactions into unified view model ──────────────
+            var deptList = departmentTransactions.Select(t => new ConsolidatedTransactionsViewModel
+            {
+                Id              = t.Id,
+                BeneficiaryId   = BeneficiaryId,
+                FullName        = FullName,
+                TransactionType = t.TransactionType ?? "Department Project",
+                Amount          = t.Amount ?? 0,
+                TransactionDate = t.Date.HasValue ? DateOnly.FromDateTime(t.Date.Value) : DateOnly.MinValue,
+                Status          = "Completed",
+                Source          = "Department Budget",
+                CreatedAt       = t.Date ?? DateTime.MinValue
+            }).ToList();
+
+            // ── Step 5: Map consolidated transactions into unified view model ──────
+            var consolidatedList = consolidatedTransactions.Select(ct => new ConsolidatedTransactionsViewModel
+            {
+                Id              = ct.Id,
+                BeneficiaryId   = ct.BeneficiaryId ?? BeneficiaryId,
+                FullName        = ct.FullName ?? FullName,
+                TransactionType = ct.TransactionType ?? "Consolidated",
+                Amount          = ct.Amount ?? 0,
+                TransactionDate = ct.TransactionDate ?? DateOnly.MinValue,
+                Status          = ct.Status ?? "Unknown",
+                Source          = "Consolidated",
+                CreatedAt       = ct.CreatedAt ?? DateTime.MinValue
+            }).ToList();
+
+            // ── Step 6: Merge both lists ──────────────────────────────────────────
+            var combinedList = deptList.Concat(consolidatedList).ToList();
+
+            // ── Step 7: Per-source summary stats ─────────────────────────────────
+            //   ConsolidatedAmount     = sum of consolidated_transactions rows
+            //   DepartmentBudgetAmount = sum of dept transactions rows
+            //   TotalAmount            = grand total of both
+            TotalTransactions      = combinedList.Count;
+            ConsolidatedAmount     = consolidatedList.Sum(t => t.Amount);
+            DepartmentBudgetAmount = deptList.Sum(t => t.Amount);
+            TotalAmount            = ConsolidatedAmount + DepartmentBudgetAmount;
+            AverageAmount          = TotalTransactions > 0 ? TotalAmount / TotalTransactions : 0;
+
+            // ── Step 8: Recent transactions list (top 10, newest first) ──────────
+            foreach (var r in combinedList.OrderByDescending(t => t.CreatedAt).Take(10))
+                RecentTransactions.Add(r);
+
+            if (!combinedList.Any()) return;
+
+            // ── Step 9: Pie Chart – Amount by Transaction Type (both sources) ─────
             var typeSeries = new SeriesCollection();
-            foreach (var t in types)
+            foreach (var grp in combinedList
+                .GroupBy(t => t.TransactionType ?? "Unknown")
+                .Select(g => new { Type = g.Key, Amount = g.Sum(x => x.Amount) }))
             {
                 typeSeries.Add(new PieSeries
                 {
-                    Title = t.Type,
-                    Values = new ChartValues<decimal> { t.Amount },
+                    Title      = grp.Type,
+                    Values     = new ChartValues<decimal> { grp.Amount },
                     DataLabels = true
                 });
             }
             TypeBreakdownSeries = typeSeries;
 
-            // Pie Chart: Status Breakdown
-            var statuses = transactions
-                .GroupBy(t => t.Status ?? "Unknown")
-                .Select(g => new { Status = g.Key, Count = g.Count() })
-                .ToList();
-
-            var statusSeries = new SeriesCollection();
-            foreach (var s in statuses)
-            {
-                statusSeries.Add(new PieSeries
+            // ── Step 10: Pie Chart – Source Breakdown (Consolidated vs Dept) ──────
+            var sourceSeries = new SeriesCollection();
+            if (consolidatedList.Any())
+                sourceSeries.Add(new PieSeries
                 {
-                    Title = s.Status,
-                    Values = new ChartValues<int> { s.Count },
+                    Title      = "Consolidated",
+                    Values     = new ChartValues<int> { consolidatedList.Count },
                     DataLabels = true
                 });
-            }
-            StatusBreakdownSeries = statusSeries;
-
-            // Monthly Trend (Column or Line)
-            var monthlyData = transactions
-                .Where(t => t.TransactionDate.HasValue)
-                .GroupBy(t => new { Year = t.TransactionDate!.Value.Year, Month = t.TransactionDate!.Value.Month })
-                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
-                .Select(g => new
+            if (deptList.Any())
+                sourceSeries.Add(new PieSeries
                 {
-                    Label = $"{new DateTime(g.Key.Year, g.Key.Month, 1):MMM yyyy}",
-                    Amount = g.Sum(x => x.Amount ?? 0)
-                })
+                    Title      = "Department Budget",
+                    Values     = new ChartValues<int> { deptList.Count },
+                    DataLabels = true
+                });
+            StatusBreakdownSeries = sourceSeries;
+
+            // ── Step 11: Monthly Trend – two columns per month (one per source) ───
+            var allMonths = combinedList
+                .Where(t => t.TransactionDate != DateOnly.MinValue)
+                .Select(t => new { t.TransactionDate.Year, t.TransactionDate.Month })
+                .Distinct()
+                .OrderBy(m => m.Year).ThenBy(m => m.Month)
                 .ToList();
 
-            var trendValues = new ChartValues<decimal>();
-            var labels = new ObservableCollection<string>();
+            var trendDept         = new ChartValues<decimal>();
+            var trendConsolidated = new ChartValues<decimal>();
+            var labels            = new ObservableCollection<string>();
 
-            foreach (var m in monthlyData)
+            foreach (var m in allMonths)
             {
-                trendValues.Add(m.Amount);
-                labels.Add(m.Label);
+                labels.Add($"{new DateTime(m.Year, m.Month, 1):MMM yyyy}");
+
+                trendDept.Add(deptList
+                    .Where(t => t.TransactionDate.Year == m.Year && t.TransactionDate.Month == m.Month)
+                    .Sum(t => t.Amount));
+
+                trendConsolidated.Add(consolidatedList
+                    .Where(t => t.TransactionDate.Year == m.Year && t.TransactionDate.Month == m.Month)
+                    .Sum(t => t.Amount));
             }
 
             MonthlyLabels = labels;
             MonthlyTrendSeries = new SeriesCollection
             {
-                new ColumnSeries
-                {
-                    Title = "Monthly Amount",
-                    Values = trendValues
-                }
+                new ColumnSeries { Title = "Department Budget", Values = trendDept         },
+                new ColumnSeries { Title = "Consolidated",      Values = trendConsolidated }
             };
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading beneficiary analytics: {ex.Message}");
+            System.Windows.MessageBox.Show(
+                $"Error loading beneficiary analytics:\n{ex}",
+                "Error",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
         }
         finally
         {

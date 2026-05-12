@@ -38,9 +38,9 @@ namespace GoodGovernanceApp.ViewModels
             LoadBackupSettings();
 
             // ── Connection commands ──────────────────────────────────────────
-            PresetLocalCommand = new RelayCommand(_ => ApplyPreset("Local"));
-            PresetNetworkCommand = new RelayCommand(_ => ApplyPreset("LAN"));
-            PresetRemoteCommand = new RelayCommand(_ => ApplyPreset("Remote"));
+            PresetLocalCommand = new RelayCommand(_ => ApplyPreset("Local", true));
+            PresetNetworkCommand = new RelayCommand(_ => ApplyPreset("LAN", true));
+            PresetRemoteCommand = new RelayCommand(_ => ApplyPreset("Remote", true));
             TestBothCommand = new RelayCommand(async _ => await ExecuteTestBoth());
             SaveSettingsCommand = new RelayCommand(async _ => await ExecuteSaveSettings(null));
 
@@ -289,7 +289,7 @@ namespace GoodGovernanceApp.ViewModels
         public ICommand OpenSystemsProfileCommand { get; }
 
         // ── Preset Logic ─────────────────────────────────────────────────────
-        private void ApplyPreset(string mode)
+        private void ApplyPreset(string mode, bool userInitiated = false)
         {
             DatabaseMode = mode;
             SelectedPreset = mode switch
@@ -310,26 +310,38 @@ namespace GoodGovernanceApp.ViewModels
                     LocalConnectionString = _config.GetConnectionString("LocalConnection") ?? "";
                     LanConnectionString = _config.GetConnectionString("LanConnection") ?? "";
                     RemoteConnectionString = _config.GetConnectionString("RemoteConnection") ?? "";
-                    CrsServer = "localhost"; CrsPort = "3306";
-                    CrsDatabase = "crs_db"; CrsUser = "root"; CrsPassword = "root";
+                    if (userInitiated) 
+                    {
+                        CrsServer = "localhost"; CrsPort = "3306";
+                        CrsDatabase = "crs_db"; CrsUser = "root"; CrsPassword = "root";
+                    }
                     break;
 
                 case "LAN":
                     if (string.IsNullOrWhiteSpace(LanIp)) LanIp = "192.168.1.1";
                     LanConnectionString = _config.GetConnectionString("LanConnection") ?? "";
-                    CrsServer = LanIp; CrsPort = "3306";
-                    CrsDatabase = "crs_db"; CrsUser = "root"; CrsPassword = "root";
+                    if (userInitiated) 
+                    {
+                        CrsServer = LanIp; CrsPort = "3306";
+                        CrsDatabase = "crs_db"; CrsUser = "root"; CrsPassword = "root";
+                    }
                     break;
 
                 case "Remote":
                     RemoteConnectionString = _config.GetConnectionString("RemoteConnection") ?? "";
-                    CrsServer = "194.59.164.58"; CrsPort = "3306";
-                    CrsDatabase = "u621755393_crs"; CrsUser = "u621755393_crs_user";
-                    CrsPassword = "Crs@2026";
+                    if (userInitiated) 
+                    {
+                        CrsServer = "194.59.164.58"; CrsPort = "3306";
+                        CrsDatabase = "u621755393_crs"; CrsUser = "u621755393_crs_user";
+                        CrsPassword = "Crs@2026";
+                    }
                     break;
             }
 
-            StatusMessage = $"{mode} preset applied. Edit the LAN IP if needed, then TEST BOTH.";
+            if (userInitiated) 
+            {
+                StatusMessage = $"{mode} preset applied. Edit the LAN IP if needed, then TEST BOTH.";
+            }
         }
 
         public string BuildCrsConnStr()
@@ -402,7 +414,7 @@ namespace GoodGovernanceApp.ViewModels
                 CrsUser     = _config["CrsConnection:User"]     ?? "root";
                 CrsPassword = _config["CrsConnection:Password"] ?? "";
 
-                ApplyPreset(dbMode);
+                ApplyPreset(dbMode, false);
             }
             catch { StatusMessage = "Error loading settings."; }
         }

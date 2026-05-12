@@ -108,10 +108,10 @@ public class DashboardViewModel : ViewModelBase
             TotalBudget = await _context.YearlyBudgets.SumAsync(b => b.TotalAmount);
             
             TotalIncome = await _context.Transactions
-                                        .SumAsync(t => t.Amount);
+                                        .SumAsync(t => t.Amount ?? 0);
 
             TotalExpense = await _context.Transactions
-                                         .SumAsync(t => t.Amount);
+                                         .SumAsync(t => t.Amount ?? 0);
 
             ActiveUsersCount = await _context.Users
                                              .CountAsync(u => u.Status == "active");

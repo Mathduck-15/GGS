@@ -189,7 +189,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             spentByProject = await _context.Transactions
                 .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
                 .GroupBy(t => t.ProjectCode)
-                .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount) })
+                .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
                 .ToDictionaryAsync(x => x.ProjectCode!, x => x.Spent);
         }
 

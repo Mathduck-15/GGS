@@ -1,40 +1,31 @@
 using System;
-using MySqlConnector;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using GoodGovernanceApp.Data;
+using GoodGovernanceApp.Models;
 using System.Threading.Tasks;
 
 class Program
 {
     static async Task Main(string[] args)
     {
-        string connStr = "Server=127.0.0.1;Port=3306;Database=govern;User=root;Password=root123;SslMode=None;AllowPublicKeyRetrieval=True;";
-        try
+        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+        optionsBuilder.UseMySql("Server=127.0.0.1;Port=3306;Database=governance;User=root;Password=root;SslMode=None;AllowPublicKeyRetrieval=True;", new MySqlServerVersion(new Version(8, 0, 31)));
+        
+        using var dbContext = new AppDbContext(optionsBuilder.Options);
+
+        var projects = await dbContext.ProjectDetails.OrderByDescending(p => p.Id).Take(5).ToListAsync();
+        Console.WriteLine($"Found {projects.Count} projects:");
+        foreach (var p in projects)
         {
-            using var conn = new MySqlConnection(connStr);
-            await conn.OpenAsync();
-            
-            const string insertSql = @"
-            INSERT INTO project_details
-                (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at, voucher_code)
-            VALUES
-                (@pid, @project, @desc, @code, @budget, @contact, @ybid, NOW(), NOW(), @voucher);";
-
-            using var cmd = new MySqlCommand(insertSql, conn);
-            cmd.Parameters.AddWithValue("@pid", "TEST-2026-0002");
-            cmd.Parameters.AddWithValue("@project", "Test Project 2");
-            cmd.Parameters.AddWithValue("@desc", DBNull.Value);
-            cmd.Parameters.AddWithValue("@code", "OFFICE-A");
-            cmd.Parameters.AddWithValue("@budget", 1000.50m);
-            cmd.Parameters.AddWithValue("@contact", "John Doe");
-            cmd.Parameters.AddWithValue("@ybid", DBNull.Value); // Put DBNull!
-            cmd.Parameters.AddWithValue("@voucher", "VOUCHER124");
-
-            int rows = await cmd.ExecuteNonQueryAsync();
-            Console.WriteLine($"Inserted rows: {rows}");
-
+            Console.WriteLine($" - ID: {p.Id}, PID: {p.ProjectDetailsID}, ContactPerson: '{p.ContactPerson}'");
         }
-        catch (Exception ex)
+
+        var txns = await dbContext.Transactions.OrderByDescending(t => t.Id).Take(5).ToListAsync();
+        Console.WriteLine($"Found {txns.Count} transactions:");
+        foreach (var t in txns)
         {
-            Console.WriteLine("Error: " + ex.ToString());
+            Console.WriteLine($" - ID: {t.Id}, PCode: {t.ProjectCode}, Amount: {t.Amount}, Date: {t.Date}");
         }
     }
 }

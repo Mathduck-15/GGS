@@ -20,5 +20,4 @@ public class Category
     public string? Description { get; set; }
     
     public ICollection<Budget> Budgets { get; set; } = new List<Budget>();
-    public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }
