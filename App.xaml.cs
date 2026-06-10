@@ -27,12 +27,25 @@ public partial class App : Application
             typeof(FrameworkElement),
             new FrameworkPropertyMetadata(System.Windows.Markup.XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
+        string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GoodGovernanceApp");
+        Directory.CreateDirectory(appDataFolder);
+        string appDataSettingsPath = Path.Combine(appDataFolder, "appsettings.json");
+
+        if (!File.Exists(appDataSettingsPath))
+        {
+            string baseSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+            if (File.Exists(baseSettingsPath))
+            {
+                File.Copy(baseSettingsPath, appDataSettingsPath);
+            }
+        }
+
         AppHost = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
                 // Clear default sources to avoid loading appsettings.json from wrong directory
                 config.Sources.Clear();
-                config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
+                config.SetBasePath(appDataFolder);
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
             })
             .ConfigureServices((context, services) =>

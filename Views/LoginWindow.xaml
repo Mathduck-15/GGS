@@ -32,48 +32,71 @@
         </Grid.ColumnDefinitions>
 
         <!-- ── LEFT PANEL ── -->
-        <Border Grid.Column="0"
-                Background="{DynamicResource PrimaryHueMidBrush}">
-            <StackPanel VerticalAlignment="Center"
-                        HorizontalAlignment="Center" Height="358" Width="377">
+        <!-- ── LEFT PANEL ── -->
+        <!-- ── LEFT PANEL ── -->
+        <Grid Grid.Column="0"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Stretch">
 
-                <!-- Replace Source with your actual logo path -->
+            <Image Source="pack://application:,,,/Assets/Images/bg.jpg"
+           Stretch="UniformToFill"
+           HorizontalAlignment="Center"
+           VerticalAlignment="Center"/>
+
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#CC006064" Offset="0"/>
+                        <GradientStop Color="#CC00838F" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <Rectangle VerticalAlignment="Top" Height="5">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        
+                       
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <StackPanel VerticalAlignment="Center"
+                HorizontalAlignment="Center" Height="358" Width="377">
 
                 <Image Width="161" Height="161"
-                Stretch="Uniform"
-                HorizontalAlignment="Center"
-                Margin="0 0 0 24">
+               Stretch="Uniform"
+               HorizontalAlignment="Center"
+               Margin="0 0 0 24">
                     <Image.Source>
-                        <Binding Path="LogoSource">
-                        </Binding>
+                        <Binding Path="LogoSource"/>
                     </Image.Source>
                 </Image>
 
                 <TextBlock Text="{Binding GovernanceName}"
-                           FontSize="26" FontWeight="Bold"
-                           Foreground="#000000"
-                           HorizontalAlignment="Center"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"/>
+                   FontSize="26" FontWeight="Bold"
+                   Foreground="White"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"/>
 
                 <TextBlock Text="{Binding Address}"
-                FontSize="17" FontWeight="Light"
-                Foreground="#000000"
-                HorizontalAlignment="Center"
-                TextAlignment="Center"
-                TextWrapping="Wrap"/>
+                   FontSize="17" FontWeight="Light"
+                   Foreground="#BBDEFB"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"/>
 
-
-                <Separator Margin="24 20"
-                           Background="Teal"/>
+                <Separator Margin="24 20" Background="#4DFFFFFF"/>
 
                 <TextBlock Text="Transparency · Accountability · Integrity"
-                           FontSize="20"
-                           HorizontalAlignment="Center"
-                           TextAlignment="Center"
-                            Foreground="#000000"/>
+                   FontSize="20"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   Foreground="White"/>
             </StackPanel>
-        </Border>
+
+        </Grid>
 
         <!-- ── RIGHT PANEL ── -->
         <Grid Grid.Column="1">

@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
@@ -39,6 +39,14 @@
     <Compile Remove="scratch_db3.cs" />
     <Compile Remove="scratch_app\**" />
     <Compile Remove="scratch_app2\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Assets\Images\bg.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Images\bg.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

@@ -60,7 +60,8 @@ public static class DatabaseConfig
         string mode, string ggmsConnStr,
         string crsServer, string crsPort, string crsDb, string crsUser, string crsPass)
     {
-        string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+        string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GoodGovernanceApp");
+        string path = Path.Combine(appDataFolder, "appsettings.json");
         string json = File.ReadAllText(path);
         var root = JsonNode.Parse(json)!.AsObject();
 

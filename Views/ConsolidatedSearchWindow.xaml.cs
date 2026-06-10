@@ -1,5 +1,5 @@
 using System.Windows;
-using MaterialDesignThemes.Wpf;
+using System.Windows.Input;
 
 namespace GoodGovernanceApp.Views;
 
@@ -23,26 +23,41 @@ public partial class ConsolidatedSearchWindow : Window
 
     private void SearchMode_Changed(object sender, RoutedEventArgs e)
     {
-        if (RadioBeneficiaryId == null || RadioFullName == null || SearchInputCard == null)
+        if (RadioBeneficiaryId == null || RadioFullName == null || SearchInputPanel == null)
             return;
 
         if (RadioBeneficiaryId.IsChecked == true)
         {
-            SearchInputCard.Visibility = Visibility.Visible;
             SearchLabel.Text = "Enter Beneficiary ID:";
             SearchTextBox.Text = string.Empty;
-            HintAssist.SetHint(SearchTextBox, "e.g. BEN-00123");
+            SearchTextBox.IsEnabled = true;
+            SearchInputPanel.Visibility = Visibility.Visible;
+            // Give keyboard focus after layout updates
+            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
+                new System.Action(() =>
+                {
+                    SearchTextBox.IsEnabled = true;
+                    SearchTextBox.Focus();
+                    Keyboard.Focus(SearchTextBox);
+                }));
         }
         else if (RadioFullName.IsChecked == true)
         {
-            SearchInputCard.Visibility = Visibility.Visible;
             SearchLabel.Text = "Enter Full Name:";
             SearchTextBox.Text = string.Empty;
-            HintAssist.SetHint(SearchTextBox, "e.g. Juan Dela Cruz");
+            SearchTextBox.IsEnabled = true;
+            SearchInputPanel.Visibility = Visibility.Visible;
+            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
+                new System.Action(() =>
+                {
+                    SearchTextBox.IsEnabled = true;
+                    SearchTextBox.Focus();
+                    Keyboard.Focus(SearchTextBox);
+                }));
         }
         else // View All
         {
-            SearchInputCard.Visibility = Visibility.Collapsed;
+            SearchInputPanel.Visibility = Visibility.Collapsed;
             SearchTextBox.Text = string.Empty;
         }
     }

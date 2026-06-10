@@ -168,6 +168,7 @@ public class MainViewModel : ViewModelBase
     public ICommand ShowDashboardCommand { get; }
     public ICommand ToggleSidebarCommand { get; }
     public ICommand NotificationClickedCommand { get; }
+    public ICommand OpenNotificationsCommand   { get; }
 
     // ── constructor ───────────────────────────────────────────────────────────
     public MainViewModel()
@@ -194,7 +195,8 @@ public class MainViewModel : ViewModelBase
             CurrentView          = null!;
         });
         ToggleSidebarCommand  = new RelayCommand(_ => IsSidebarOpen = !IsSidebarOpen);
-        NotificationClickedCommand = new RelayCommand(ExecuteNotificationClicked);
+        NotificationClickedCommand  = new RelayCommand(ExecuteNotificationClicked);
+        OpenNotificationsCommand    = new RelayCommand(_ => IsNotificationPopupOpen = true);
 
         LoadApplicationProfileAsync();
         LoadProfilePhotoAsync();

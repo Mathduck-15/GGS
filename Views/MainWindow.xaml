@@ -111,61 +111,254 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <materialDesign:DialogHost IsOpen="{Binding IsNotificationPopupOpen}" Identifier="RootDialog" DialogTheme="Light">
+    <materialDesign:DialogHost IsOpen="{Binding IsNotificationPopupOpen}" Identifier="RootDialog" DialogTheme="Light"
+                               CloseOnClickAway="True">
         <materialDesign:DialogHost.DialogContent>
-            <!-- Large Notification Dialog -->
-            <Border Background="White" CornerRadius="12" Width="600" MinHeight="400" MaxHeight="600" Padding="0">
+            <!-- ══════════════════════════════════════════════
+                 Premium Notification Panel
+            ══════════════════════════════════════════════ -->
+            <Border Width="520" MaxHeight="640" CornerRadius="20"
+                    Background="White"
+                    Effect="{DynamicResource MaterialDesignShadowDepth5}">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>  <!-- gradient header -->
+                        <RowDefinition Height="*"/>     <!-- scrollable list  -->
+                        <RowDefinition Height="Auto"/>  <!-- footer           -->
                     </Grid.RowDefinitions>
-                    
-                    <Border Grid.Row="0" Background="#3B82F6" CornerRadius="12,12,0,0" Padding="24,16">
+
+                    <!-- ── Gradient Header ────────────────────────── -->
+                    <Border Grid.Row="0" CornerRadius="20,20,0,0" Padding="24,20,20,20">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#0F172A" Offset="0"/>
+                                <GradientStop Color="#1E3A5F" Offset="0.6"/>
+                                <GradientStop Color="#1D4ED8" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Recent System Activity" FontSize="20" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}" Background="Transparent" BorderThickness="0" Foreground="White" Width="32" Height="32" Padding="0">
-                                <materialDesign:PackIcon Kind="Close" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            <!-- Bell icon with glow ring -->
+                            <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23"
+                                    Margin="0,0,14,0" VerticalAlignment="Center">
+                                <Border.Background>
+                                    <SolidColorBrush Color="#2563EB" Opacity="0.35"/>
+                                </Border.Background>
+                                <materialDesign:PackIcon Kind="BellRing" Foreground="White"
+                                                         Width="24" Height="24"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Title block -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Notifications" FontSize="20" FontWeight="Bold"
+                                           Foreground="White"/>
+                                <TextBlock Text="Recent system activity" FontSize="12"
+                                           Foreground="#93C5FD" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <!-- Close button -->
+                            <Button Grid.Column="2"
+                                    Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                                    Width="34" Height="34" Padding="0"
+                                    Background="Transparent" BorderThickness="0"
+                                    Cursor="Hand" VerticalAlignment="Center">
+                                <Border Width="34" Height="34" CornerRadius="17" Background="#1E3A5F">
+                                    <materialDesign:PackIcon Kind="Close" Foreground="#93C5FD"
+                                                             Width="16" Height="16"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"/>
+                                </Border>
                             </Button>
                         </Grid>
                     </Border>
-                    
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16">
-                        <ItemsControl ItemsSource="{Binding Notifications}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <materialDesign:Card Margin="0,0,0,12" Padding="16" Background="#F8FAFC" UniformCornerRadius="8">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="16"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" Background="White" Width="48" Height="48" CornerRadius="24" VerticalAlignment="Top">
-                                                <materialDesign:PackIcon Kind="{Binding Icon}" Foreground="{Binding Color, Converter={StaticResource ColorConverter}}" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="16" Foreground="#0F172A"/>
-                                                <TextBlock Text="{Binding Message}" FontSize="14" Foreground="#475569" TextWrapping="Wrap" Margin="0,4,0,8"/>
-                                                <TextBlock Text="{Binding FormattedDate}" FontSize="12" Foreground="#94A3B8"/>
-                                            </StackPanel>
-                                            <Button Grid.Column="3" Content="View Record" Command="{Binding DataContext.NotificationClickedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding ViewToken}" Style="{StaticResource MaterialDesignOutlinedButton}" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </materialDesign:Card>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+
+                    <!-- ── Scrollable Notification List ───────────── -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                  Padding="16,12,16,4">
+                        <StackPanel>
+
+                            <!-- Notification Cards -->
+                            <ItemsControl ItemsSource="{Binding Notifications}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- Card with colored left accent strip -->
+                                        <Border Margin="0,0,0,10" CornerRadius="12"
+                                                Background="#F8FAFC"
+                                                BorderThickness="0">
+                                            <Border.Effect>
+                                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8"
+                                                                  ShadowDepth="2" Opacity="0.4"/>
+                                            </Border.Effect>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="5"/>   <!-- accent bar -->
+                                                    <ColumnDefinition Width="*"/>   <!-- content    -->
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Colored left accent bar -->
+                                                <Border Grid.Column="0" CornerRadius="12,0,0,12"
+                                                        Background="{Binding Color, Converter={StaticResource ColorConverter}}"/>
+
+                                                <!-- Card content -->
+                                                <Grid Grid.Column="1" Margin="14,14,14,14">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- Glowing icon badge -->
+                                                    <Border Grid.Column="0" Width="44" Height="44"
+                                                            CornerRadius="22" Margin="0,0,12,0"
+                                                            VerticalAlignment="Top">
+                                                        <Border.Background>
+                                                            <SolidColorBrush Color="#EFF6FF"/>
+                                                        </Border.Background>
+                                                        <materialDesign:PackIcon
+                                                            Kind="{Binding Icon}"
+                                                            Foreground="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                                            Width="22" Height="22"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"/>
+                                                    </Border>
+
+                                                    <!-- Text content -->
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Title}"
+                                                                   FontWeight="SemiBold" FontSize="14"
+                                                                   Foreground="#0F172A"/>
+                                                        <TextBlock Text="{Binding Message}"
+                                                                   FontSize="12" Foreground="#64748B"
+                                                                   TextWrapping="Wrap"
+                                                                   Margin="0,3,0,5"
+                                                                   MaxWidth="230"/>
+                                                        <!-- Date pill -->
+                                                        <Border Background="#F1F5F9" CornerRadius="4"
+                                                                Padding="6,2" HorizontalAlignment="Left">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="ClockOutline"
+                                                                    Width="11" Height="11"
+                                                                    Foreground="#94A3B8"
+                                                                    VerticalAlignment="Center"
+                                                                    Margin="0,0,4,0"/>
+                                                                <TextBlock Text="{Binding FormattedDate}"
+                                                                           FontSize="11" Foreground="#94A3B8"
+                                                                           VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+
+                                                    <!-- View button -->
+                                                    <Button Grid.Column="2"
+                                                            Command="{Binding DataContext.NotificationClickedCommand,
+                                                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding ViewToken}"
+                                                            VerticalAlignment="Center"
+                                                            Padding="12,6"
+                                                            BorderThickness="0"
+                                                            Cursor="Hand"
+                                                            Margin="8,0,0,0">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="Bd" CornerRadius="20"
+                                                                        Padding="12,6"
+                                                                        Background="{Binding Color, Converter={StaticResource ColorConverter}}">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="View"
+                                                                                   FontSize="12"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="White"/>
+                                                                        <materialDesign:PackIcon Kind="ArrowRight"
+                                                                            Width="13" Height="13"
+                                                                            Foreground="White"
+                                                                            VerticalAlignment="Center"
+                                                                            Margin="4,0,0,0"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsPressed" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Opacity" Value="0.7"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Empty state (shown when no notifications) -->
+                            <StackPanel HorizontalAlignment="Center" Margin="0,32,0,32"
+                                        Visibility="{Binding HasNewNotifications, Converter={StaticResource InvBoolToVis}}">
+                                <Border Width="80" Height="80" CornerRadius="40"
+                                        Background="#F1F5F9" HorizontalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="BellOffOutline"
+                                                             Width="36" Height="36"
+                                                             Foreground="#CBD5E1"
+                                                             HorizontalAlignment="Center"
+                                                             VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="All caught up!" FontSize="16" FontWeight="SemiBold"
+                                           Foreground="#334155" HorizontalAlignment="Center"
+                                           Margin="0,16,0,4"/>
+                                <TextBlock Text="No recent system activity to show."
+                                           FontSize="13" Foreground="#94A3B8"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
                     </ScrollViewer>
-                    
-                    <TextBlock Grid.Row="1" Text="No recent activity found." Foreground="#94A3B8" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding HasNewNotifications, Converter={StaticResource InvBoolToVis}}"/>
+
+                    <!-- ── Footer ─────────────────────────────────── -->
+                    <Border Grid.Row="2" CornerRadius="0,0,20,20"
+                            Background="#F8FAFC" Padding="20,12"
+                            BorderThickness="0,1,0,0" BorderBrush="#E2E8F0">
+                        <Grid>
+                            <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="#94A3B8">
+                                <Run Text="Showing latest"/>
+                                <Run Text="{Binding Notifications.Count, Mode=OneWay}" FontWeight="SemiBold" Foreground="#3B82F6"/>
+                                <Run Text="notifications"/>
+                            </TextBlock>
+                            <Button HorizontalAlignment="Right"
+                                    Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                                    Padding="16,6" BorderThickness="1" BorderBrush="#E2E8F0"
+                                    Background="White" Foreground="#475569"
+                                    FontSize="13" FontWeight="SemiBold"
+                                    Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" CornerRadius="8" Padding="16,7"
+                                                Background="White" BorderThickness="1"
+                                                BorderBrush="#E2E8F0">
+                                            <TextBlock Text="Dismiss All" FontSize="13"
+                                                       FontWeight="SemiBold" Foreground="#475569"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#F1F5F9"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
         </materialDesign:DialogHost.DialogContent>
+
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -310,12 +503,47 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     
                     <!-- Notification Bell -->
-                    <ToggleButton x:Name="NotifToggle" IsChecked="{Binding IsNotificationPopupOpen}" Background="Transparent" BorderThickness="0" Margin="0,0,24,0" Cursor="Hand" Width="40" Height="40" Style="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}">
-                        <Grid>
-                            <materialDesign:PackIcon Kind="BellOutline" Foreground="White" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <Border Background="#EF4444" Width="10" Height="10" CornerRadius="5" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,4,0" Visibility="{Binding HasNewNotifications, Converter={StaticResource BoolToVis}}"/>
-                        </Grid>
-                    </ToggleButton>
+                    <Button Command="{Binding OpenNotificationsCommand}"
+                            Width="40" Height="40"
+                            Margin="0,0,24,0"
+                            Cursor="Hand"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            ToolTip="Notifications">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Bd" CornerRadius="20"
+                                        Background="Transparent"
+                                        Width="40" Height="40">
+                                    <Grid>
+                                        <!-- Bell icon -->
+                                        <materialDesign:PackIcon Kind="BellOutline"
+                                                                 Foreground="White"
+                                                                 Width="22" Height="22"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"/>
+                                        <!-- Red dot badge -->
+                                        <Border Background="#EF4444"
+                                                Width="10" Height="10"
+                                                CornerRadius="5"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                Margin="0,5,5,0"
+                                                Visibility="{Binding HasNewNotifications,
+                                                    Converter={StaticResource BoolToVis}}"/>
+                                    </Grid>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                     
                     <!-- Notification Popup -->
                     <!-- Removed popup as it is now a DialogHost at the root -->
