@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("master_budget")]
-public class MasterBudget
+public class MasterBudget : ISyncable
 {
     [Key]
     [Column("id")]
@@ -32,6 +32,10 @@ public class MasterBudget
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 
     public virtual ICollection<BudgetAllocation> Allocations { get; set; } = new List<BudgetAllocation>();
 }

@@ -9,7 +9,7 @@ namespace GoodGovernanceApp.Data
     {
         public async Task<MySqlConnection> OpenConnectionAsync()
         {
-            MySqlConnection connection = new MySqlConnection(DatabaseConfig.ConnectionString);
+            MySqlConnection connection = new MySqlConnection(DatabaseConfig.HostingerConnectionString);
             await connection.OpenAsync();
             return connection;
         }

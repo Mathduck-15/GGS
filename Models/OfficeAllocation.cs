@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("officeallocations")]
-public class OfficeAllocation
+public class OfficeAllocation : ISyncable
 {
     [Key]
     public int Id { get; set; }
@@ -25,5 +25,9 @@ public class OfficeAllocation
     [Required]
     public decimal AllocatedAmount { get; set; }
 
+    public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

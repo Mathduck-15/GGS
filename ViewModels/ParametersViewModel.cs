@@ -11,7 +11,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class ParametersViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
     
     // Parameters
     private ObservableCollection<Parameter> _parameters = new();
@@ -91,7 +91,7 @@ public class ParametersViewModel : ViewModelBase
 
         try
         {
-            _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+            _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
             _context.Parameters.Load();
             Parameters = _context.Parameters.Local.ToObservableCollection();
 
@@ -165,3 +165,4 @@ public class ParametersViewModel : ViewModelBase
         }
     }
 }
+

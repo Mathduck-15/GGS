@@ -10,13 +10,14 @@ using System.Data;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace GoodGovernanceApp.ViewModels;
 
 public class BudgetTransactionsViewModel : ViewModelBase
 {
-    private readonly DatabaseHelper _db;
-    private readonly AppDbContext _dbContext;
+    private readonly LocalDbContext _dbContext;
 
     // ── Raw data loaded from DB ───────────────────────────────────────────────
     private ObservableCollection<TransactionRow> _allRows = new();
@@ -114,8 +115,8 @@ public class BudgetTransactionsViewModel : ViewModelBase
     {
         if (App.AppHost == null) return;
 
-        _db = App.AppHost.Services.GetRequiredService<DatabaseHelper>();
-        _dbContext = App.AppHost.Services.GetRequiredService<AppDbContext>();
+        var scope = App.AppHost.Services.CreateScope();
+        _dbContext = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
 
         // Initialise an empty view so bindings don't throw before data arrives
         _allRows = new ObservableCollection<TransactionRow>();
@@ -154,38 +155,43 @@ public class BudgetTransactionsViewModel : ViewModelBase
 
         try
         {
-            // Only columns that actually exist in the transactions table
-            const string sql = @"
-        SELECT
-            t.Id,
-            COALESCE(t.project_code, '')      AS ProjectCode,
-            COALESCE(pd.project, '')          AS ProjectName,
-            COALESCE(t.voucher_code, '')      AS VoucherCode,
-            COALESCE(t.transaction_type, '')  AS TransactionType,
-            t.Amount,
-            t.Date
-        FROM transactions t
-        LEFT JOIN project_details pd
-            ON t.project_code = pd.project_details_id
-        ORDER BY t.Date DESC;";
-
-            DataTable dt = await _db.ExecuteQueryAsync(sql);
+            var data = await _dbContext.Transactions
+                .AsNoTracking()
+                .GroupJoin(
+                    _dbContext.ProjectDetails,
+                    t => t.ProjectCode,
+                    pd => pd.ProjectDetailsID,
+                    (t, pdGroup) => new { t, pdGroup }
+                )
+                .SelectMany(
+                    x => x.pdGroup.DefaultIfEmpty(),
+                    (x, pd) => new
+                    {
+                        x.t.Id,
+                        ProjectCode = x.t.ProjectCode ?? string.Empty,
+                        ProjectName = pd != null ? (pd.Name ?? string.Empty) : string.Empty,
+                        VoucherCode = x.t.VoucherCode ?? string.Empty,
+                        TransactionType = x.t.TransactionType ?? string.Empty,
+                        Amount = x.t.Amount,
+                        Date = x.t.Date ?? DateTime.MinValue
+                    }
+                )
+                .OrderByDescending(x => x.Date)
+                .ToListAsync();
 
             var rows = new ObservableCollection<TransactionRow>();
 
-            foreach (DataRow row in dt.Rows)
+            foreach (var row in data)
             {
                 rows.Add(new TransactionRow
                 {
-                    Id              = Convert.ToInt32(row["Id"]),
-                    ProjectCode     = row["ProjectCode"].ToString()     ?? string.Empty,
-                    ProjectName     = row["ProjectName"].ToString()     ?? string.Empty,
-                    VoucherCode     = row["VoucherCode"].ToString()     ?? string.Empty,
-                    TransactionType = row["TransactionType"].ToString() ?? string.Empty,
-                    Amount          = row["Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Amount"]),
-                    Date            = row["Date"] == DBNull.Value
-                        ? DateTime.MinValue
-                        : Convert.ToDateTime(row["Date"])
+                    Id              = row.Id,
+                    ProjectCode     = row.ProjectCode,
+                    ProjectName     = row.ProjectName,
+                    VoucherCode     = row.VoucherCode,
+                    TransactionType = row.TransactionType,
+                    Amount          = row.Amount ?? 0m,
+                    Date            = row.Date
                 });
             }
 
@@ -254,3 +260,4 @@ public class BudgetTransactionsViewModel : ViewModelBase
         FilterFreeText    = string.Empty;
     }
 }
+

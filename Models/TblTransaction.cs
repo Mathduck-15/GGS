@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("tbl_transaction")]
-public class TblTransaction
+public class TblTransaction : ISyncable
 {
     [Key]
     [Column("id")]
@@ -65,4 +65,8 @@ public class TblTransaction
     [Column("voucher_code")]
     [StringLength(10)]
     public string? VoucherCode { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

@@ -17,7 +17,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class UserManagementViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
 
     // ── Users ─────────────────────────────────────────────────────────────────
     private ObservableCollection<User> _users = new();
@@ -179,7 +179,7 @@ public class UserManagementViewModel : ViewModelBase
     {
         try
         {
-            _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+            _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
             LoadData();
         }
         catch (Exception ex)
@@ -418,3 +418,4 @@ public class UserManagementViewModel : ViewModelBase
             entry.State = EntityState.Unchanged;
     }
 }
+

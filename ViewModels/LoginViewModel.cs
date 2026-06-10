@@ -124,7 +124,7 @@ public class LoginViewModel : ViewModelBase
             User? user = null;
 
             using var scope = App.AppHost!.Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
 
             string inputLower = Username.Trim().ToLowerInvariant();
 
@@ -168,7 +168,9 @@ public class LoginViewModel : ViewModelBase
             }
 
             // ── OTP Check ────────────────────────────────────────────────────
-            if (GoodGovernanceApp.Services.OtpService.OtpEnabled && ConfigHelper.IsRemoteDatabase())
+            // Trigger OTP if enabled AND we have an internet connection
+            var connectivity = App.AppHost!.Services.GetRequiredService<Services.ConnectivityService>();
+            if (GoodGovernanceApp.Services.OtpService.OtpEnabled && connectivity.IsOnline)
             {
                 // Bypass for regular 'user' role
                 if (!string.Equals(user.Role, "user", StringComparison.OrdinalIgnoreCase))
@@ -221,27 +223,15 @@ public class LoginViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
+            var profile = await context.GoveProfiles.AsNoTracking().FirstOrDefaultAsync();
 
-            // ✅ ADD THIS — create table first before querying
-            string createTableQuery = @"
-            CREATE TABLE IF NOT EXISTS goveprofile (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                GoveName NVARCHAR(255),
-                Address NVARCHAR(255),
-                LogoAddress NVARCHAR(500)
-            );";
-            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
-
-            string query = "SELECT GoveName, LogoAddress, Address FROM goveprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            if (profile != null)
             {
-                var row = dataTable.Rows[0];
-                string govName = row["GoveName"]?.ToString() ?? "";
-                string logoUrl = row["LogoAddress"]?.ToString() ?? "";
-                string addr = row["Address"]?.ToString() ?? "";
+                string govName = profile.GoveName ?? "";
+                string logoUrl = profile.LogoAddress ?? "";
+                string addr = profile.Address ?? "";
 
                 if (!string.IsNullOrWhiteSpace(govName))
                     GovernanceName = govName;
@@ -269,9 +259,9 @@ public class LoginViewModel : ViewModelBase
                 }
             }
         }
-        catch (Exception ex) // ✅ CHANGE THIS TOO — never silently swallow errors
+        catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MethodName] Error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[LoadApplicationProfileAsync] Error: {ex.Message}");
         }
     }
       
@@ -282,21 +272,13 @@ public class LoginViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
+            var profile = await context.SystemsProfiles.AsNoTracking().FirstOrDefaultAsync();
 
-            string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS systemsprofile (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    PhotoAddress NVARCHAR(500)
-                );";
-            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
-
-            string query = "SELECT PhotoAddress FROM systemsprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            if (profile != null)
             {
-                var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
+                var path = profile.PhotoAddress;
 
                 if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
                     path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
@@ -318,3 +300,4 @@ public class LoginViewModel : ViewModelBase
         catch { }
     }
 }
+

@@ -1,4 +1,5 @@
 using GoodGovernanceApp.Data;
+using GoodGovernanceApp.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using Org.BouncyCastle.Utilities.Net;
@@ -11,6 +12,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using Microsoft.EntityFrameworkCore;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -46,6 +48,7 @@ public class MainViewModel : ViewModelBase
     // ── services ─────────────────────────────────────────────────────────────
     private readonly Services.SessionService _sessionService;
     private readonly Timer _clockTimer;
+    private readonly ConnectivityService _connectivity;
 
     // ── backing fields ────────────────────────────────────────────────────────
     private NavigationItem _selectedNavItem = null!;
@@ -160,6 +163,12 @@ public class MainViewModel : ViewModelBase
         set { _isNotificationPopupOpen = value; OnPropertyChanged(); }
     }
 
+    // ── sync status (bound to the connectivity status bar) ────────────────────
+    public string SyncStatusText => _connectivity.StatusText;
+    public string SyncDotColor   => _connectivity.StatusDotColor;
+    public bool   IsSyncing      => _connectivity.IsSyncing;
+    public ICommand SyncNowCommand => _connectivity.SyncNowCommand;
+
     // ── commands ──────────────────────────────────────────────────────────────
     public ICommand LogoutCommand        { get; }
     public ICommand OpenAppProfileCommand{ get; }
@@ -174,6 +183,18 @@ public class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         _sessionService = App.AppHost!.Services.GetRequiredService<Services.SessionService>();
+        _connectivity   = App.AppHost!.Services.GetRequiredService<ConnectivityService>();
+
+        // Refresh sync status properties whenever connectivity changes
+        _connectivity.ConnectivityChanged += () =>
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                OnPropertyChanged(nameof(SyncStatusText));
+                OnPropertyChanged(nameof(SyncDotColor));
+                OnPropertyChanged(nameof(IsSyncing));
+            });
+        };
 
         // Live clock
         CurrentDate = DateTime.Now.ToString("dddd, MMMM dd, yyyy  •  hh:mm tt");
@@ -383,13 +404,13 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
-            string query = $"SELECT profile_photo FROM users WHERE Id = {_sessionService.CurrentUser?.Id};";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GoodGovernanceApp.Data.LocalDbContext>();
+            var user = await context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == _sessionService.CurrentUser!.Id);
 
-            if (dataTable.Rows.Count > 0)
+            if (user != null)
             {
-                var path = dataTable.Rows[0]["profile_photo"]?.ToString();
+                var path = user.ProfilePhoto;
                 if (!string.IsNullOrEmpty(path) && File.Exists(path))
                 {
                     var bitmap = new BitmapImage();
@@ -413,13 +434,13 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
-            string query = "SELECT GoveName, Address FROM goveprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GoodGovernanceApp.Data.LocalDbContext>();
+            var profile = await context.GoveProfiles.AsNoTracking().FirstOrDefaultAsync();
 
-            if (dataTable.Rows.Count > 0)
+            if (profile != null)
             {
-                var goveName = dataTable.Rows[0]["GoveName"]?.ToString() ?? string.Empty;
+                var goveName = profile.GoveName ?? string.Empty;
                 if (!string.IsNullOrWhiteSpace(goveName))
                     GovernanceName = goveName;
             }
@@ -432,22 +453,13 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
-            
-            // Ensure table exists first to avoid Table doesn't exist exception
-            string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS systemsprofile (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    PhotoAddress NVARCHAR(500)
-                );";
-            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GoodGovernanceApp.Data.LocalDbContext>();
+            var profile = await context.SystemsProfiles.AsNoTracking().FirstOrDefaultAsync();
 
-            string query = "SELECT PhotoAddress FROM systemsprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            if (profile != null)
             {
-                var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
+                var path = profile.PhotoAddress;
                 
                 // Resolve relative path if needed
                 if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
@@ -474,27 +486,15 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GoodGovernanceApp.Data.LocalDbContext>();
+            var profile = await context.GoveProfiles.AsNoTracking().FirstOrDefaultAsync();
 
-            // ✅ ADD THIS — create table first before querying
-            string createTableQuery = @"
-            CREATE TABLE IF NOT EXISTS goveprofile (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                GoveName NVARCHAR(255),
-                Address NVARCHAR(255),
-                LogoAddress NVARCHAR(500)
-            );";
-            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
-
-            string query = "SELECT GoveName, LogoAddress, Address FROM goveprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            if (profile != null)
             {
-                var row = dataTable.Rows[0];
-                string govName = row["GoveName"]?.ToString() ?? "";
-                string logoUrl = row["LogoAddress"]?.ToString() ?? "";
-                string addr = row["Address"]?.ToString() ?? "";
+                string govName = profile.GoveName ?? "";
+                string logoUrl = profile.LogoAddress ?? "";
+                string addr = profile.Address ?? "";
 
                 if (!string.IsNullOrWhiteSpace(logoUrl))
                 {
@@ -516,9 +516,9 @@ public class MainViewModel : ViewModelBase
                 }
             }
         }
-        catch (Exception ex) // ✅ CHANGE THIS TOO — never silently swallow errors
+        catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MethodName] Error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[LoadGovProfileAsync] Error: {ex.Message}");
         }
     }
 
@@ -526,20 +526,25 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            using var scope = App.AppHost!.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GoodGovernanceApp.Data.LocalDbContext>();
             var notifications = new List<AppNotification>();
 
             // Query TblTransaction (Budget Transactions)
-            string budgetQuery = "SELECT id, amount, description, created_at FROM tbl_transaction ORDER BY created_at DESC LIMIT 5;";
-            var budgetData = await dbHelper.ExecuteQueryAsync(budgetQuery);
-            foreach (System.Data.DataRow row in budgetData.Rows)
+            var budgetData = await context.TblTransactions
+                .AsNoTracking()
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(5)
+                .ToListAsync();
+            
+            foreach (var row in budgetData)
             {
-                if (row["created_at"] is DateTime date)
+                if (row.CreatedAt is DateTime date)
                 {
                     notifications.Add(new AppNotification
                     {
                         Title = "New Budget Transaction",
-                        Message = $"₱{Convert.ToDecimal(row["amount"]):N2} - {row["description"]}",
+                        Message = $"₱{row.Amount:N2} - {row.Description}",
                         Date = date,
                         ViewToken = "Transactions",
                         Icon = "Finance",
@@ -549,16 +554,20 @@ public class MainViewModel : ViewModelBase
             }
 
             // Query ConsolidatedTransactions
-            string consolidatedQuery = "SELECT id, amount, transaction_type, created_at FROM consolidated_transactions ORDER BY created_at DESC LIMIT 5;";
-            var consolidatedData = await dbHelper.ExecuteQueryAsync(consolidatedQuery);
-            foreach (System.Data.DataRow row in consolidatedData.Rows)
+            var consolidatedData = await context.ConsolidatedTransactions
+                .AsNoTracking()
+                .OrderByDescending(c => c.CreatedAt)
+                .Take(5)
+                .ToListAsync();
+                
+            foreach (var row in consolidatedData)
             {
-                if (row["created_at"] is DateTime date)
+                if (row.CreatedAt is DateTime date)
                 {
                     notifications.Add(new AppNotification
                     {
                         Title = "Consolidated Record Added",
-                        Message = $"₱{Convert.ToDecimal(row["amount"]):N2} - {row["transaction_type"]}",
+                        Message = $"₱{row.Amount:N2} - {row.TransactionType}",
                         Date = date,
                         ViewToken = "ConsolidatedTransactions",
                         Icon = "TableMultiple",
@@ -618,3 +627,4 @@ public class MainViewModel : ViewModelBase
         window.ShowDialog();
     }
 }
+

@@ -15,7 +15,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class EvaluationViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
     private readonly Services.SessionService _sessionService;
     private UploadedFile? _selectedFile;
     private int _score;
@@ -57,7 +57,7 @@ public class EvaluationViewModel : ViewModelBase
     public EvaluationViewModel()
     {
         var services = App.AppHost!.Services;
-        _context = services.GetRequiredService<AppDbContext>();
+        _context = services.GetRequiredService<LocalDbContext>();
         _sessionService = services.GetRequiredService<Services.SessionService>();
 
         OpenFileCommand = new RelayCommand(_ => ExecuteOpenFile(), _ => SelectedFile != null);
@@ -163,3 +163,4 @@ public class EvaluationViewModel : ViewModelBase
         }
     }
 }
+

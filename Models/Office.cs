@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("tbl_offices")]
-public class Office
+public class Office : ISyncable
 {
     [Key]
     [Column("id")]
@@ -27,6 +27,10 @@ public class Office
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 
     // Navigation
     public virtual ICollection<DepartmentRole> Roles { get; set; } = new List<DepartmentRole>();

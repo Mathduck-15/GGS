@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class ProjectDetailsViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
     private List<ProjectDetail> _allProjects = new();
     private Office? _selectedDepartment;
     private ProjectDetail? _selectedRole;
@@ -24,7 +24,7 @@ public class ProjectDetailsViewModel : ViewModelBase
         {
             _selectedDepartment = value;
             OnPropertyChanged();
-            _ = LoadAndFilterAsync(value?.OfficeCode); // ✅ changed from FilterByOfficeCode
+            _ = LoadAndFilterAsync(value?.OfficeCode); // ? changed from FilterByOfficeCode
         }
     }
 
@@ -40,11 +40,11 @@ public class ProjectDetailsViewModel : ViewModelBase
 
     public ProjectDetailsViewModel()
     {
-        _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
-        _ = LoadAndFilterAsync(null); // ✅ changed from LoadDataAsync
+        _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
+        _ = LoadAndFilterAsync(null); // ? changed from LoadDataAsync
     }
 
-    // ✅ replaced LoadDataAsync + FilterByOfficeCode with this single method
+    // ? replaced LoadDataAsync + FilterByOfficeCode with this single method
     private async Task LoadAndFilterAsync(string? officeCode)
     {
         _allProjects = await _context.ProjectDetails.ToListAsync();

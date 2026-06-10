@@ -8,12 +8,14 @@ using Microsoft.Win32;
 using MySqlConnector;
 using GoodGovernanceApp.Data;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using GoodGovernanceApp.Models;
 
 namespace GoodGovernanceApp.ViewModels;
 
 public class SystemsApplicationProfileViewModel : ViewModelBase
 {
-    private readonly DatabaseHelper _dbHelper;
+    private readonly LocalDbContext _dbContext;
     private string _photoAddress = string.Empty;
     private BitmapImage? _photoPreview;
 
@@ -34,7 +36,8 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
 
     public SystemsApplicationProfileViewModel()
     {
-        _dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+        var scope = App.AppHost!.Services.CreateScope();
+        _dbContext = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
         BrowseCommand = new RelayCommand(_ => ExecuteBrowse());
         SaveCommand = new RelayCommand(async _ => await ExecuteSaveAsync());
 
@@ -49,24 +52,11 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
     {
         try
         {
-            // Ensure table exists
-            string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS systemsprofile (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    PhotoAddress NVARCHAR(500)
-                );";
+            var profile = await _dbContext.SystemsProfiles.FirstOrDefaultAsync();
 
-            await _dbHelper.ExecuteNonQueryAsync(createTableQuery);
-
-            // Load existing profile
-            string query = "SELECT PhotoAddress FROM systemsprofile LIMIT 1;";
-            var dataTable = await _dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            if (profile != null)
             {
-                var row = dataTable.Rows[0];
-                PhotoAddress = row["PhotoAddress"]?.ToString() ?? "";
-
+                PhotoAddress = profile.PhotoAddress ?? "";
                 LoadPhoto(PhotoAddress);
             }
         }
@@ -167,32 +157,22 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
     {
         try
         {
-            // Check if record exists
-            string checkQuery = "SELECT COUNT(*) FROM systemsprofile;";
-            var countObj = await _dbHelper.ExecuteScalarAsync(checkQuery);
-            int count = Convert.ToInt32(countObj ?? 0);
+            var profile = await _dbContext.SystemsProfiles.FirstOrDefaultAsync();
 
-            if (count > 0)
+            if (profile != null)
             {
-                // UPDATE first record specifically
-                string updateQuery = @"
-                    UPDATE systemsprofile 
-                    SET PhotoAddress = @photoAddress 
-                    ORDER BY id ASC LIMIT 1;";
-                
-                await _dbHelper.ExecuteNonQueryAsync(updateQuery,
-                    new MySqlParameter("@photoAddress", PhotoAddress));
+                profile.PhotoAddress = PhotoAddress;
             }
             else
             {
-                // INSERT
-                string insertQuery = @"
-                    INSERT INTO systemsprofile (PhotoAddress)
-                    VALUES (@photoAddress);";
-                
-                await _dbHelper.ExecuteNonQueryAsync(insertQuery,
-                    new MySqlParameter("@photoAddress", PhotoAddress));
+                profile = new SystemsProfile
+                {
+                    PhotoAddress = PhotoAddress
+                };
+                _dbContext.SystemsProfiles.Add(profile);
             }
+
+            await _dbContext.SaveChangesAsync();
 
             MessageBox.Show("Systems Application Profile saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -202,3 +182,4 @@ public class SystemsApplicationProfileViewModel : ViewModelBase
         }
     }
 }
+

@@ -1,9 +1,14 @@
 using GoodGovernanceApp.Models;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace GoodGovernanceApp.Data;
 
-public class AppDbContext : DbContext
+/// <summary>
+/// SQLite EF Core context — ALWAYS used for normal app reads/writes.
+/// Hostinger MySQL is ONLY used by SyncService for background sync.
+/// </summary>
+public class LocalDbContext : DbContext
 {
     // ── Core ──────────────────────────────────────────────────────────────────
     public DbSet<User> Users { get; set; } = null!;
@@ -31,8 +36,6 @@ public class AppDbContext : DbContext
     public DbSet<Evaluation> Evaluations { get; set; } = null!;
 
     // ── Legacy / Retained ────────────────────────────────────────────────────
-
-
     public DbSet<Parameter> Parameters { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Budget> Budgets { get; set; } = null!;
@@ -44,7 +47,10 @@ public class AppDbContext : DbContext
     public DbSet<GoveProfile> GoveProfiles { get; set; } = null!;
     public DbSet<SystemsProfile> SystemsProfiles { get; set; } = null!;
 
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    // ── Cross-System Cache (read-only from other systems) ─────────────────────
+    public DbSet<CrsBeneficiaryCache> CrsBeneficiaryCache { get; set; } = null!;
+
+    public LocalDbContext(DbContextOptions<LocalDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,12 +64,10 @@ public class AppDbContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.Role).HasDefaultValue("user");
             entity.Property(u => u.Status).HasDefaultValue("active");
+            entity.HasIndex(u => u.SyncId).IsUnique();
         });
 
         // ── Transaction ───────────────────────────────────────────────────────
-        // Explicitly map only the 5 physical columns that exist in the DB.
-        // This prevents EF from injecting shadow properties (e.g. CategoryId)
-        // from any accidental navigation property on related entities.
         modelBuilder.Entity<Transaction>(entity =>
         {
             entity.ToTable("transactions");
@@ -84,6 +88,7 @@ public class AppDbContext : DbContext
             entity.Property(v => v.Status).HasDefaultValue("pending");
             entity.HasOne(v => v.Category).WithMany().HasForeignKey(v => v.CategoryId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(v => v.AppUser).WithOne(u => u.ValidationInfo).HasForeignKey<ValidateUser>(v => v.UserId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(v => v.SyncId).IsUnique();
         });
 
         // ── AuditTrails ───────────────────────────────────────────────────────
@@ -91,6 +96,7 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("audit_trails");
             entity.HasKey(a => a.Id);
+            entity.HasIndex(a => a.SyncId).IsUnique();
         });
 
         // ── Offices ───────────────────────────────────────────────────────────
@@ -99,6 +105,7 @@ public class AppDbContext : DbContext
             entity.ToTable("tbl_offices");
             entity.HasKey(o => o.Id);
             entity.HasIndex(o => o.OfficeCode).IsUnique();
+            entity.HasIndex(o => o.SyncId).IsUnique();
         });
 
         // ── Master Budget ─────────────────────────────────────────────────────
@@ -107,6 +114,7 @@ public class AppDbContext : DbContext
             entity.ToTable("master_budget");
             entity.HasKey(m => m.Id);
             entity.HasOne(m => m.CreatedBy).WithMany().HasForeignKey(m => m.CreatedById).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(m => m.SyncId).IsUnique();
         });
 
         // ── Budget Allocations ────────────────────────────────────────────────
@@ -117,6 +125,7 @@ public class AppDbContext : DbContext
             entity.HasOne(b => b.MasterBudget).WithMany(m => m.Allocations).HasForeignKey(b => b.MasterBudgetId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(b => b.AllocatedBy).WithMany().HasForeignKey(b => b.AllocatedById).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(b => b.Office).WithMany().HasForeignKey(b => b.OfficeId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(b => b.SyncId).IsUnique();
         });
 
         // ── Program Provision ─────────────────────────────────────────────────
@@ -125,6 +134,7 @@ public class AppDbContext : DbContext
             entity.ToTable("tbl_program_provision");
             entity.HasKey(p => p.Id);
             entity.HasOne(p => p.Office).WithMany().HasForeignKey(p => p.OfficeId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(p => p.SyncId).IsUnique();
         });
 
         // ── Tbl Transaction ───────────────────────────────────────────────────
@@ -138,18 +148,24 @@ public class AppDbContext : DbContext
             entity.HasOne(t => t.User).WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(t => t.Office).WithMany().HasForeignKey(t => t.OfficeId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(t => t.Service).WithMany().HasForeignKey(t => t.ServicesId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(t => t.SyncId).IsUnique();
         });
 
-
-
-
-
         // ── Services & Requests ───────────────────────────────────────────────
-        modelBuilder.Entity<TblService>(entity => { entity.ToTable("tbl_services"); entity.HasKey(s => s.ServicesId); });
-
+        modelBuilder.Entity<TblService>(entity =>
+        {
+            entity.ToTable("tbl_services");
+            entity.HasKey(s => s.ServicesId);
+            entity.HasIndex(s => s.SyncId).IsUnique();
+        });
 
         // ── Project Details ───────────────────────────────────────────────────
-        modelBuilder.Entity<ProjectDetail>(entity => { entity.ToTable("project_details"); entity.HasKey(p => p.Id); });
+        modelBuilder.Entity<ProjectDetail>(entity =>
+        {
+            entity.ToTable("project_details");
+            entity.HasKey(p => p.Id);
+            entity.HasIndex(p => p.SyncId).IsUnique();
+        });
 
         // ── Legacy Retained Relations ─────────────────────────────────────────
         modelBuilder.Entity<Parameter>().ToTable("parameters");
@@ -157,7 +173,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<YearlyBudget>().ToTable("yearlybudgets");
         modelBuilder.Entity<Budget>().HasOne(b => b.Category).WithMany(c => c.Budgets).HasForeignKey(b => b.CategoryId);
         modelBuilder.Entity<Budget>().HasOne(b => b.Office).WithMany().HasForeignKey(b => b.OfficeId).OnDelete(DeleteBehavior.SetNull);
-     
+
         modelBuilder.Entity<SystemLog>().HasOne(l => l.User).WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<User>().HasOne(u => u.Office).WithMany(o => o.Users).HasForeignKey(u => u.OfficeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<DepartmentRole>().HasOne(dr => dr.Office).WithMany(o => o.Roles).HasForeignKey(dr => dr.OfficeId).OnDelete(DeleteBehavior.Cascade);
@@ -185,16 +201,12 @@ public class AppDbContext : DbContext
             entity.HasKey(s => s.Id);
             entity.Property(s => s.PhotoAddress).HasMaxLength(500);
         });
-    }
-}
 
-public class AppDbContextFactory : Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory<AppDbContext>
-{
-    public AppDbContext CreateDbContext(string[] args)
-    {
-        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        optionsBuilder.UseMySql("Server=127.0.0.1;Port=3306;Database=governance;User=root;Password=root;SslMode=None;AllowPublicKeyRetrieval=True;", new MySqlServerVersion(new Version(8, 0, 31)));
-
-        return new AppDbContext(optionsBuilder.Options);
+        // ── CRS Beneficiary Cache ─────────────────────────────────────────────
+        modelBuilder.Entity<CrsBeneficiaryCache>(entity =>
+        {
+            entity.ToTable("crs_beneficiary_cache");
+            entity.HasKey(c => c.BeneficiaryCacheId);
+        });
     }
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("parameters")]
-public class Parameter
+public class Parameter : ISyncable
 {
     [Key]
     public int Id { get; set; }
@@ -23,4 +23,10 @@ public class Parameter
 
     [ForeignKey("CategoryId")]
     public virtual Category? Category { get; set; }
+
+    public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

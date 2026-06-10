@@ -6,7 +6,7 @@ using GoodGovernanceApp.Models;
 namespace GoodGovernanceApp.Models;
 
 [Table("users")]
-public class User
+public class User : ISyncable
 {
     [Key]
     [Column("id")]
@@ -58,6 +58,10 @@ public class User
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService. Never changes after creation.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 
     [Column("constituent_id")]
     public long? ConstituentId { get; set; }

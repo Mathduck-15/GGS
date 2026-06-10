@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+namespace GoodGovernanceApp.Models;
+
 [Table("project_details")]
-public class ProjectDetail
+public class ProjectDetail : ISyncable
 {
     [Key]
     [Column("id")]
@@ -38,6 +40,10 @@ public class ProjectDetail
     [Column("voucher_code")]
     [StringLength(10)]
     public string? VoucherCode { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 
     [NotMapped]
     public decimal Spent { get; set; }

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("validate_users")]
-public class ValidateUser
+public class ValidateUser : ISyncable
 {
     [Key]
     [Column("id")]
@@ -56,6 +56,10 @@ public class ValidateUser
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 
     [Column("category_id")]
     public int? CategoryId { get; set; }

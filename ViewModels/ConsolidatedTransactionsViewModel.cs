@@ -27,7 +27,7 @@ namespace GoodGovernanceApp.ViewModels
         public string Source { get; set; } = "Consolidated";
 
         // 2. Query goes inside a method
-        public static async Task<List<ConsolidatedTransactionsViewModel>> GetTransactionsAsync(AppDbContext context)
+        public static async Task<List<ConsolidatedTransactionsViewModel>> GetTransactionsAsync(LocalDbContext context)
         {
             var transactions = await context.ConsolidatedTransactions
                 .Select(t => new ConsolidatedTransactionsViewModel
@@ -55,3 +55,4 @@ namespace GoodGovernanceApp.ViewModels
     }
 
 }
+

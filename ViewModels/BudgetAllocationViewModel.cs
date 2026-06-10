@@ -13,7 +13,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class BudgetAllocationViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
 
     // ── Yearly Budget Form ────────────────────────────────────────────────────
     private YearlyBudget? _selectedYearlyBudget;
@@ -78,7 +78,7 @@ public class BudgetAllocationViewModel : ViewModelBase
 
     public BudgetAllocationViewModel()
     {
-        _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+        _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
 
         SaveAllocationsCommand = new RelayCommand(async _ => await SaveAllocationsAsync(), _ => SelectedYearlyBudget != null);
     }
@@ -312,3 +312,4 @@ public class DepartmentAllocationViewModel : OfficeAllocationItemViewModel
     public DepartmentAllocationViewModel(OfficeAllocation model, string officeName, string? officeCode)
         : base(model, officeName, officeCode) { }
 }
+

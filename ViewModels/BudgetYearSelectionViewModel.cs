@@ -13,7 +13,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class BudgetYearSelectionViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
 
     private int _newBudgetYear = DateTime.Now.Year;
     private decimal _newBudgetAmount;
@@ -50,7 +50,7 @@ public class BudgetYearSelectionViewModel : ViewModelBase
 
     public BudgetYearSelectionViewModel()
     {
-        _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+        _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
 
         AddYearlyBudgetCommand = new RelayCommand(async _ => await AddYearlyBudgetAsync());
 
@@ -92,3 +92,4 @@ public class BudgetYearSelectionViewModel : ViewModelBase
         NewBudgetDescription = string.Empty;
     }
 }
+

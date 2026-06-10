@@ -1,8 +1,10 @@
 using System;
-using System.Data;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using GoodGovernanceApp.Data;
-using MySqlConnector;
+using GoodGovernanceApp.Models;
 
 namespace GoodGovernanceApp.Services;
 
@@ -12,9 +14,9 @@ namespace GoodGovernanceApp.Services;
 /// </summary>
 public class ValidationService
 {
-    private readonly DatabaseHelper _db;
+    private readonly LocalDbContext _db;
 
-    public ValidationService(DatabaseHelper db)
+    public ValidationService(LocalDbContext db)
     {
         _db = db;
     }
@@ -25,104 +27,61 @@ public class ValidationService
     /// Returns all validate_users records, optionally filtered by status.
     /// </summary>
     /// <param name="filter">One of: "all", "pending", "accepted", "rejected"</param>
-    public async Task<DataTable> GetAllAsync(string filter = "all")
+    public async Task<List<ValidateUser>> GetAllAsync(string filter = "all")
     {
-        string whereClause = filter.ToLower() switch
+        var query = _db.ValidateUsers.AsQueryable();
+
+        switch (filter.ToLower())
         {
-            "pending"  => "WHERE status = 'pending'",
-            "accepted" => "WHERE status = 'accepted'",
-            "rejected" => "WHERE status = 'rejected'",
-            _          => ""
-        };
+            case "pending":
+                query = query.Where(v => v.Status == "pending");
+                break;
+            case "accepted":
+                query = query.Where(v => v.Status == "accepted");
+                break;
+            case "rejected":
+                query = query.Where(v => v.Status == "rejected");
+                break;
+        }
 
-        string query = $@"
-            SELECT
-                vu.id,
-                vu.civil_registryid,
-                vu.lastname,
-                vu.firstname,
-                vu.middlename,
-                CONCAT(COALESCE(vu.firstname,''), ' ', COALESCE(vu.middlename,''), ' ', COALESCE(vu.lastname,'')) AS full_name,
-                vu.address,
-                vu.status,
-                vu.rejection_reason,
-                vu.validated_by,
-                vu.validated_at,
-                vu.user_id,
-                vu.email,
-                vu.phone,
-                vu.photo,
-                vu.created_at,
-                vu.updated_at,
-                u.name AS validated_by_name
-            FROM validate_users vu
-            LEFT JOIN users u ON u.id = vu.validated_by
-            {whereClause}
-            ORDER BY vu.created_at DESC";
-
-        return await _db.ExecuteQueryAsync(query);
+        return await query.OrderByDescending(v => v.CreatedAt).ToListAsync();
     }
 
     /// <summary>
     /// Returns a single validate_users record by ID.
     /// </summary>
-    public async Task<DataTable> GetByIdAsync(int id)
+    public async Task<ValidateUser?> GetByIdAsync(int id)
     {
-        string query = @"
-            SELECT
-                vu.*,
-                u.name AS validated_by_name
-            FROM validate_users vu
-            LEFT JOIN users u ON u.id = vu.validated_by
-            WHERE vu.id = @id
-            LIMIT 1";
-
-        return await _db.ExecuteQueryAsync(query,
-            new MySqlParameter("@id", id));
+        return await _db.ValidateUsers.FirstOrDefaultAsync(v => v.Id == id);
     }
 
     /// <summary>
     /// Searches validate_users by name or civil registry ID.
     /// </summary>
-    public async Task<DataTable> SearchAsync(string keyword, string filter = "all")
+    public async Task<List<ValidateUser>> SearchAsync(string keyword, string filter = "all")
     {
-        string whereClause = filter.ToLower() switch
+        var query = _db.ValidateUsers.AsQueryable();
+
+        switch (filter.ToLower())
         {
-            "pending"  => "AND vu.status = 'pending'",
-            "accepted" => "AND vu.status = 'accepted'",
-            "rejected" => "AND vu.status = 'rejected'",
-            _          => ""
-        };
+            case "pending":
+                query = query.Where(v => v.Status == "pending");
+                break;
+            case "accepted":
+                query = query.Where(v => v.Status == "accepted");
+                break;
+            case "rejected":
+                query = query.Where(v => v.Status == "rejected");
+                break;
+        }
 
-        string query = $@"
-            SELECT
-                vu.id,
-                vu.civil_registryid,
-                vu.lastname,
-                vu.firstname,
-                vu.middlename,
-                CONCAT(COALESCE(vu.firstname,''), ' ', COALESCE(vu.middlename,''), ' ', COALESCE(vu.lastname,'')) AS full_name,
-                vu.address,
-                vu.status,
-                vu.rejection_reason,
-                vu.validated_by,
-                vu.validated_at,
-                vu.email,
-                vu.phone,
-                vu.photo,
-                vu.created_at
-            FROM validate_users vu
-            WHERE (
-                vu.civil_registryid LIKE @kw
-                OR vu.firstname     LIKE @kw
-                OR vu.lastname      LIKE @kw
-                OR vu.middlename    LIKE @kw
-            )
-            {whereClause}
-            ORDER BY vu.created_at DESC";
-
-        return await _db.ExecuteQueryAsync(query,
-            new MySqlParameter("@kw", $"%{keyword}%"));
+        return await query
+            .Where(v => (v.CivilRegistryId != null && v.CivilRegistryId.Contains(keyword)) ||
+                        (v.Firstname != null && v.Firstname.Contains(keyword)) ||
+                        (v.Lastname != null && v.Lastname.Contains(keyword)) ||
+                        (v.Middlename != null && v.Middlename.Contains(keyword)))
+            .OrderByDescending(v => v.CreatedAt)
+            .ToListAsync();
     }
 
     // ── Actions ────────────────────────────────────────────────────────────────
@@ -133,22 +92,17 @@ public class ValidationService
     public async Task<bool> AcceptAsync(int id, long adminUserId)
     {
         var now = DateTime.UtcNow;
-
-        int rows = await _db.ExecuteNonQueryAsync(@"
-            UPDATE validate_users
-            SET status       = 'accepted',
-                validated_by = @adminId,
-                validated_at = @now,
-                updated_at   = @now
-            WHERE id = @id",
-            new MySqlParameter("@adminId", adminUserId),
-            new MySqlParameter("@now",     now),
-            new MySqlParameter("@id",      id));
-
-        if (rows > 0)
+        var user = await _db.ValidateUsers.FindAsync(id);
+        
+        if (user != null)
         {
-            await LogAuditAsync(adminUserId, "accept", "validate_users", id,
-                $"Validation record #{id} was accepted.", now);
+            user.Status = "accepted";
+            user.ValidatedBy = (int)adminUserId;
+            user.ValidatedAt = now;
+            user.UpdatedAt = now;
+
+            await LogAuditAsync(adminUserId, "accept", "validate_users", id, $"Validation record #{id} was accepted.", now);
+            await _db.SaveChangesAsync();
             return true;
         }
         return false;
@@ -163,24 +117,18 @@ public class ValidationService
             throw new ArgumentException("Rejection reason is required.", nameof(reason));
 
         var now = DateTime.UtcNow;
+        var user = await _db.ValidateUsers.FindAsync(id);
 
-        int rows = await _db.ExecuteNonQueryAsync(@"
-            UPDATE validate_users
-            SET status           = 'rejected',
-                rejection_reason = @reason,
-                validated_by     = @adminId,
-                validated_at     = @now,
-                updated_at       = @now
-            WHERE id = @id",
-            new MySqlParameter("@reason",  reason),
-            new MySqlParameter("@adminId", adminUserId),
-            new MySqlParameter("@now",     now),
-            new MySqlParameter("@id",      id));
-
-        if (rows > 0)
+        if (user != null)
         {
-            await LogAuditAsync(adminUserId, "reject", "validate_users", id,
-                $"Validation record #{id} was rejected. Reason: {reason}", now);
+            user.Status = "rejected";
+            user.RejectionReason = reason;
+            user.ValidatedBy = (int)adminUserId;
+            user.ValidatedAt = now;
+            user.UpdatedAt = now;
+
+            await LogAuditAsync(adminUserId, "reject", "validate_users", id, $"Validation record #{id} was rejected. Reason: {reason}", now);
+            await _db.SaveChangesAsync();
             return true;
         }
         return false;
@@ -192,22 +140,18 @@ public class ValidationService
     public async Task<bool> ResubmitAsync(int id)
     {
         var now = DateTime.UtcNow;
+        var user = await _db.ValidateUsers.FindAsync(id);
 
-        int rows = await _db.ExecuteNonQueryAsync(@"
-            UPDATE validate_users
-            SET status           = 'pending',
-                rejection_reason = NULL,
-                validated_by     = NULL,
-                validated_at     = NULL,
-                updated_at       = @now
-            WHERE id = @id",
-            new MySqlParameter("@now", now),
-            new MySqlParameter("@id",  id));
-
-        if (rows > 0)
+        if (user != null)
         {
-            await LogAuditAsync(0, "resubmit", "validate_users", id,
-                $"Validation record #{id} was reset to pending (resubmitted).", now);
+            user.Status = "pending";
+            user.RejectionReason = null;
+            user.ValidatedBy = null;
+            user.ValidatedAt = null;
+            user.UpdatedAt = now;
+
+            await LogAuditAsync(0, "resubmit", "validate_users", id, $"Validation record #{id} was reset to pending (resubmitted).", now);
+            await _db.SaveChangesAsync();
             return true;
         }
         return false;
@@ -220,31 +164,26 @@ public class ValidationService
         string lastname, string address, string? email, string? phone)
     {
         var now = DateTime.UtcNow;
+        var user = await _db.ValidateUsers.FindAsync(id);
 
-        int rows = await _db.ExecuteNonQueryAsync(@"
-            UPDATE validate_users
-            SET firstname  = @firstname,
-                middlename = @middlename,
-                lastname   = @lastname,
-                address    = @address,
-                email      = @email,
-                phone      = @phone,
-                status     = 'pending',
-                rejection_reason = NULL,
-                validated_by     = NULL,
-                validated_at     = NULL,
-                updated_at = @now
-            WHERE id = @id",
-            new MySqlParameter("@firstname",  firstname),
-            new MySqlParameter("@middlename", middlename),
-            new MySqlParameter("@lastname",   lastname),
-            new MySqlParameter("@address",    address),
-            new MySqlParameter("@email",      (object?)email  ?? DBNull.Value),
-            new MySqlParameter("@phone",      (object?)phone  ?? DBNull.Value),
-            new MySqlParameter("@now",        now),
-            new MySqlParameter("@id",         id));
+        if (user != null)
+        {
+            user.Firstname = firstname;
+            user.Middlename = middlename;
+            user.Lastname = lastname;
+            user.Address = address;
+            user.Email = email;
+            user.Phone = phone;
+            user.Status = "pending";
+            user.RejectionReason = null;
+            user.ValidatedBy = null;
+            user.ValidatedAt = null;
+            user.UpdatedAt = now;
 
-        return rows > 0;
+            await _db.SaveChangesAsync();
+            return true;
+        }
+        return false;
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
@@ -252,16 +191,17 @@ public class ValidationService
     private async Task LogAuditAsync(long userId, string action, string modelType,
         int modelId, string description, DateTime timestamp)
     {
-        await _db.ExecuteNonQueryAsync(@"
-            INSERT INTO audit_trails
-                (user_id, action, model_type, model_id, description, created_at, updated_at)
-            VALUES
-                (@userId, @action, @modelType, @modelId, @desc, @ts, @ts)",
-            new MySqlParameter("@userId",    userId),
-            new MySqlParameter("@action",    action),
-            new MySqlParameter("@modelType", modelType),
-            new MySqlParameter("@modelId",   modelId),
-            new MySqlParameter("@desc",      description),
-            new MySqlParameter("@ts",        timestamp));
+        var audit = new AuditTrail
+        {
+            UserId = (int)userId,
+            Action = action,
+            ModelType = modelType,
+            ModelId = modelId,
+            Description = description,
+            CreatedAt = timestamp,
+            UpdatedAt = timestamp
+        };
+
+        _db.AuditTrails.Add(audit);
     }
 }

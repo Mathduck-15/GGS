@@ -17,3 +17,4 @@ public class SimpleDashboardViewModel : ViewModelBase
         new DeptAllocationData { Name = "Test", Amount = 100 } 
     };
 }
+

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -16,15 +16,15 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class FileUploadViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
     private readonly FileService _fileService;
 
     private Office? _selectedOffice;
     private Parameter? _selectedParameter;
     private string _selectedFilePath = string.Empty;
     private string _fileName = string.Empty;
-    private ObservableCollection<Category> _categories = new();  // ← add this
-    private Category _selectedCategory = new();                  // ← add this
+    private ObservableCollection<Category> _categories = new();  // ? add this
+    private Category _selectedCategory = new();                  // ? add this
 
 
 
@@ -44,7 +44,7 @@ public class FileUploadViewModel : ViewModelBase
 
 
 
-    // ↓ add these two below
+    // ? add these two below
     public ObservableCollection<Category> Categories
     {
         get => _categories;
@@ -96,7 +96,7 @@ public class FileUploadViewModel : ViewModelBase
 
     public FileUploadViewModel()
     {
-        _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+        _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
         _fileService = new FileService();
 
         SelectFileCommand = new RelayCommand(_ => ExecuteSelectFile());
@@ -116,7 +116,7 @@ public class FileUploadViewModel : ViewModelBase
             var @params = await _context.Parameters.ToListAsync();
             foreach (var p in @params) Parameters.Add(p);
 
-            var categories = await _context.Categories.ToListAsync();  // ← add this
+            var categories = await _context.Categories.ToListAsync();  // ? add this
             foreach (var c in categories) _categories.Add(c);
 
             await LoadUploadedFilesAsync();
@@ -207,3 +207,4 @@ public class FileUploadViewModel : ViewModelBase
 
 
 }
+

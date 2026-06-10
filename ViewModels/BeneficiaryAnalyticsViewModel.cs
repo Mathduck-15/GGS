@@ -12,7 +12,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class BeneficiaryAnalyticsViewModel : ViewModelBase
 {
-    private readonly AppDbContext _dbContext;
+    private readonly LocalDbContext _dbContext;
     public string BeneficiaryId { get; }
 
     private bool _isLoading;
@@ -97,7 +97,7 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
 
     public Func<double, string> Formatter { get; set; }
 
-    public BeneficiaryAnalyticsViewModel(AppDbContext dbContext, string beneficiaryId, string fullName)
+    public BeneficiaryAnalyticsViewModel(LocalDbContext dbContext, string beneficiaryId, string fullName)
     {
         _dbContext = dbContext;
         BeneficiaryId = beneficiaryId;
@@ -259,3 +259,4 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
         }
     }
 }
+

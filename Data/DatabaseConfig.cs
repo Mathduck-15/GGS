@@ -31,6 +31,21 @@ public static class DatabaseConfig
         }
     }
 
+    /// <summary>
+    /// Always returns the Hostinger (cloud) connection string.
+    /// Used by SyncService and ConnectivityService — never by ViewModels.
+    /// </summary>
+    public static string HostingerConnectionString =>
+        App.Config.GetConnectionString("RemoteConnection")
+            ?? throw new InvalidOperationException("RemoteConnection not found in appsettings.json.");
+
+    /// <summary>
+    /// SQLite connection string pointing to ggms.db in the app's base directory.
+    /// Used by LocalDbContext — the primary context for all normal app reads/writes.
+    /// </summary>
+    public static string SqliteConnectionString =>
+        $"Data Source={System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ggms.db")}";
+
     /// <summary>CRS database connection string built from the CrsConnection section.</summary>
     public static string CrsConnectionString
     {

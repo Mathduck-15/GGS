@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
-public class UploadedFile
+public class UploadedFile : ISyncable
 {
     [Key]
     public int Id { get; set; }
@@ -35,9 +35,13 @@ public class UploadedFile
     public virtual Parameter? Parameter { get; set; }
 
 
-    public int? CategoryId { get; set; }       // ← add this
+    public int? CategoryId { get; set; }
     [ForeignKey("CategoryId")]
-    public virtual Category? Category { get; set; }  // ← add this
+    public virtual Category? Category { get; set; }
 
+    public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

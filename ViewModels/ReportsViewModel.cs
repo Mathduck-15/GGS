@@ -17,7 +17,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class ReportsViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
 
     // ── Report Type List ──────────────────────────────────────────────────────
     public ObservableCollection<string> ReportTypes { get; } = new()
@@ -145,7 +145,7 @@ public class ReportsViewModel : ViewModelBase
     // ── Constructor ───────────────────────────────────────────────────────────
     public ReportsViewModel()
     {
-        try { _context = App.AppHost!.Services.GetRequiredService<AppDbContext>(); }
+        try { _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>(); }
         catch { }
 
         GenerateReportCommand = new RelayCommand(async _ => await GenerateReportAsync());
@@ -429,3 +429,4 @@ public class ReportsViewModel : ViewModelBase
         }
     }
 }
+

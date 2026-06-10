@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("budget_allocations")]
-public class BudgetAllocation
+public class BudgetAllocation : ISyncable
 {
     [Key]
     [Column("id")]
@@ -42,4 +42,8 @@ public class BudgetAllocation
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

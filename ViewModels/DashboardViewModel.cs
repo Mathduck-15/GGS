@@ -13,7 +13,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class DashboardViewModel : ViewModelBase
 {
-    private AppDbContext _context;
+    private LocalDbContext _context;
     private decimal _totalBudget;
     private decimal _totalIncome;
     private decimal _totalExpense;
@@ -92,7 +92,7 @@ public class DashboardViewModel : ViewModelBase
         {
             if (App.AppHost != null)
             {
-                _context = App.AppHost.Services.GetRequiredService<AppDbContext>();
+                _context = App.AppHost.Services.GetRequiredService<LocalDbContext>();
                 _ = LoadAnalyticsAsync();
             }
         }
@@ -184,3 +184,4 @@ public class DashboardViewModel : ViewModelBase
         ExpenseHeight = expenseVal / max * 250;
     }
 }
+

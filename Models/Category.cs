@@ -5,7 +5,7 @@ namespace GoodGovernanceApp.Models;
 
 [Table("categories")]
 
-public class Category
+public class Category : ISyncable
 {
    
 
@@ -20,4 +20,10 @@ public class Category
     public string? Description { get; set; }
     
     public ICollection<Budget> Budgets { get; set; } = new List<Budget>();
+
+    public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

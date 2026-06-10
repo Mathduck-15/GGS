@@ -14,7 +14,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class DepartmentManagementViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
     private Office? _selectedOffice;
     private string _newDepartmentName = string.Empty;
     private string _newDepartmentDescription = string.Empty;
@@ -92,7 +92,7 @@ public class DepartmentManagementViewModel : ViewModelBase
 
     public DepartmentManagementViewModel()
     {
-        _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+        _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
         AddDepartmentCommand = new RelayCommand(async _ => await AddOfficeAsync());
         AddRoleCommand = new RelayCommand(async _ => await AddRoleAsync(), _ => SelectedDepartment != null);
         DeleteDepartmentCommand = new RelayCommand(async _ => await DeleteOfficeAsync(), _ => SelectedDepartment != null);
@@ -309,3 +309,4 @@ public class DepartmentManagementViewModel : ViewModelBase
         }
     }
 }
+

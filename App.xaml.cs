@@ -6,6 +6,7 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Views;
+using GoodGovernanceApp.Services;
 using System.Globalization;
 using System.Threading;
 
@@ -35,43 +36,66 @@ public partial class App : Application
         {
             string baseSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
             if (File.Exists(baseSettingsPath))
-            {
                 File.Copy(baseSettingsPath, appDataSettingsPath);
-            }
         }
 
         AppHost = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
-                // Clear default sources to avoid loading appsettings.json from wrong directory
                 config.Sources.Clear();
                 config.SetBasePath(appDataFolder);
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
             })
             .ConfigureServices((context, services) =>
             {
-                // Configure DbContext — uses DatabaseConfig (single source of truth)
-                services.AddDbContext<AppDbContext>(options =>
+                // ── SQLite LocalDbContext — primary context, always available ──
+                // All ViewModels use this. Works offline.
+                services.AddDbContextFactory<LocalDbContext>(options =>
                 {
-                    options.UseMySql(DatabaseConfig.ConnectionString, new MySqlServerVersion(new Version(8, 0, 31)),
-                        mysqlOptions => mysqlOptions.EnableRetryOnFailure());
+                    options.UseSqlite(DatabaseConfig.SqliteConnectionString);
+                }, ServiceLifetime.Scoped);
+
+                // Transient LocalDbContext for direct injection in ViewModels
+                services.AddDbContext<LocalDbContext>(options =>
+                {
+                    options.UseSqlite(DatabaseConfig.SqliteConnectionString);
                 }, ServiceLifetime.Transient, ServiceLifetime.Transient);
 
-                // Register Services
+                // ── MySQL AppDbContext — used ONLY by SyncService ──────────────
+                // NO EnableRetryOnFailure — fails fast so offline fallback works.
+                services.AddDbContextFactory<AppDbContext>(options =>
+                {
+                    options.UseMySql(
+                        DatabaseConfig.HostingerConnectionString,
+                        new MySqlServerVersion(new Version(8, 0, 0)));
+                }, ServiceLifetime.Scoped);
+
+                // Transient AppDbContext for design-time / legacy use
+                services.AddDbContext<AppDbContext>(options =>
+                {
+                    options.UseMySql(
+                        DatabaseConfig.HostingerConnectionString,
+                        new MySqlServerVersion(new Version(8, 0, 0)));
+                }, ServiceLifetime.Transient, ServiceLifetime.Transient);
+
+                // ── Sync Infrastructure ────────────────────────────────────────
+                services.AddSingleton<ConnectivityService>();
+                services.AddScoped<SyncService>();
+
+                // ── Application Services ───────────────────────────────────────
                 services.AddSingleton<DatabaseHelper>();
                 services.AddSingleton<GoodGovernanceApp.Services.ValidationService>();
                 services.AddSingleton<GoodGovernanceApp.Services.SessionService>();
                 services.AddSingleton<GoodGovernanceApp.Services.FileService>();
                 services.AddSingleton<GoodGovernanceApp.Services.BackupService>();
 
-                // Register Views
+                // ── Views ──────────────────────────────────────────────────────
                 services.AddTransient<MainWindow>();
                 services.AddTransient<GoodGovernanceApp.Views.LoginWindow>();
                 services.AddTransient<GoodGovernanceApp.ViewModels.LoginViewModel>();
             })
             .Build();
 
-        // Set Config to the host's IConfiguration so every class uses the SAME instance
         Config = AppHost.Services.GetRequiredService<IConfiguration>();
     }
 
@@ -79,7 +103,7 @@ public partial class App : Application
     {
         await AppHost!.StartAsync();
 
-        // ✅ ADD THESE LINES — ensure folders always exist on startup
+        // Ensure app data folders always exist
         string appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "GoodGovernanceApp");
@@ -87,115 +111,89 @@ public partial class App : Application
         Directory.CreateDirectory(Path.Combine(appData, "Logos"));
         Directory.CreateDirectory(Path.Combine(appData, "ProfilePhotos"));
 
-        // ... rest of your existing code stays the same
+        // Show the login window immediately — no blocking on DB
         var loginWindow = AppHost.Services.GetRequiredService<GoodGovernanceApp.Views.LoginWindow>();
         loginWindow.Show();
-        // ...
-
 
         base.OnStartup(e);
 
-        // Run all DB initialisation off the UI thread so a slow/unreachable
-        // remote server can never freeze or prevent the window from appearing.
+        // Initialise SQLite on a background thread — never blocks the UI
         await Task.Run(async () =>
         {
-            using var scope = AppHost.Services.CreateScope();
-            var services   = scope.ServiceProvider;
             try
             {
-                var dbContext = services.GetRequiredService<AppDbContext>();
+                // EnsureCreated creates ggms.db + all tables if they don't exist.
+                // This is instant on subsequent launches (file already exists).
+                using var scope = AppHost.Services.CreateScope();
+                var localDb = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
+                await localDb.Database.EnsureCreatedAsync();
 
-                Exception? connError = null;
-                bool canConn = await Task.Run(() =>
+                // Apply any non-breaking patches to SQLite schema
+                await ApplySqlitePatchesAsync(localDb);
+
+                // Seed a default admin if the database is completely empty (e.g. running offline on first launch)
+                if (!localDb.Users.Any())
                 {
-                    try   { return dbContext.Database.CanConnect(); }
-                    catch (Exception ex) { connError = ex; return false; }
-                });
-
-                if (!canConn)
-                {
-                    string dbMode = Config["AppSettings:DatabaseMode"] ?? "Local";
-                    string errorMsg = "Database Connection Failed!\n\nThe application could not reach the database. " +
-                                      "Check your connection settings (Settings → Database).";
-
-                    if (connError != null)
+                    localDb.Users.Add(new Models.User
                     {
-                        string realErr = connError.InnerException?.Message ?? connError.Message;
-                        errorMsg += $"\n\nError Details:\n{realErr}";
-                        
-                        try 
-                        { 
-                            System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db_error_log.txt"), 
-                                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Startup Connection Error:\n{connError}\n\n"); 
-                        } catch { }
-                    }
-
-                    if (dbMode == "Remote")
-                        errorMsg += "\n\nFor Hostinger remote:\n" +
-                                    "1. Add your current IP to 'Remote MySQL' in Hostinger hPanel.\n" +
-                                    "2. Verify the server/user/password in Settings.";
-                    else if (dbMode == "LAN")
-                        errorMsg += "\n\nFor LAN:\n" +
-                                    "1. Ensure you are on the same network.\n" +
-                                    "2. Verify the LAN server IP in Settings.";
-
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        System.Windows.MessageBox.Show(errorMsg, "Database Warning",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Warning));
-                    return;
-                }
-
-                // Non-critical patches — ignore failures silently
-                try { await Task.Run(() => dbContext.Database.EnsureCreated()); } catch { }
-
-                try
-                {
-                    await Task.Run(() =>
-                    {
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
-                        
-                        // Patch VoucherCode
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE project_details ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE transactions ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_transaction ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
-
-                        try
-                        {
-                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 0;");
-                            dbContext.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS officeallocations;");
-                            dbContext.Database.ExecuteSqlRaw(@"
-                                CREATE TABLE officeallocations (
-                                    Id INT AUTO_INCREMENT PRIMARY KEY,
-                                    YearlyBudgetId INT NOT NULL,
-                                    office_code VARCHAR(30) NOT NULL,
-                                    AllocatedAmount DECIMAL(65,30) NOT NULL,
-                                    CONSTRAINT FK_officeallocations_YearlyBudgets FOREIGN KEY (YearlyBudgetId) REFERENCES YearlyBudgets (Id) ON DELETE CASCADE,
-                                    CONSTRAINT FK_officeallocations_tbl_offices FOREIGN KEY (office_code) REFERENCES tbl_offices (office_code) ON DELETE CASCADE
-                                ) CHARACTER SET=utf8mb4;
-                            ");
-                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;");
-                        }
-                        catch
-                        {
-                            try { dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;"); } catch { }
-                        }
+                        Name = "Offline Admin",
+                        Email = "admin@ggms.local",
+                        Password = GoodGovernanceApp.Utilities.PasswordHasher.HashPassword("admin123"),
+                        Role = "super_admin",
+                        Status = "active"
                     });
+                    await localDb.SaveChangesAsync();
                 }
-                catch { }
-
-                try { await Task.Run(() => DatabaseSeeder.SeedData(dbContext)); } catch { }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App Startup] DB init error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App Startup] SQLite init error: {ex.Message}");
+            }
+
+            // Start connectivity check + background sync timer
+            // This runs regardless of whether SQLite init succeeded
+            try
+            {
+                var connectivity = AppHost.Services.GetRequiredService<ConnectivityService>();
+                await connectivity.StartAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App Startup] Connectivity start error: {ex.Message}");
             }
         });
     }
 
+    private static async Task ApplySqlitePatchesAsync(LocalDbContext db)
+    {
+        // SQLite doesn't support ALTER TABLE … ADD COLUMN with constraints,
+        // but EnsureCreated handles the full schema. These patches are for
+        // safety only in case of legacy SQLite files from before SyncId was added.
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE project_details ADD COLUMN voucher_code VARCHAR(10) NULL;");
+        }
+        catch { }
+
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE tbl_transaction ADD COLUMN voucher_code VARCHAR(10) NULL;");
+        }
+        catch { }
+    }
+
     protected override async void OnExit(ExitEventArgs e)
     {
+        // Stop the background sync timer cleanly
+        try
+        {
+            var connectivity = AppHost!.Services.GetService<ConnectivityService>();
+            connectivity?.Stop();
+        }
+        catch { }
+
         await AppHost!.StopAsync();
         AppHost.Dispose();
         base.OnExit(e);

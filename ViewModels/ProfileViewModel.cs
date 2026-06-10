@@ -16,7 +16,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class ProfileViewModel : ViewModelBase
 {
-    private readonly AppDbContext _context;
+    private readonly LocalDbContext _context;
     private readonly SessionService _sessionService;
     
     private string _username = string.Empty;
@@ -90,7 +90,7 @@ public class ProfileViewModel : ViewModelBase
 
     public ProfileViewModel()
     {
-        _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
+        _context = App.AppHost!.Services.GetRequiredService<LocalDbContext>();
         _sessionService = App.AppHost!.Services.GetRequiredService<SessionService>();
 
         SaveChangesCommand = new RelayCommand(async _ => await ExecuteSaveChanges(), _ => CanSave());
@@ -246,3 +246,4 @@ public class ProfileViewModel : ViewModelBase
         }
     }
 }
+

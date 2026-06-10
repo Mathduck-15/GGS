@@ -7,13 +7,15 @@ using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using MySqlConnector;
 
 namespace GoodGovernanceApp.ViewModels;
 
 public class AddProjectViewModel : ViewModelBase
 {
-    private readonly DatabaseHelper _db;
+    private readonly LocalDbContext _dbContext;
 
     // ── Backing fields ──────────────────────────────────────────────────────────
     private string _projectId       = string.Empty;
@@ -129,7 +131,8 @@ public class AddProjectViewModel : ViewModelBase
     // ── Constructor ──────────────────────────────────────────────────────────────
     public AddProjectViewModel()
     {
-        _db = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+        var scope = App.AppHost!.Services.CreateScope();
+        _dbContext = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
 
         SaveCommand              = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
         CancelCommand            = new RelayCommand(_ => { });
@@ -160,16 +163,8 @@ public class AddProjectViewModel : ViewModelBase
 
             try
             {
-                const string sql = "SELECT COUNT(1) FROM project_details WHERE voucher_code = @code";
-                var result = await _db.ExecuteScalarAsync(sql, new MySqlParameter("@code", code));
-                if (result != null && int.TryParse(result.ToString(), out int count))
-                {
-                    if (count == 0) isUnique = true;
-                }
-                else
-                {
-                    isUnique = true; // Fallback to allow continuing if check fails
-                }
+                int count = await _dbContext.ProjectDetails.CountAsync(p => p.VoucherCode == code);
+                if (count == 0) isUnique = true;
             }
             catch 
             {
@@ -185,21 +180,18 @@ public class AddProjectViewModel : ViewModelBase
     // ── Project-ID generation ────────────────────────────────────────────────────
     private async Task GenerateProjectIdAsync()
     {
-        const string sql = @"
-            SELECT project_details_id
-            FROM project_details
-            WHERE project_details_id LIKE 'OPP-%'
-            ORDER BY project_details_id DESC
-            LIMIT 1;";
-
         try
         {
-            var dt = await _db.ExecuteQueryAsync(sql);
+            var last = await _dbContext.ProjectDetails
+                .Where(p => p.ProjectDetailsID != null && p.ProjectDetailsID.StartsWith("OPP-"))
+                .OrderByDescending(p => p.ProjectDetailsID)
+                .Select(p => p.ProjectDetailsID)
+                .FirstOrDefaultAsync();
+
             int nextSeq = 1;
 
-            if (dt.Rows.Count > 0)
+            if (!string.IsNullOrEmpty(last))
             {
-                string last = dt.Rows[0][0]?.ToString() ?? string.Empty;
                 // format: OPP-YYYY-NNNN
                 var parts = last.Split('-');
                 if (parts.Length == 3 && int.TryParse(parts[2], out int n))
@@ -222,14 +214,17 @@ public class AddProjectViewModel : ViewModelBase
     // ── Load distinct years from YearlyBudgets ───────────────────────────────────
     private async Task LoadYearsAsync()
     {
-        const string sql = "SELECT DISTINCT Year FROM yearlybudgets ORDER BY Year DESC;"; // lowercase: Linux MySQL is case-sensitive
         try
         {
-            var dt = await _db.ExecuteQueryAsync(sql);
+            var years = await _dbContext.YearlyBudgets
+                .Select(yb => yb.Year)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync();
+
             AvailableYears.Clear();
-            foreach (DataRow row in dt.Rows)
-                if (int.TryParse(row[0]?.ToString(), out int y))
-                    AvailableYears.Add(y);
+            foreach (var y in years)
+                AvailableYears.Add(y);
         }
         catch { /* leave empty */ }
     }
@@ -243,23 +238,18 @@ public class AddProjectViewModel : ViewModelBase
 
         if (_selectedYear == null) return;
 
-        const string sql = @"
-            SELECT oa.office_code
-            FROM officeallocations oa
-            INNER JOIN yearlybudgets yb ON oa.YearlyBudgetId = yb.Id
-            WHERE yb.Year = @year
-            ORDER BY oa.office_code;";
-
         try
         {
-            var dt = await _db.ExecuteQueryAsync(sql,
-                new MySqlParameter("@year", _selectedYear.Value));
+            var codes = await _dbContext.OfficeAllocations
+                .Include(oa => oa.YearlyBudget)
+                .Where(oa => oa.YearlyBudget.Year == _selectedYear.Value && !string.IsNullOrEmpty(oa.OfficeCode))
+                .Select(oa => oa.OfficeCode)
+                .OrderBy(c => c)
+                .ToListAsync();
 
-            foreach (DataRow row in dt.Rows)
+            foreach (var code in codes)
             {
-                string? code = row[0]?.ToString();
-                if (!string.IsNullOrEmpty(code))
-                    FilteredOfficeCodes.Add(code);
+                FilteredOfficeCodes.Add(code);
             }
         }
         catch { /* leave empty */ }
@@ -273,20 +263,15 @@ public class AddProjectViewModel : ViewModelBase
 
         _ = Task.Run(async () =>
         {
-            const string sql = @"
-                SELECT oa.YearlyBudgetId
-                FROM officeallocations oa
-                INNER JOIN yearlybudgets yb ON oa.YearlyBudgetId = yb.Id
-                WHERE yb.Year = @year AND oa.office_code = @code
-                LIMIT 1;";
-
             try
             {
-                var result = await _db.ExecuteScalarAsync(sql,
-                    new MySqlParameter("@year", _selectedYear!.Value),
-                    new MySqlParameter("@code", _selectedOfficeCode));
+                var id = await _dbContext.OfficeAllocations
+                    .Include(oa => oa.YearlyBudget)
+                    .Where(oa => oa.YearlyBudget.Year == _selectedYear!.Value && oa.OfficeCode == _selectedOfficeCode)
+                    .Select(oa => oa.YearlyBudgetId)
+                    .FirstOrDefaultAsync();
 
-                if (result != null && int.TryParse(result.ToString(), out int id))
+                if (id != 0)
                     _resolvedYearlyBudgetId = id;
             }
             catch { /* silently ignore */ }
@@ -368,67 +353,48 @@ public class AddProjectViewModel : ViewModelBase
 
         if (_resolvedYearlyBudgetId == null && _selectedYear.HasValue && !string.IsNullOrEmpty(_selectedOfficeCode))
         {
-            const string resolveSql = @"
-            SELECT oa.YearlyBudgetId
-            FROM officeallocations oa
-            INNER JOIN yearlybudgets yb ON oa.YearlyBudgetId = yb.Id
-            WHERE yb.Year = @year AND oa.office_code = @code
-            LIMIT 1;";
-            var res = await _db.ExecuteScalarAsync(resolveSql,
-                new MySqlParameter("@year", _selectedYear!.Value),
-                new MySqlParameter("@code", _selectedOfficeCode));
-            if (res != null && int.TryParse(res.ToString(), out int rid))
-                _resolvedYearlyBudgetId = rid;
+            var id = await _dbContext.OfficeAllocations
+                .Include(oa => oa.YearlyBudget)
+                .Where(oa => oa.YearlyBudget.Year == _selectedYear!.Value && oa.OfficeCode == _selectedOfficeCode)
+                .Select(oa => oa.YearlyBudgetId)
+                .FirstOrDefaultAsync();
+
+            if (id != 0)
+                _resolvedYearlyBudgetId = id;
         }
 
-        const string insertSql = @"
-        INSERT INTO project_details
-            (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at, voucher_code)
-        VALUES
-            (@pid, @project, @desc, @code, @budget, @contact, @ybid, NOW(), NOW(), @voucher);";
-
-        const string insertSqlTransaction = @"
-        INSERT INTO transactions
-            (project_code, Amount, voucher_code, date, transaction_type)
-        VALUES
-            (@pid, @budget, @voucher, NOW(), @transtype);";
-
-        // --- INSERT 1: project_details ---
-        int rowsAffected = 0;
         try
         {
-            rowsAffected = await _db.ExecuteNonQueryAsync(insertSql,
-                new MySqlParameter("@pid",     ProjectId),
-                new MySqlParameter("@project", ProjectName),
-                new MySqlParameter("@desc",    (object?)Description ?? DBNull.Value),
-                new MySqlParameter("@code",    SelectedOfficeCode),
-                new MySqlParameter("@budget",  (object?)budget ?? DBNull.Value),
-                new MySqlParameter("@contact", string.IsNullOrWhiteSpace(BeneficiaryId)
-                                                   ? DBNull.Value
-                                                   : (object)BeneficiaryId.Trim()),
-                new MySqlParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
-                new MySqlParameter("@voucher", VoucherCode));
+            var project = new ProjectDetail
+            {
+                ProjectDetailsID = ProjectId,
+                Name = ProjectName,
+                Description = string.IsNullOrWhiteSpace(Description) ? null : Description,
+                OfficeCode = SelectedOfficeCode,
+                Budget = budget,
+                ContactPerson = string.IsNullOrWhiteSpace(BeneficiaryId) ? null : BeneficiaryId.Trim(),
+                YearlyBudgetId = _resolvedYearlyBudgetId,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                VoucherCode = VoucherCode
+            };
+            _dbContext.ProjectDetails.Add(project);
+
+            var transaction = new Transaction
+            {
+                ProjectCode = ProjectId,
+                Amount = budget ?? 0,
+                VoucherCode = VoucherCode,
+                Date = DateTime.Now,
+                TransactionType = transaction_type
+            };
+            _dbContext.Transactions.Add(transaction);
+
+            await _dbContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"project_details INSERT failed:\n{ex.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            return; // stop here, don't insert transaction
-        }
-
-
-        // --- INSERT 2: transactions ---
-        try
-        {
-            await _db.ExecuteNonQueryAsync(insertSqlTransaction,
-                new MySqlParameter("@pid", ProjectId),
-                new MySqlParameter("@budget", (object?)budget ?? DBNull.Value),
-                new MySqlParameter("@voucher", VoucherCode),
-                new MySqlParameter("@transtype", transaction_type));
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"transactions INSERT failed:\n{ex.Message}", "Error",
+            MessageBox.Show($"Failed to save project or transaction:\n{ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
@@ -439,3 +405,4 @@ public class AddProjectViewModel : ViewModelBase
         SaveSucceeded?.Invoke(this, EventArgs.Empty);
     }
 }
+

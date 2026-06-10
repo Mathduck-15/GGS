@@ -1,4 +1,4 @@
-﻿using GoodGovernanceApp.Models;
+using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Views;
 using System;
 using System.Collections.Generic;
@@ -20,13 +20,13 @@ namespace GoodGovernanceApp.ViewModels
         public TransactionRow Row { get; }
 
         public ICommand PrintCommand { get; }
-        public ICommand DownloadPdfCommand { get; }  // ✅ New command
+        public ICommand DownloadPdfCommand { get; }  // ? New command
 
         public VoucherPrintViewModel(TransactionRow row)
         {
             Row = row;
             PrintCommand = new RelayCommand(_ => Print());
-            DownloadPdfCommand = new RelayCommand(_ => DownloadPdf());  // ✅ New
+            DownloadPdfCommand = new RelayCommand(_ => DownloadPdf());  // ? New
         }
 
         private void Print()
@@ -43,7 +43,7 @@ namespace GoodGovernanceApp.ViewModels
             }
         }
 
-        // ✅ New PDF download method
+        // ? New PDF download method
         private void DownloadPdf()
         {
             try
@@ -114,7 +114,7 @@ namespace GoodGovernanceApp.ViewModels
                 MessageBox.Show($"Voucher saved successfully!\n\n{saveDialog.FileName}",
                     "PDF Saved", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                // 8. Optional — open the PDF automatically
+                // 8. Optional � open the PDF automatically
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = saveDialog.FileName,

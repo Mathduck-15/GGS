@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace GoodGovernanceApp.Models;
 
 [Table("tbl_program_provision")]
-public class ProgramProvision
+public class ProgramProvision : ISyncable
 {
     [Key]
     [Column("id")]
@@ -28,4 +28,8 @@ public class ProgramProvision
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

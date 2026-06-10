@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
-public class Evaluation
+public class Evaluation : ISyncable
 {
     [Key]
     public int Id { get; set; }
@@ -28,4 +28,10 @@ public class Evaluation
     public string? Comments { get; set; }
 
     public DateTime EvaluationDate { get; set; } = DateTime.Now;
+
+    public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>Stable cross-PC identity used by SyncService.</summary>
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

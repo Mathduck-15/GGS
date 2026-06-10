@@ -9,12 +9,13 @@ using MySqlConnector;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace GoodGovernanceApp.ViewModels;
 
 public class ApplicationProfileViewModel : ViewModelBase
 {
-    private readonly DatabaseHelper _dbHelper;
+    private readonly LocalDbContext _dbContext;
     private ApplicationProfileModel _profile = new();
     private BitmapImage? _logoPreview;
 
@@ -47,7 +48,8 @@ public class ApplicationProfileViewModel : ViewModelBase
 
     public ApplicationProfileViewModel()
     {
-        _dbHelper = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+        var scope = App.AppHost!.Services.CreateScope();
+        _dbContext = scope.ServiceProvider.GetRequiredService<LocalDbContext>();
         BrowseCommand = new RelayCommand(_ => ExecuteBrowse());
         SaveCommand = new RelayCommand(async _ => await ExecuteSaveAsync());
 
@@ -58,27 +60,13 @@ public class ApplicationProfileViewModel : ViewModelBase
     {
         try
         {
-            // Ensure table exists
-            string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS goveprofile (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    GoveName NVARCHAR(255),
-                    Address NVARCHAR(255),
-                    LogoAddress NVARCHAR(500)
-                );";
+            var profile = await _dbContext.GoveProfiles.FirstOrDefaultAsync();
 
-            await _dbHelper.ExecuteNonQueryAsync(createTableQuery);
-
-            // Load existing profile
-            string query = "SELECT GoveName, Address, LogoAddress FROM goveprofile LIMIT 1;";
-            var dataTable = await _dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            if (profile != null)
             {
-                var row = dataTable.Rows[0];
-                GoveName = row["GoveName"]?.ToString() ?? "";
-                Address = row["Address"]?.ToString() ?? "";
-                LogoAddress = row["LogoAddress"]?.ToString() ?? "";
+                GoveName = profile.GoveName ?? "";
+                Address = profile.Address ?? "";
+                LogoAddress = profile.LogoAddress ?? "";
 
                 LoadLogoImage(LogoAddress);
             }
@@ -169,36 +157,26 @@ public class ApplicationProfileViewModel : ViewModelBase
     {
         try
         {
-            // Check if record exists
-            string checkQuery = "SELECT COUNT(*) FROM goveprofile;";
-            var countObj = await _dbHelper.ExecuteScalarAsync(checkQuery);
-            int count = Convert.ToInt32(countObj ?? 0);
+            var profile = await _dbContext.GoveProfiles.FirstOrDefaultAsync();
 
-            if (count > 0)
+            if (profile != null)
             {
-                // UPDATE first record specifically
-                string updateQuery = @"
-                    UPDATE goveprofile 
-                    SET GoveName = @goveName, Address = @address, LogoAddress = @logoAddress 
-                    ORDER BY id ASC LIMIT 1;";
-                
-                await _dbHelper.ExecuteNonQueryAsync(updateQuery,
-                    new MySqlParameter("@goveName", GoveName),
-                    new MySqlParameter("@address", Address),
-                    new MySqlParameter("@logoAddress", LogoAddress));
+                profile.GoveName = GoveName;
+                profile.Address = Address;
+                profile.LogoAddress = LogoAddress;
             }
             else
             {
-                // INSERT
-                string insertQuery = @"
-                    INSERT INTO goveprofile (GoveName, Address, LogoAddress)
-                    VALUES (@goveName, @address, @logoAddress);";
-                
-                await _dbHelper.ExecuteNonQueryAsync(insertQuery,
-                    new MySqlParameter("@goveName", GoveName),
-                    new MySqlParameter("@address", Address),
-                    new MySqlParameter("@logoAddress", LogoAddress));
+                profile = new GoveProfile
+                {
+                    GoveName = GoveName,
+                    Address = Address,
+                    LogoAddress = LogoAddress
+                };
+                _dbContext.GoveProfiles.Add(profile);
             }
+
+            await _dbContext.SaveChangesAsync();
 
             MessageBox.Show("Application profile saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             
@@ -210,3 +188,4 @@ public class ApplicationProfileViewModel : ViewModelBase
         }
     }
 }
+

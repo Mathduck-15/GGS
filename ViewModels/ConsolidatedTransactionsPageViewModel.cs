@@ -13,7 +13,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class ConsolidatedTransactionsPageViewModel : ViewModelBase
 {
-    private readonly AppDbContext _dbContext;
+    private readonly LocalDbContext _dbContext;
 
     private ObservableCollection<ConsolidatedTransactionsViewModel> _consolidatedRows = new();
     private ICollectionView _consolidatedTransactionsView = null!;
@@ -93,7 +93,7 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
     {
         if (App.AppHost == null) return;
 
-        _dbContext = App.AppHost.Services.GetRequiredService<AppDbContext>();
+        _dbContext = App.AppHost.Services.GetRequiredService<LocalDbContext>();
 
         _consolidatedRows = new ObservableCollection<ConsolidatedTransactionsViewModel>();
         _consolidatedTransactionsView = CollectionViewSource.GetDefaultView(_consolidatedRows);
@@ -227,3 +227,4 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
         }
     }
 }
+
