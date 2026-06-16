@@ -141,7 +141,7 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                 FullName        = FullName,
                 TransactionType = t.TransactionType ?? "Department Project",
                 Amount          = t.Amount ?? 0,
-                TransactionDate = t.Date.HasValue ? DateOnly.FromDateTime(t.Date.Value) : DateOnly.MinValue,
+                TransactionDate = t.Date,
                 Status          = "Completed",
                 Source          = "Department Budget",
                 CreatedAt       = t.Date ?? DateTime.MinValue
@@ -155,7 +155,7 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                 FullName        = ct.FullName ?? FullName,
                 TransactionType = ct.TransactionType ?? "Consolidated",
                 Amount          = ct.Amount ?? 0,
-                TransactionDate = ct.TransactionDate ?? DateOnly.MinValue,
+                TransactionDate = ct.TransactionDate,
                 Status          = ct.Status ?? "Unknown",
                 Source          = "Consolidated",
                 CreatedAt       = ct.CreatedAt ?? DateTime.MinValue
@@ -215,8 +215,8 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
 
             // ── Step 11: Monthly Trend – two columns per month (one per source) ───
             var allMonths = combinedList
-                .Where(t => t.TransactionDate != DateOnly.MinValue)
-                .Select(t => new { t.TransactionDate.Year, t.TransactionDate.Month })
+                .Where(t => t.TransactionDate.HasValue)
+                .Select(t => new { t.TransactionDate!.Value.Year, t.TransactionDate.Value.Month })
                 .Distinct()
                 .OrderBy(m => m.Year).ThenBy(m => m.Month)
                 .ToList();
@@ -230,11 +230,11 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                 labels.Add($"{new DateTime(m.Year, m.Month, 1):MMM yyyy}");
 
                 trendDept.Add(deptList
-                    .Where(t => t.TransactionDate.Year == m.Year && t.TransactionDate.Month == m.Month)
+                    .Where(t => t.TransactionDate.HasValue && t.TransactionDate.Value.Year == m.Year && t.TransactionDate.Value.Month == m.Month)
                     .Sum(t => t.Amount));
 
                 trendConsolidated.Add(consolidatedList
-                    .Where(t => t.TransactionDate.Year == m.Year && t.TransactionDate.Month == m.Month)
+                    .Where(t => t.TransactionDate.HasValue && t.TransactionDate.Value.Year == m.Year && t.TransactionDate.Value.Month == m.Month)
                     .Sum(t => t.Amount));
             }
 

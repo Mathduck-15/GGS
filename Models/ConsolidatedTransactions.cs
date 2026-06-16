@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace GoodGovernanceApp.Models
-
 {
-
     [Table("consolidated_transactions")]
     public class ConsolidatedTransactions
     {
@@ -63,7 +59,7 @@ namespace GoodGovernanceApp.Models
         public decimal? Amount { get; set; }
 
         [Column("transaction_date")]
-        public DateOnly? TransactionDate { get; set; }
+        public DateTime? TransactionDate { get; set; }
 
         [Column("status")]
         [StringLength(45)]
@@ -72,5 +68,10 @@ namespace GoodGovernanceApp.Models
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } 
 
+        [Column("SyncId")]
+        public Guid SyncId { get; set; } = Guid.NewGuid();
+
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
     }
 }

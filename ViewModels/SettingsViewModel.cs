@@ -5,6 +5,7 @@ using GoodGovernanceApp.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Win32;
+using Microsoft.Data.Sqlite;
 using MySqlConnector;
 using System;
 using System.IO;

@@ -34,4 +34,7 @@ public class AuditTrail
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

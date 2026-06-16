@@ -31,4 +31,7 @@ public class Office
     // Navigation
     public virtual ICollection<DepartmentRole> Roles { get; set; } = new List<DepartmentRole>();
     public virtual ICollection<User> Users { get; set; } = new List<User>();
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

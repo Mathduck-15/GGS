@@ -23,12 +23,12 @@ public class BudgetAllocation
     [ForeignKey("OfficeId")]
     public virtual Office? Office { get; set; }
 
-    [Column("allocated_amount")]
+    [Column("amount")]
     public decimal AllocatedAmount { get; set; }
 
 
 
-    [Column("allocated_by_id")]
+    [Column("allocated_by")]
     public long? AllocatedById { get; set; }
 
     [ForeignKey("AllocatedById")]
@@ -42,4 +42,7 @@ public class BudgetAllocation
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

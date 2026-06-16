@@ -1,15 +1,23 @@
 using System;
 using System.Data;
+using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using MySqlConnector;
 
 namespace GoodGovernanceApp.Data
 {
     public class DatabaseHelper
     {
-        public async Task<MySqlConnection> OpenConnectionAsync()
+        private string GetLocalConnectionString()
         {
-            MySqlConnection connection = new MySqlConnection(DatabaseConfig.ConnectionString);
+            string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GoodGovernanceApp");
+            return $"Data Source={Path.Combine(appDataFolder, "ggms.db")}";
+        }
+
+        public async Task<SqliteConnection> OpenConnectionAsync()
+        {
+            SqliteConnection connection = new SqliteConnection(GetLocalConnectionString());
             await connection.OpenAsync();
             return connection;
         }
@@ -18,12 +26,26 @@ namespace GoodGovernanceApp.Data
         {
             try
             {
-                string connectionString = connectionStringOverride ?? DatabaseConfig.ConnectionString;
-                using (var connection = new MySqlConnection(connectionString))
+                // This is generally testing the remote connection from SettingsViewModel
+                if (!string.IsNullOrEmpty(connectionStringOverride) && connectionStringOverride.Contains("Server="))
+                {
+                    using (var connection = new MySqlConnection(connectionStringOverride))
+                    {
+                        await connection.OpenAsync();
+                        return (true, "Cloud connection successful!");
+                    }
+                }
+                
+                string connectionString = connectionStringOverride ?? GetLocalConnectionString();
+                using (var connection = new SqliteConnection(connectionString))
                 {
                     await connection.OpenAsync();
-                    return (true, "Connection successful!");
+                    return (true, "Local connection successful!");
                 }
+            }
+            catch (SqliteException ex)
+            {
+                return (false, $"SQLite Error [{ex.SqliteErrorCode}]: {ex.Message}");
             }
             catch (MySqlException ex)
             {
@@ -35,32 +57,32 @@ namespace GoodGovernanceApp.Data
             }
         }
 
-        public async Task<DataTable> ExecuteQueryAsync(string query, params MySqlParameter[] parameters)
+        public async Task<DataTable> ExecuteQueryAsync(string query, params SqliteParameter[] parameters)
         {
             using (var connection = await OpenConnectionAsync())
             {
-                using (var command = new MySqlCommand(query, connection))
+                using (var command = new SqliteCommand(query, connection))
                 {
                     if (parameters != null)
                     {
                         command.Parameters.AddRange(parameters);
                     }
 
-                    using (var adapter = new MySqlDataAdapter(command))
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
                         DataTable dataTable = new DataTable();
-                        await Task.Run(() => adapter.Fill(dataTable));
+                        dataTable.Load(reader);
                         return dataTable;
                     }
                 }
             }
         }
 
-        public async Task<int> ExecuteNonQueryAsync(string query, params MySqlParameter[] parameters)
+        public async Task<int> ExecuteNonQueryAsync(string query, params SqliteParameter[] parameters)
         {
             using (var connection = await OpenConnectionAsync())
             {
-                using (var command = new MySqlCommand(query, connection))
+                using (var command = new SqliteCommand(query, connection))
                 {
                     if (parameters != null)
                     {
@@ -72,11 +94,11 @@ namespace GoodGovernanceApp.Data
             }
         }
 
-        public async Task<object?> ExecuteScalarAsync(string query, params MySqlParameter[] parameters)
+        public async Task<object?> ExecuteScalarAsync(string query, params SqliteParameter[] parameters)
         {
             using (var connection = await OpenConnectionAsync())
             {
-                using (var command = new MySqlCommand(query, connection))
+                using (var command = new SqliteCommand(query, connection))
                 {
                     if (parameters != null)
                     {

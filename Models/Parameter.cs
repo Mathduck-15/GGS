@@ -23,4 +23,10 @@ public class Parameter
 
     [ForeignKey("CategoryId")]
     public virtual Category? Category { get; set; }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
 }

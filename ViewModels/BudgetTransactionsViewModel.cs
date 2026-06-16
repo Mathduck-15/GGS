@@ -2,7 +2,7 @@ using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using GoodGovernanceApp.Views;
 using Microsoft.Extensions.DependencyInjection;
-using MySqlConnector;
+using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;

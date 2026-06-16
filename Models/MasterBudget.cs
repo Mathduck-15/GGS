@@ -12,16 +12,16 @@ public class MasterBudget
     [Column("id")]
     public long Id { get; set; }
 
-    [Column("fiscal_year")]
-    public int FiscalYear { get; set; }
+    [Column("budget_year")]
+    public string FiscalYear { get; set; } = string.Empty;
 
-    [Column("total_amount")]
+    [Column("total_budget")]
     public decimal TotalAmount { get; set; }
 
     [Column("description")]
     public string? Description { get; set; }
 
-    [Column("created_by_id")]
+    [Column("created_by")]
     public long? CreatedById { get; set; }
 
     [ForeignKey("CreatedById")]
@@ -34,4 +34,7 @@ public class MasterBudget
     public DateTime? UpdatedAt { get; set; }
 
     public virtual ICollection<BudgetAllocation> Allocations { get; set; } = new List<BudgetAllocation>();
+
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
 }

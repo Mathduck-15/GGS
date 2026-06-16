@@ -52,4 +52,5 @@ Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "A
 ## Step 4: Client Distribution
 - You can distribute the generated `GoodGovernanceSetup.exe` to your users.
 - Because we exposed the dual Database Connection settings within the UI (under the "Settings" menu), Super Admins and Users can install the *exact same underlying package*!
-- Upon first launch, the App will use the generic Local MySQL connection. The Super Admin simply logs in, opens Settings, pastes the **Hostinger MySQL Connection String**, enables "Use Remote (Hostinger) Database", and restarts the application to lock it into the cloud network mode!
+- Upon first launch, the App will automatically use the bundled **Local SQLite database** (`ggms.db`), requiring zero setup or installation of MySQL on the client machine!
+- To enable automatic cloud sync, the Super Admin simply logs in, opens Settings, pastes the **Hostinger MySQL Connection String**, and enables "Use Remote (Hostinger) Database". The system will then seamlessly operate in an offline-first manner, syncing with Hostinger in the background whenever internet is available.

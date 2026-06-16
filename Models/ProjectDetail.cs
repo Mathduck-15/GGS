@@ -44,4 +44,7 @@ public class ProjectDetail
 
     [NotMapped]
     public decimal Remaining => (Budget ?? 0) - Spent;
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

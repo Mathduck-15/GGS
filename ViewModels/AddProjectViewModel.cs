@@ -7,7 +7,7 @@ using System.Windows.Input;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using Microsoft.Extensions.DependencyInjection;
-using MySqlConnector;
+using Microsoft.Data.Sqlite;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -161,7 +161,7 @@ public class AddProjectViewModel : ViewModelBase
             try
             {
                 const string sql = "SELECT COUNT(1) FROM project_details WHERE voucher_code = @code";
-                var result = await _db.ExecuteScalarAsync(sql, new MySqlParameter("@code", code));
+                var result = await _db.ExecuteScalarAsync(sql, new SqliteParameter("@code", code));
                 if (result != null && int.TryParse(result.ToString(), out int count))
                 {
                     if (count == 0) isUnique = true;
@@ -253,7 +253,7 @@ public class AddProjectViewModel : ViewModelBase
         try
         {
             var dt = await _db.ExecuteQueryAsync(sql,
-                new MySqlParameter("@year", _selectedYear.Value));
+                new SqliteParameter("@year", _selectedYear.Value));
 
             foreach (DataRow row in dt.Rows)
             {
@@ -283,8 +283,8 @@ public class AddProjectViewModel : ViewModelBase
             try
             {
                 var result = await _db.ExecuteScalarAsync(sql,
-                    new MySqlParameter("@year", _selectedYear!.Value),
-                    new MySqlParameter("@code", _selectedOfficeCode));
+                    new SqliteParameter("@year", _selectedYear!.Value),
+                    new SqliteParameter("@code", _selectedOfficeCode));
 
                 if (result != null && int.TryParse(result.ToString(), out int id))
                     _resolvedYearlyBudgetId = id;
@@ -303,30 +303,59 @@ public class AddProjectViewModel : ViewModelBase
         string id = BeneficiaryId.Trim();
         if (string.IsNullOrWhiteSpace(id)) return;
 
-        const string sql = @"
-            SELECT full_name
-            FROM val_beneficiaries
-            WHERE beneficiary_id = @id
-            LIMIT 1;";
         try
         {
-            using var conn = new MySqlConnection(GoodGovernanceApp.Data.DatabaseConfig.CrsConnectionString);
-            await conn.OpenAsync();
-
-            using var cmd = new MySqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@id", id);
-
-            var result = await cmd.ExecuteScalarAsync();
-            string? name = result?.ToString();
-
-            if (!string.IsNullOrWhiteSpace(name))
+            if (GoodGovernanceApp.Services.ConnectivityService.IsCrsOnline)
             {
-                BeneficiaryName = name;
-                HasBeneficiary  = true;
+                // ONLINE: Fetch from CRS Hostinger
+                const string sql = "SELECT full_name FROM val_beneficiaries WHERE beneficiary_id = @id LIMIT 1;";
+                using var conn = new MySqlConnector.MySqlConnection(GoodGovernanceApp.Data.DatabaseConfig.CrsConnectionString);
+                await conn.OpenAsync();
+                using var cmd = new MySqlConnector.MySqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                
+                var result = await cmd.ExecuteScalarAsync();
+                string? name = result?.ToString();
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    BeneficiaryName = name;
+                    HasBeneficiary  = true;
+
+                    // Cache locally for offline use
+                    const string cacheSql = @"
+                        INSERT INTO crs_beneficiary_cache (beneficiary_id, full_name, cached_at)
+                        VALUES (@id, @name, CURRENT_TIMESTAMP)
+                        ON CONFLICT(beneficiary_id) DO UPDATE SET full_name = @name, cached_at = CURRENT_TIMESTAMP;";
+                    try
+                    {
+                        await _db.ExecuteNonQueryAsync(cacheSql, 
+                            new SqliteParameter("@id", id),
+                            new SqliteParameter("@name", name));
+                    }
+                    catch { /* ignore cache write errors */ }
+                }
+                else
+                {
+                    ShowNotFound = true;
+                }
             }
             else
             {
-                ShowNotFound = true;
+                // OFFLINE: Fetch from local SQLite cache
+                const string sql = "SELECT full_name FROM crs_beneficiary_cache WHERE beneficiary_id = @id LIMIT 1;";
+                var result = await _db.ExecuteScalarAsync(sql, new SqliteParameter("@id", id));
+                string? name = result?.ToString();
+                
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    BeneficiaryName = name + " (Cached)";
+                    HasBeneficiary  = true;
+                }
+                else
+                {
+                    ShowNotFound = true;
+                }
             }
         }
         catch
@@ -375,8 +404,8 @@ public class AddProjectViewModel : ViewModelBase
             WHERE yb.Year = @year AND oa.office_code = @code
             LIMIT 1;";
             var res = await _db.ExecuteScalarAsync(resolveSql,
-                new MySqlParameter("@year", _selectedYear!.Value),
-                new MySqlParameter("@code", _selectedOfficeCode));
+                new SqliteParameter("@year", _selectedYear!.Value),
+                new SqliteParameter("@code", _selectedOfficeCode));
             if (res != null && int.TryParse(res.ToString(), out int rid))
                 _resolvedYearlyBudgetId = rid;
         }
@@ -398,16 +427,16 @@ public class AddProjectViewModel : ViewModelBase
         try
         {
             rowsAffected = await _db.ExecuteNonQueryAsync(insertSql,
-                new MySqlParameter("@pid",     ProjectId),
-                new MySqlParameter("@project", ProjectName),
-                new MySqlParameter("@desc",    (object?)Description ?? DBNull.Value),
-                new MySqlParameter("@code",    SelectedOfficeCode),
-                new MySqlParameter("@budget",  (object?)budget ?? DBNull.Value),
-                new MySqlParameter("@contact", string.IsNullOrWhiteSpace(BeneficiaryId)
+                new SqliteParameter("@pid",     ProjectId),
+                new SqliteParameter("@project", ProjectName),
+                new SqliteParameter("@desc",    (object?)Description ?? DBNull.Value),
+                new SqliteParameter("@code",    SelectedOfficeCode),
+                new SqliteParameter("@budget",  (object?)budget ?? DBNull.Value),
+                new SqliteParameter("@contact", string.IsNullOrWhiteSpace(BeneficiaryId)
                                                    ? DBNull.Value
                                                    : (object)BeneficiaryId.Trim()),
-                new MySqlParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
-                new MySqlParameter("@voucher", VoucherCode));
+                new SqliteParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
+                new SqliteParameter("@voucher", VoucherCode));
         }
         catch (Exception ex)
         {
@@ -421,10 +450,10 @@ public class AddProjectViewModel : ViewModelBase
         try
         {
             await _db.ExecuteNonQueryAsync(insertSqlTransaction,
-                new MySqlParameter("@pid", ProjectId),
-                new MySqlParameter("@budget", (object?)budget ?? DBNull.Value),
-                new MySqlParameter("@voucher", VoucherCode),
-                new MySqlParameter("@transtype", transaction_type));
+                new SqliteParameter("@pid", ProjectId),
+                new SqliteParameter("@budget", (object?)budget ?? DBNull.Value),
+                new SqliteParameter("@voucher", VoucherCode),
+                new SqliteParameter("@transtype", transaction_type));
         }
         catch (Exception ex)
         {

@@ -65,4 +65,7 @@ public class TblTransaction
     [Column("voucher_code")]
     [StringLength(10)]
     public string? VoucherCode { get; set; }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

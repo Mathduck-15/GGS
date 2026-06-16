@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
-using MySqlConnector;
+using Microsoft.Data.Sqlite;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -183,9 +183,9 @@ public class ApplicationProfileViewModel : ViewModelBase
                     ORDER BY id ASC LIMIT 1;";
                 
                 await _dbHelper.ExecuteNonQueryAsync(updateQuery,
-                    new MySqlParameter("@goveName", GoveName),
-                    new MySqlParameter("@address", Address),
-                    new MySqlParameter("@logoAddress", LogoAddress));
+                    new SqliteParameter("@goveName", GoveName),
+                    new SqliteParameter("@address", Address),
+                    new SqliteParameter("@logoAddress", LogoAddress));
             }
             else
             {
@@ -195,9 +195,9 @@ public class ApplicationProfileViewModel : ViewModelBase
                     VALUES (@goveName, @address, @logoAddress);";
                 
                 await _dbHelper.ExecuteNonQueryAsync(insertQuery,
-                    new MySqlParameter("@goveName", GoveName),
-                    new MySqlParameter("@address", Address),
-                    new MySqlParameter("@logoAddress", LogoAddress));
+                    new SqliteParameter("@goveName", GoveName),
+                    new SqliteParameter("@address", Address),
+                    new SqliteParameter("@logoAddress", LogoAddress));
             }
 
             MessageBox.Show("Application profile saved successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);

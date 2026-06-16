@@ -160,6 +160,27 @@ public class MainViewModel : ViewModelBase
         set { _isNotificationPopupOpen = value; OnPropertyChanged(); }
     }
 
+    private bool _isOnline = false;
+    public bool IsOnline
+    {
+        get => _isOnline;
+        set { _isOnline = value; OnPropertyChanged(); }
+    }
+
+    private bool _isSyncing = false;
+    public bool IsSyncing
+    {
+        get => _isSyncing;
+        set { _isSyncing = value; OnPropertyChanged(); }
+    }
+
+    private string _syncStatus = "Waiting...";
+    public string SyncStatus
+    {
+        get => _syncStatus;
+        set { _syncStatus = value; OnPropertyChanged(); }
+    }
+
     // ── commands ──────────────────────────────────────────────────────────────
     public ICommand LogoutCommand        { get; }
     public ICommand OpenAppProfileCommand{ get; }
@@ -169,6 +190,7 @@ public class MainViewModel : ViewModelBase
     public ICommand ToggleSidebarCommand { get; }
     public ICommand NotificationClickedCommand { get; }
     public ICommand OpenNotificationsCommand   { get; }
+    public ICommand SyncNowCommand             { get; }
 
     // ── constructor ───────────────────────────────────────────────────────────
     public MainViewModel()
@@ -183,7 +205,29 @@ public class MainViewModel : ViewModelBase
                 CurrentDate = DateTime.Now.ToString("dddd, MMMM dd, yyyy  •  hh:mm tt"));
         }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
 
+        // Sync Events
+        GoodGovernanceApp.Services.ConnectivityService.OnConnectionStatusChanged += (isOnline) =>
+        {
+            Application.Current?.Dispatcher.Invoke(() => IsOnline = isOnline);
+        };
+        GoodGovernanceApp.Services.SyncService.OnSyncStatusChanged += (isSyncing) =>
+        {
+            Application.Current?.Dispatcher.Invoke(() => IsSyncing = isSyncing);
+        };
+        GoodGovernanceApp.Services.SyncService.OnSyncProgress += (msg) =>
+        {
+            Application.Current?.Dispatcher.Invoke(() => SyncStatus = msg);
+        };
+
+        // Seed the initial state from whatever ConnectivityService already knows
+        IsOnline   = GoodGovernanceApp.Services.ConnectivityService.IsOnline;
+        SyncStatus = "Checking...";
+
+        // Ask ConnectivityService to push its current status to all subscribers immediately
+        GoodGovernanceApp.Services.ConnectivityService.SyncCurrentStatus();
+
         // Commands
+        SyncNowCommand = new RelayCommand(async _ => await GoodGovernanceApp.Services.SyncService.SyncNowAsync(), _ => IsOnline && !IsSyncing);
         OpenAppProfileCommand = new RelayCommand(ExecuteOpenAppProfile);
         OpenSystemsProfileCommand = new RelayCommand(ExecuteOpenSystemsProfile);
         LogoutCommand         = new RelayCommand(ExecuteLogout);

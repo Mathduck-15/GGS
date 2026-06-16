@@ -85,4 +85,7 @@ public class User
         get => Status == "active";
         set => Status = value ? "active" : "inactive";
     }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

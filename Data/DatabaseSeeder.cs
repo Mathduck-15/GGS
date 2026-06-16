@@ -9,7 +9,22 @@ public static class DatabaseSeeder
 {
     public static void SeedData(AppDbContext context)
     {
-        // The seeder has been disabled. 
-        // No dummy users, parameters, categories, budgets, or transactions will be generated.
+        // Check if the superadmin user already exists
+        if (!context.Users.Any(u => u.Name == "superadmin"))
+        {
+            var superAdmin = new User
+            {
+                Name = "superadmin",
+                Email = "superadmin@ggms.local",
+                Password = PasswordHasher.HashPassword("password"),
+                Role = "super_admin",
+                Status = "active",
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            context.Users.Add(superAdmin);
+            context.SaveChanges();
+        }
     }
 }

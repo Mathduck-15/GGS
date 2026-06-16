@@ -16,9 +16,10 @@ public class AppDbContext : DbContext
     public DbSet<BudgetAllocation> BudgetAllocations { get; set; } = null!;
     public DbSet<ProgramProvision> ProgramProvisions { get; set; } = null!;
 
-    // ── Transactions ──────────────────────────────────────────────────────────
+    // ── Transactions & Caches ────────────────────────────────────────────────
     public DbSet<ConsolidatedTransactions> ConsolidatedTransactions { get; set; } = null!;
     public DbSet<TblTransaction> TblTransactions { get; set; } = null!;
+    public DbSet<CrsBeneficiaryCache> CrsBeneficiaryCaches { get; set; } = null!;
 
     // ── People & Organization ─────────────────────────────────────────────────
     public DbSet<DepartmentRole> DepartmentRoles { get; set; } = null!;
@@ -163,7 +164,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<UploadedFile>().HasOne(f => f.Parameter).WithMany().HasForeignKey(f => f.ParameterId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Parameter>().HasOne(p => p.Category).WithMany().HasForeignKey(p => p.CategoryId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<OfficeAllocation>().HasOne(da => da.YearlyBudget).WithMany(yb => yb.Allocations).HasForeignKey(da => da.YearlyBudgetId).OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<OfficeAllocation>().HasOne(da => da.Office).WithMany().HasPrincipalKey(o => o.OfficeCode).HasForeignKey(da => da.OfficeCode).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<OfficeAllocation>().HasOne(da => da.Office).WithMany().HasForeignKey(da => da.OfficeId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<Evaluation>().HasOne(e => e.UploadedFile).WithMany().HasForeignKey(e => e.UploadedFileId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Evaluation>().HasOne(e => e.Evaluator).WithMany().HasForeignKey(e => e.EvaluatorId).OnDelete(DeleteBehavior.Cascade);
     }

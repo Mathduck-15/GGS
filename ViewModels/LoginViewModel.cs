@@ -167,28 +167,7 @@ public class LoginViewModel : ViewModelBase
                 return;
             }
 
-            // ── OTP Check ────────────────────────────────────────────────────
-            if (GoodGovernanceApp.Services.OtpService.OtpEnabled && ConfigHelper.IsRemoteDatabase())
-            {
-                // Bypass for regular 'user' role
-                if (!string.Equals(user.Role, "user", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (string.IsNullOrWhiteSpace(user.Email))
-                    {
-                        ErrorMessage = "⚠ Your account does not have an email linked for OTP. Contact an administrator.";
-                        return;
-                    }
-
-                    var otpWindow = new OtpVerificationWindow(user.Email, "Login");
-                    otpWindow.ShowDialog();
-
-                    if (!otpWindow.IsVerified)
-                    {
-                        ErrorMessage = "❌ Login cancelled — OTP verification failed or was cancelled.";
-                        return;
-                    }
-                }
-            }
+            // ── OTP Check removed per user request ───────────────────────────
 
             // ── Login success ────────────────────────────────────────────────
             _sessionService.CurrentUser = user;

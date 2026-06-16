@@ -78,4 +78,7 @@ public class ValidateUser
 
     [NotMapped]
     public bool IsRejected => Status == "rejected";
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

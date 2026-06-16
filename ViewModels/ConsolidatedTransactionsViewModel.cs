@@ -21,7 +21,7 @@ namespace GoodGovernanceApp.ViewModels
         public string OfficeName { get; set; } = string.Empty;
         public string TransactionType { get; set; } = string.Empty;
         public decimal Amount { get; set; }
-        public DateOnly TransactionDate { get; set; }
+        public DateTime? TransactionDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public string Source { get; set; } = "Consolidated";
@@ -44,7 +44,7 @@ namespace GoodGovernanceApp.ViewModels
                     OfficeName = t.OfficeName ?? string.Empty,
                     TransactionType = t.TransactionType ?? string.Empty,
                     Amount = t.Amount ?? 0,
-                    TransactionDate = t.TransactionDate ?? DateOnly.MinValue,
+                    TransactionDate = t.TransactionDate,
                     Status = t.Status ?? string.Empty,
                     CreatedAt = t.CreatedAt ?? DateTime.MinValue
                 })

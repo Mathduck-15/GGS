@@ -18,7 +18,6 @@ public partial class App : Application
 
     public App()
     {
-        // Set global culture to Philippines (en-PH) for currency (₱)
         var culture = new CultureInfo("en-PH");
         Thread.CurrentThread.CurrentCulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
@@ -35,43 +34,50 @@ public partial class App : Application
         {
             string baseSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
             if (File.Exists(baseSettingsPath))
-            {
                 File.Copy(baseSettingsPath, appDataSettingsPath);
-            }
         }
 
         AppHost = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
-                // Clear default sources to avoid loading appsettings.json from wrong directory
                 config.Sources.Clear();
                 config.SetBasePath(appDataFolder);
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
             })
             .ConfigureServices((context, services) =>
             {
-                // Configure DbContext — uses DatabaseConfig (single source of truth)
                 services.AddDbContext<AppDbContext>(options =>
                 {
-                    options.UseMySql(DatabaseConfig.ConnectionString, new MySqlServerVersion(new Version(8, 0, 31)),
-                        mysqlOptions => mysqlOptions.EnableRetryOnFailure());
+                    options.UseSqlite($"Data Source={Path.Combine(appDataFolder, "ggms.db")}");
                 }, ServiceLifetime.Transient, ServiceLifetime.Transient);
 
-                // Register Services
+                services.AddDbContext<CloudDbContext>((serviceProvider, options) =>
+                {
+                    try
+                    {
+                        var connStr = DatabaseConfig.ConnectionString;
+                        options.UseMySql(connStr, new MySqlServerVersion(new Version(8, 0, 31)));
+                    }
+                    catch
+                    {
+                        // No valid MySQL connection string configured — use a dummy so DI doesn't crash.
+                        // The CloudDbContext will only be used when IsOnline = true.
+                        options.UseMySql("Server=localhost;Database=ggms;User=root;Password=;", new MySqlServerVersion(new Version(8, 0, 31)));
+                    }
+                }, ServiceLifetime.Transient, ServiceLifetime.Transient);
+
                 services.AddSingleton<DatabaseHelper>();
                 services.AddSingleton<GoodGovernanceApp.Services.ValidationService>();
                 services.AddSingleton<GoodGovernanceApp.Services.SessionService>();
                 services.AddSingleton<GoodGovernanceApp.Services.FileService>();
                 services.AddSingleton<GoodGovernanceApp.Services.BackupService>();
 
-                // Register Views
                 services.AddTransient<MainWindow>();
                 services.AddTransient<GoodGovernanceApp.Views.LoginWindow>();
                 services.AddTransient<GoodGovernanceApp.ViewModels.LoginViewModel>();
             })
             .Build();
 
-        // Set Config to the host's IConfiguration so every class uses the SAME instance
         Config = AppHost.Services.GetRequiredService<IConfiguration>();
     }
 
@@ -79,7 +85,9 @@ public partial class App : Application
     {
         await AppHost!.StartAsync();
 
-        // ✅ ADD THESE LINES — ensure folders always exist on startup
+        GoodGovernanceApp.Services.ConnectivityService.StartMonitoring();
+        GoodGovernanceApp.Services.SyncService.StartAutoSync();
+
         string appData = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "GoodGovernanceApp");
@@ -87,76 +95,73 @@ public partial class App : Application
         Directory.CreateDirectory(Path.Combine(appData, "Logos"));
         Directory.CreateDirectory(Path.Combine(appData, "ProfilePhotos"));
 
-        // ... rest of your existing code stays the same
-        var loginWindow = AppHost.Services.GetRequiredService<GoodGovernanceApp.Views.LoginWindow>();
-        loginWindow.Show();
-        // ...
-
-
         base.OnStartup(e);
 
-        // Run all DB initialisation off the UI thread so a slow/unreachable
-        // remote server can never freeze or prevent the window from appearing.
+        // ── Initialise SQLite database BEFORE showing the login window ──────────
         await Task.Run(async () =>
         {
             using var scope = AppHost.Services.CreateScope();
-            var services   = scope.ServiceProvider;
+            var services = scope.ServiceProvider;
             try
             {
                 var dbContext = services.GetRequiredService<AppDbContext>();
 
+                // Step 1: Create all SQLite tables from EF model
+                bool created = await dbContext.Database.EnsureCreatedAsync();
+                System.Diagnostics.Debug.WriteLine($"[DB Init] EnsureCreated result: {created}");
+
+                // ── Step 2: Verify the users table actually exists ────────────────
+                bool usersTableExists = false;
+                try
+                {
+                    var conn = dbContext.Database.GetDbConnection();
+                    if (conn.State != System.Data.ConnectionState.Open)
+                        await conn.OpenAsync();
+
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='users';";
+                    var result = await cmd.ExecuteScalarAsync();
+                    usersTableExists = result != null;
+                    System.Diagnostics.Debug.WriteLine($"[DB Init] 'users' table exists: {usersTableExists}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DB Init] Table check failed: {ex.Message}");
+                }
+
+                // ── Step 3: Connectivity check (warning only, not a blocker) ─────
                 Exception? connError = null;
                 bool canConn = await Task.Run(() =>
                 {
-                    try   { return dbContext.Database.CanConnect(); }
+                    try { return dbContext.Database.CanConnect(); }
                     catch (Exception ex) { connError = ex; return false; }
                 });
 
                 if (!canConn)
                 {
                     string dbMode = Config["AppSettings:DatabaseMode"] ?? "Local";
-                    string errorMsg = "Database Connection Failed!\n\nThe application could not reach the database. " +
-                                      "Check your connection settings (Settings → Database).";
-
-                    if (connError != null)
+                    if (dbMode != "Local")
                     {
-                        string realErr = connError.InnerException?.Message ?? connError.Message;
-                        errorMsg += $"\n\nError Details:\n{realErr}";
-                        
-                        try 
-                        { 
-                            System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db_error_log.txt"), 
-                                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Startup Connection Error:\n{connError}\n\n"); 
-                        } catch { }
+                        string errorMsg = "Cloud/LAN Database Connection Failed!\n\nThe application will continue using the local SQLite database.";
+                        if (connError != null)
+                        {
+                            string realErr = connError.InnerException?.Message ?? connError.Message;
+                            errorMsg += $"\n\nError Details:\n{realErr}";
+                        }
+                        Application.Current.Dispatcher.Invoke(() =>
+                            MessageBox.Show(errorMsg, "Cloud Sync Warning",
+                                MessageBoxButton.OK, MessageBoxImage.Warning));
                     }
-
-                    if (dbMode == "Remote")
-                        errorMsg += "\n\nFor Hostinger remote:\n" +
-                                    "1. Add your current IP to 'Remote MySQL' in Hostinger hPanel.\n" +
-                                    "2. Verify the server/user/password in Settings.";
-                    else if (dbMode == "LAN")
-                        errorMsg += "\n\nFor LAN:\n" +
-                                    "1. Ensure you are on the same network.\n" +
-                                    "2. Verify the LAN server IP in Settings.";
-
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        System.Windows.MessageBox.Show(errorMsg, "Database Warning",
-                            System.Windows.MessageBoxButton.OK,
-                            System.Windows.MessageBoxImage.Warning));
-                    return;
                 }
 
-                // Non-critical patches — ignore failures silently
-                try { await Task.Run(() => dbContext.Database.EnsureCreated()); } catch { }
-
-                try
+                // ── Step 4: MySQL-only schema patches ────────────────────────────
+                string mode = Config["AppSettings:DatabaseMode"] ?? "Local";
+                if (mode != "Local")
                 {
                     await Task.Run(() =>
                     {
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
-                        
-                        // Patch VoucherCode
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE project_details ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE transactions ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_transaction ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
@@ -183,15 +188,26 @@ public partial class App : Application
                         }
                     });
                 }
-                catch { }
 
-                try { await Task.Run(() => DatabaseSeeder.SeedData(dbContext)); } catch { }
+                // ── Step 5: Seed only after tables are confirmed to exist ─────────
+                if (usersTableExists)
+                {
+                    await Task.Run(() => DatabaseSeeder.SeedData(dbContext));
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[DB Init] Skipping seed — 'users' table missing after EnsureCreated. Delete ggms.db and restart.");
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[App Startup] DB init error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[App Startup] DB init error: {ex.Message}\n{ex.StackTrace}");
             }
         });
+
+        // Show login window only AFTER the database is fully initialized
+        var loginWindow = AppHost.Services.GetRequiredService<GoodGovernanceApp.Views.LoginWindow>();
+        loginWindow.Show();
     }
 
     protected override async void OnExit(ExitEventArgs e)

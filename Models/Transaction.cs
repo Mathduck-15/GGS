@@ -27,4 +27,10 @@ public class Transaction
 
     [Column("date")]
     public DateTime? Date { get; set; } = DateTime.Now;
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
 }

@@ -20,4 +20,10 @@ public class Category
     public string? Description { get; set; }
     
     public ICollection<Budget> Budgets { get; set; } = new List<Budget>();
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
 }

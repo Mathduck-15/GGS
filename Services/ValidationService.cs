@@ -2,7 +2,7 @@ using System;
 using System.Data;
 using System.Threading.Tasks;
 using GoodGovernanceApp.Data;
-using MySqlConnector;
+using Microsoft.Data.Sqlite;
 
 namespace GoodGovernanceApp.Services;
 
@@ -78,7 +78,7 @@ public class ValidationService
             LIMIT 1";
 
         return await _db.ExecuteQueryAsync(query,
-            new MySqlParameter("@id", id));
+            new SqliteParameter("@id", id));
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public class ValidationService
             ORDER BY vu.created_at DESC";
 
         return await _db.ExecuteQueryAsync(query,
-            new MySqlParameter("@kw", $"%{keyword}%"));
+            new SqliteParameter("@kw", $"%{keyword}%"));
     }
 
     // ── Actions ────────────────────────────────────────────────────────────────
@@ -141,9 +141,9 @@ public class ValidationService
                 validated_at = @now,
                 updated_at   = @now
             WHERE id = @id",
-            new MySqlParameter("@adminId", adminUserId),
-            new MySqlParameter("@now",     now),
-            new MySqlParameter("@id",      id));
+            new SqliteParameter("@adminId", adminUserId),
+            new SqliteParameter("@now",     now),
+            new SqliteParameter("@id",      id));
 
         if (rows > 0)
         {
@@ -172,10 +172,10 @@ public class ValidationService
                 validated_at     = @now,
                 updated_at       = @now
             WHERE id = @id",
-            new MySqlParameter("@reason",  reason),
-            new MySqlParameter("@adminId", adminUserId),
-            new MySqlParameter("@now",     now),
-            new MySqlParameter("@id",      id));
+            new SqliteParameter("@reason",  reason),
+            new SqliteParameter("@adminId", adminUserId),
+            new SqliteParameter("@now",     now),
+            new SqliteParameter("@id",      id));
 
         if (rows > 0)
         {
@@ -201,8 +201,8 @@ public class ValidationService
                 validated_at     = NULL,
                 updated_at       = @now
             WHERE id = @id",
-            new MySqlParameter("@now", now),
-            new MySqlParameter("@id",  id));
+            new SqliteParameter("@now", now),
+            new SqliteParameter("@id",  id));
 
         if (rows > 0)
         {
@@ -235,14 +235,14 @@ public class ValidationService
                 validated_at     = NULL,
                 updated_at = @now
             WHERE id = @id",
-            new MySqlParameter("@firstname",  firstname),
-            new MySqlParameter("@middlename", middlename),
-            new MySqlParameter("@lastname",   lastname),
-            new MySqlParameter("@address",    address),
-            new MySqlParameter("@email",      (object?)email  ?? DBNull.Value),
-            new MySqlParameter("@phone",      (object?)phone  ?? DBNull.Value),
-            new MySqlParameter("@now",        now),
-            new MySqlParameter("@id",         id));
+            new SqliteParameter("@firstname",  firstname),
+            new SqliteParameter("@middlename", middlename),
+            new SqliteParameter("@lastname",   lastname),
+            new SqliteParameter("@address",    address),
+            new SqliteParameter("@email",      (object?)email  ?? DBNull.Value),
+            new SqliteParameter("@phone",      (object?)phone  ?? DBNull.Value),
+            new SqliteParameter("@now",        now),
+            new SqliteParameter("@id",         id));
 
         return rows > 0;
     }
@@ -257,11 +257,11 @@ public class ValidationService
                 (user_id, action, model_type, model_id, description, created_at, updated_at)
             VALUES
                 (@userId, @action, @modelType, @modelId, @desc, @ts, @ts)",
-            new MySqlParameter("@userId",    userId),
-            new MySqlParameter("@action",    action),
-            new MySqlParameter("@modelType", modelType),
-            new MySqlParameter("@modelId",   modelId),
-            new MySqlParameter("@desc",      description),
-            new MySqlParameter("@ts",        timestamp));
+            new SqliteParameter("@userId",    userId),
+            new SqliteParameter("@action",    action),
+            new SqliteParameter("@modelType", modelType),
+            new SqliteParameter("@modelId",   modelId),
+            new SqliteParameter("@desc",      description),
+            new SqliteParameter("@ts",        timestamp));
     }
 }

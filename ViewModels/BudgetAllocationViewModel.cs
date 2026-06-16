@@ -24,7 +24,7 @@ public class BudgetAllocationViewModel : ViewModelBase
     private OfficeAllocationItemViewModel? _selectedOffice;
     private string _transactionPanelHeader = string.Empty;
 
-    // public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
+    public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
     public ObservableCollection<OfficeAllocationItemViewModel> DepartmentAllocations { get; } = new();
     public ObservableCollection<TblTransaction> OfficeTransactions { get; } = new();
     public ObservableCollection<ProjectDetail> OfficeProjects { get; } = new();
@@ -81,6 +81,23 @@ public class BudgetAllocationViewModel : ViewModelBase
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
 
         SaveAllocationsCommand = new RelayCommand(async _ => await SaveAllocationsAsync(), _ => SelectedYearlyBudget != null);
+
+        _ = LoadInitialDataAsync();
+    }
+
+    private async Task LoadInitialDataAsync()
+    {
+        var budgets = await _context.YearlyBudgets.OrderByDescending(b => b.Year).ToListAsync();
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            YearlyBudgets.Clear();
+            foreach (var b in budgets) YearlyBudgets.Add(b);
+
+            if (SelectedYearlyBudget == null && YearlyBudgets.Any())
+            {
+                SelectedYearlyBudget = YearlyBudgets.First();
+            }
+        });
     }
 
     public void InitializeWithBudget(YearlyBudget budget)
@@ -138,7 +155,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             if (string.IsNullOrEmpty(office.OfficeCode)) continue;
 
             var allocation = existingAllocations.FirstOrDefault(a => a.OfficeCode == office.OfficeCode)
-                             ?? new OfficeAllocation { OfficeCode = office.OfficeCode, YearlyBudgetId = SelectedYearlyBudget.Id };
+                             ?? new OfficeAllocation { OfficeCode = office.OfficeCode, OfficeId = office.Id, YearlyBudgetId = SelectedYearlyBudget.Id };
 
             decimal spent = spentByOffice.TryGetValue(office.Id, out var s) ? s : 0m;
 

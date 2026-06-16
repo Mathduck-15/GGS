@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
@@ -18,4 +19,10 @@ public class YearlyBudget
     public string? Description { get; set; }
 
     public virtual ICollection<OfficeAllocation> Allocations { get; set; } = new List<OfficeAllocation>();
+
+    [Column("SyncId")]
+    public System.Guid SyncId { get; set; } = System.Guid.NewGuid();
+
+    [Column("updated_at")]
+    public System.DateTime? UpdatedAt { get; set; }
 }

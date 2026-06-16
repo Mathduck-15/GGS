@@ -11,7 +11,7 @@ public class ProgramProvision
     [Column("id")]
     public long Id { get; set; }
 
-    [Column("name")]
+    [Column("program")]
     public string Name { get; set; } = string.Empty;
 
     [Column("description")]
@@ -28,4 +28,7 @@ public class ProgramProvision
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }

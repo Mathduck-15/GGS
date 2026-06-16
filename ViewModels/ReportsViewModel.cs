@@ -11,7 +11,7 @@ using LiveCharts;
 using LiveCharts.Wpf;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using MySqlConnector;
+using Microsoft.Data.Sqlite;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -363,58 +363,96 @@ public class ReportsViewModel : ViewModelBase
     {
         try
         {
-            using var conn = new MySqlConnection(DatabaseConfig.CrsConnectionString);
-            await conn.OpenAsync();
-
-            // Aggregate query — count, PWD, senior, gender, age groups
-            const string sql = @"
-                SELECT
-                    COUNT(*)                              AS total,
-                    SUM(is_pwd)                           AS pwd_count,
-                    SUM(is_senior)                        AS senior_count,
-                    SUM(CASE WHEN LOWER(sex)='male'   THEN 1 ELSE 0 END) AS male_count,
-                    SUM(CASE WHEN LOWER(sex)='female' THEN 1 ELSE 0 END) AS female_count,
-                    SUM(CASE WHEN CAST(age AS UNSIGNED) BETWEEN  0 AND 17  THEN 1 ELSE 0 END) AS age_0_17,
-                    SUM(CASE WHEN CAST(age AS UNSIGNED) BETWEEN 18 AND 35  THEN 1 ELSE 0 END) AS age_18_35,
-                    SUM(CASE WHEN CAST(age AS UNSIGNED) BETWEEN 36 AND 60  THEN 1 ELSE 0 END) AS age_36_60,
-                    SUM(CASE WHEN CAST(age AS UNSIGNED) > 60               THEN 1 ELSE 0 END) AS age_60_plus
-                FROM val_beneficiaries;";
-
-            using var cmd    = new MySqlCommand(sql, conn);
-            using var reader = await cmd.ExecuteReaderAsync();
-
-            if (await reader.ReadAsync())
+            if (GoodGovernanceApp.Services.ConnectivityService.IsCrsOnline)
             {
-                CrsTotalCount  = reader.GetInt32("total");
-                CrsPwdCount    = reader.GetInt32("pwd_count");
-                CrsSeniorCount = reader.GetInt32("senior_count");
+                using var conn = new MySqlConnector.MySqlConnection(DatabaseConfig.CrsConnectionString);
+                await conn.OpenAsync();
 
-                int male   = reader.GetInt32("male_count");
-                int female = reader.GetInt32("female_count");
-                int other  = CrsTotalCount - male - female;
+                // Aggregate query — count, PWD, senior, gender, age groups
+                const string sql = @"
+                    SELECT
+                        COUNT(*)                              AS total,
+                        SUM(is_pwd)                           AS pwd_count,
+                        SUM(is_senior)                        AS senior_count,
+                        SUM(CASE WHEN LOWER(sex)='male'   THEN 1 ELSE 0 END) AS male_count,
+                        SUM(CASE WHEN LOWER(sex)='female' THEN 1 ELSE 0 END) AS female_count,
+                        SUM(CASE WHEN CAST(age AS UNSIGNED) BETWEEN  0 AND 17  THEN 1 ELSE 0 END) AS age_0_17,
+                        SUM(CASE WHEN CAST(age AS UNSIGNED) BETWEEN 18 AND 35  THEN 1 ELSE 0 END) AS age_18_35,
+                        SUM(CASE WHEN CAST(age AS UNSIGNED) BETWEEN 36 AND 60  THEN 1 ELSE 0 END) AS age_36_60,
+                        SUM(CASE WHEN CAST(age AS UNSIGNED) > 60               THEN 1 ELSE 0 END) AS age_60_plus
+                    FROM val_beneficiaries;";
 
-                // Gender pie
+                using var cmd    = new MySqlConnector.MySqlCommand(sql, conn);
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                if (await reader.ReadAsync())
+                {
+                    CrsTotalCount  = reader.GetInt32("total");
+                    CrsPwdCount    = reader.GetInt32("pwd_count");
+                    CrsSeniorCount = reader.GetInt32("senior_count");
+
+                    int male   = reader.GetInt32("male_count");
+                    int female = reader.GetInt32("female_count");
+                    int other  = CrsTotalCount - male - female;
+
+                    // Gender pie
+                    var genderSeries = new SeriesCollection();
+                    if (male   > 0) genderSeries.Add(new PieSeries { Title = "Male",   Values = new ChartValues<int> { male },   DataLabels = true });
+                    if (female > 0) genderSeries.Add(new PieSeries { Title = "Female", Values = new ChartValues<int> { female }, DataLabels = true });
+                    if (other  > 0) genderSeries.Add(new PieSeries { Title = "Other",  Values = new ChartValues<int> { other },  DataLabels = true });
+                    CrsGenderSeries = genderSeries;
+
+                    // Age histogram
+                    var ageCounts = new int[]
+                    {
+                        reader.GetInt32("age_0_17"),
+                        reader.GetInt32("age_18_35"),
+                        reader.GetInt32("age_36_60"),
+                        reader.GetInt32("age_60_plus")
+                    };
+                    var ageValues = new ChartValues<int>(ageCounts);
+                    CrsAgeGroupSeries = new SeriesCollection
+                    {
+                        new ColumnSeries
+                        {
+                            Title  = "Beneficiaries",
+                            Values = ageValues
+                        }
+                    };
+                }
+            }
+            else
+            {
+                // OFFLINE MODE
+                var cache = await _context.CrsBeneficiaryCaches.ToListAsync();
+
+                CrsTotalCount = cache.Count;
+                CrsPwdCount = cache.Count(c => c.IsPwd);
+                CrsSeniorCount = cache.Count(c => c.IsSenior);
+
+                int male = cache.Count(c => string.Equals(c.Sex, "male", StringComparison.OrdinalIgnoreCase));
+                int female = cache.Count(c => string.Equals(c.Sex, "female", StringComparison.OrdinalIgnoreCase));
+                int other = CrsTotalCount - male - female;
+
                 var genderSeries = new SeriesCollection();
-                if (male   > 0) genderSeries.Add(new PieSeries { Title = "Male",   Values = new ChartValues<int> { male },   DataLabels = true });
+                if (male > 0) genderSeries.Add(new PieSeries { Title = "Male", Values = new ChartValues<int> { male }, DataLabels = true });
                 if (female > 0) genderSeries.Add(new PieSeries { Title = "Female", Values = new ChartValues<int> { female }, DataLabels = true });
-                if (other  > 0) genderSeries.Add(new PieSeries { Title = "Other",  Values = new ChartValues<int> { other },  DataLabels = true });
+                if (other > 0) genderSeries.Add(new PieSeries { Title = "Other", Values = new ChartValues<int> { other }, DataLabels = true });
                 CrsGenderSeries = genderSeries;
 
-                // Age histogram
                 var ageCounts = new int[]
                 {
-                    reader.GetInt32("age_0_17"),
-                    reader.GetInt32("age_18_35"),
-                    reader.GetInt32("age_36_60"),
-                    reader.GetInt32("age_60_plus")
+                    cache.Count(c => c.Age >= 0 && c.Age <= 17),
+                    cache.Count(c => c.Age >= 18 && c.Age <= 35),
+                    cache.Count(c => c.Age >= 36 && c.Age <= 60),
+                    cache.Count(c => c.Age > 60)
                 };
-                var ageValues = new ChartValues<int>(ageCounts);
                 CrsAgeGroupSeries = new SeriesCollection
                 {
                     new ColumnSeries
                     {
-                        Title  = "Beneficiaries",
-                        Values = ageValues
+                        Title = "Beneficiaries (Cached)",
+                        Values = new ChartValues<int>(ageCounts)
                     }
                 };
             }

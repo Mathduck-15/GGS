@@ -103,4 +103,7 @@ public class Beneficiary
             return tags.Count > 0 ? string.Join(", ", tags) : "None";
         }
     }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
 }
