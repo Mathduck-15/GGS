@@ -103,6 +103,16 @@
                         <DataGridTextColumn Header="Remaining (₱)"
                                             Binding="{Binding RemainingDisplay}"
                                             IsReadOnly="True" Width="120"/>
+                        <DataGridTemplateColumn Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="View Projects" 
+                                            Command="{Binding DataContext.ViewProjectsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Height="30" Padding="8 0" FontSize="12"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
 

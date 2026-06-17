@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
         mc:Ignorable="d"
-        Title="Select Budget Year" Height="480" Width="400"
+        Title="Select Budget Year" Height="480" Width="800"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -22,62 +22,62 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- New Yearly Budget Form -->
-        <materialDesign:Card Grid.Row="0" Padding="16" Margin="0 0 0 16">
-            <StackPanel>
-                <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14" Foreground="#000000"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="2*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Year"
-                             Foreground="#000000"
-                             Text="{Binding NewBudgetYear}" Margin="0 0 8 12"/>
-                    <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Total Amount"
-                             Foreground="#000000"
-                             Text="{Binding NewBudgetAmount}" Margin="0 0 0 12"/>
-                </Grid>
-                <TextBox materialDesign:HintAssist.Hint="Description"
-                         Foreground="#000000"
-                         Text="{Binding NewBudgetDescription}" Margin="0 0 0 14"/>
-                <Button Content="Set Yearly Budget" Command="{Binding AddYearlyBudgetCommand}"
-                        Style="{StaticResource MaterialDesignRaisedButton}"/>
-            </StackPanel>
-        </materialDesign:Card>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- Available Budgets List -->
-        <materialDesign:Card Grid.Row="1" Padding="16" Margin="0 0 0 16">
-            <StackPanel>
-                <TextBlock Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10" Foreground="#000000"/>
-                <ListBox ItemsSource="{Binding YearlyBudgets}" SelectedItem="{Binding SelectedYearlyBudget}" MinHeight="100">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0 4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Year}" FontSize="16" FontWeight="SemiBold" Margin="0 0 8 0"/>
-                               
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding TotalAmount, StringFormat=₱{0:N2}}"
-                                           VerticalAlignment="Center"
-                                           Foreground="#000000"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>
-        </materialDesign:Card>
+            <!-- New Yearly Budget Form (Left Side) -->
+            <materialDesign:Card Grid.Column="0" Padding="16" Margin="0 0 8 16" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14" Foreground="#000000"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Year"
+                                 Foreground="#000000"
+                                 Text="{Binding NewBudgetYear}" Margin="0 0 8 12"/>
+                        <TextBox Grid.Column="1" materialDesign:HintAssist.Hint="Total Amount"
+                                 Foreground="#000000"
+                                 Text="{Binding NewBudgetAmount}" Margin="0 0 0 12"/>
+                    </Grid>
+                    <TextBox materialDesign:HintAssist.Hint="Description"
+                             Foreground="#000000"
+                             Text="{Binding NewBudgetDescription}" Margin="0 0 0 14"/>
+                    <Button Content="Set Yearly Budget" Command="{Binding AddYearlyBudgetCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Available Budgets Table (Right Side) -->
+            <materialDesign:Card Grid.Column="1" Padding="16" Margin="8 0 0 16">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10" Foreground="#000000"/>
+                    <DataGrid ItemsSource="{Binding YearlyBudgets}" 
+                              SelectedItem="{Binding SelectedYearlyBudget}" 
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              MinHeight="100">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Year" Binding="{Binding Year}" Width="*" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount, StringFormat=₱{0:N2}}" Width="*" Foreground="#000000"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </materialDesign:Card>
+        </Grid>
 
         <!-- Proceed Button -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" Click="CancelButton_Click" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 8 0"/>
             <Button Content="Open Allocation" Click="ProceedButton_Click" Style="{StaticResource MaterialDesignRaisedButton}"/>
         </StackPanel>

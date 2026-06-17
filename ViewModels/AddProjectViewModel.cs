@@ -140,6 +140,18 @@ public class AddProjectViewModel : ViewModelBase
         _ = InitializeAsync();
     }
 
+    public void SetContext(int? year, string officeCode)
+    {
+        SelectedYear = year;
+        _ = LoadOfficeCodes().ContinueWith(_ =>
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                SelectedOfficeCode = officeCode;
+            });
+        });
+    }
+
     private async Task InitializeAsync()
     {
         await Task.WhenAll(GenerateProjectIdAsync(), LoadYearsAsync(), GenerateUniqueVoucherCodeAsync());

@@ -260,7 +260,7 @@ public class MainViewModel : ViewModelBase
             new() { Name="Budget Allocation",Icon="ScaleBalance",     ViewToken="BudgetAllocation",TileColor="#FF00695C",Group="Finance"   },
             new() { Name="CRS Beneficiaries",Icon="AccountMultiple",  ViewToken="CrsBeneficiary", TileColor="#FF6A1B9A", Group="Management" },
             new() { Name="Reports",          Icon="FileChart",        ViewToken="Reports",        TileColor="#FFC62828", Group="Reports"    },
-            new() { Name="Departments",      Icon="OfficeBuilding",   ViewToken="Departments",    TileColor="#FF37474F", Group="Management" },
+
             new() { Name="File Center",      Icon="CloudUpload",      ViewToken="FileUpload",     TileColor="#FF00838F", Group="System"     },
             new() { Name="Evaluation Center",Icon="FileCertificate",  ViewToken="Evaluation",     TileColor="#FF827717", Group="Reports"    },
             new() { Name="Settings & Backups",Icon="DatabaseSettings",ViewToken="Settings",       TileColor="#FF263238", Group="System"     },

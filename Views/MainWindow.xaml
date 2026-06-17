@@ -597,14 +597,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#06B6D4"
-                        Command="{Binding NavigateTileCommand}" CommandParameter="Departments">
-                    <StackPanel>
-                        <materialDesign:PackIcon Kind="Domain" Width="36" Height="36" Margin="0,0,0,12"/>
-                        <TextBlock Text="DEPARTMENTS" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="Internal structures" FontSize="13" Opacity="0.8"/>
-                    </StackPanel>
-                </Button>
+
                 
                 <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#F59E0B"
                         Command="{Binding NavigateTileCommand}" CommandParameter="CrsBeneficiary">
@@ -687,7 +680,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EAB308"
+                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EAB308"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Transactions">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="Finance" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -696,7 +689,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#64748B"
+                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#64748B"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Parameters">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="CogBox" Width="36" Height="36" Margin="0,0,0,12"/>

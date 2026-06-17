@@ -55,6 +55,18 @@ namespace GoodGovernanceApp.ViewModels
             BrowseBackupFolderCommand = new RelayCommand(_ => BrowseBackupFolder());
             BrowseMySqlDumpCommand = new RelayCommand(_ => BrowseMySqlDump());
             OpenSystemsProfileCommand = new RelayCommand(_ => new SystemsApplicationProfile().ShowDialog());
+            OpenDepartmentsCommand = new RelayCommand(_ =>
+            {
+                var window = new Window
+                {
+                    Title = "Department & Project Management",
+                    Content = new Views.DepartmentManagementView(),
+                    Width = 950,
+                    Height = 650,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
+                window.ShowDialog();
+            });
         }
 
         // ── OTP Gate ─────────────────────────────────────────────────────────
@@ -288,6 +300,7 @@ namespace GoodGovernanceApp.ViewModels
         public ICommand BrowseBackupFolderCommand { get; }
         public ICommand BrowseMySqlDumpCommand { get; }
         public ICommand OpenSystemsProfileCommand { get; }
+        public ICommand OpenDepartmentsCommand { get; }
 
         // ── Preset Logic ─────────────────────────────────────────────────────
         private void ApplyPreset(string mode, bool userInitiated = false)

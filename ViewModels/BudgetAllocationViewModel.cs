@@ -73,14 +73,17 @@ public class BudgetAllocationViewModel : ViewModelBase
     }
 
     // ── Commands ─────────────────────────────────────────────────────────────
-    // public ICommand AddYearlyBudgetCommand { get; }
     public ICommand SaveAllocationsCommand { get; }
+    public ICommand ViewProjectsCommand { get; }
+    public ICommand AddProjectCommand { get; }
 
     public BudgetAllocationViewModel()
     {
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
 
         SaveAllocationsCommand = new RelayCommand(async _ => await SaveAllocationsAsync(), _ => SelectedYearlyBudget != null);
+        ViewProjectsCommand = new RelayCommand(_ => OpenProjectsPopup(), _ => SelectedOffice != null && OfficeProjects.Any());
+        AddProjectCommand = new RelayCommand(_ => OpenAddProjectWindow(), _ => SelectedOffice != null);
 
         _ = LoadInitialDataAsync();
     }
@@ -263,6 +266,40 @@ public class BudgetAllocationViewModel : ViewModelBase
         // Reload to refresh SpentAmount/Remaining
         await LoadAllocationsAsync();
         MessageBox.Show("Allocations saved successfully.");
+    }
+
+    private void OpenProjectsPopup()
+    {
+        if (SelectedOffice == null || !OfficeProjects.Any()) return;
+
+        // Pass the whole ViewModel as DataContext so the popup can access OfficeProjects AND AddProjectCommand
+        var window = new Views.DepartmentProjectsWindow(this)
+        {
+            Owner = System.Windows.Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault()
+        };
+        window.ShowDialog();
+    }
+
+    private void OpenAddProjectWindow()
+    {
+        if (SelectedOffice == null) return;
+
+        var window = new Views.AddProjectWindow
+        {
+            Owner = System.Windows.Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault()
+        };
+
+        if (window.DataContext is AddProjectViewModel vm)
+        {
+            vm.SetContext(SelectedYearlyBudget?.Year, SelectedOffice.OfficeCode);
+        }
+
+        bool? result = window.ShowDialog();
+
+        if (result == true)
+        {
+            _ = LoadOfficeTransactionsAsync(); // Refresh projects list
+        }
     }
 }
 
