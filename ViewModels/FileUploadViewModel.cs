@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -19,19 +19,52 @@ public class FileUploadViewModel : ViewModelBase
     private readonly AppDbContext _context;
     private readonly FileService _fileService;
 
-    private Department? _selectedDepartment;
+    private Office? _selectedOffice;
     private Parameter? _selectedParameter;
     private string _selectedFilePath = string.Empty;
     private string _fileName = string.Empty;
+    private ObservableCollection<Category> _categories = new();  // ← add this
+    private Category _selectedCategory = new();                  // ← add this
 
-    public ObservableCollection<Department> Departments { get; } = new();
+
+
+
+
+
+
+
+
+
+    public ObservableCollection<Office> Offices { get; } = new();
     public ObservableCollection<Parameter> Parameters { get; } = new();
     public ObservableCollection<UploadedFile> UploadedFiles { get; } = new();
 
-    public Department? SelectedDepartment
+    // Keep Departments property for XAML compatibility
+    public ObservableCollection<Office> Departments => Offices;
+
+
+
+    // ↓ add these two below
+    public ObservableCollection<Category> Categories
     {
-        get => _selectedDepartment;
-        set { _selectedDepartment = value; OnPropertyChanged(); }
+        get => _categories;
+        set { _categories = value; OnPropertyChanged(); }
+    }
+
+    public Category SelectedCategory
+    {
+        get => _selectedCategory;
+        set { _selectedCategory = value ?? new Category(); OnPropertyChanged(); }
+    }
+
+
+
+
+
+    public Office? SelectedDepartment
+    {
+        get => _selectedOffice;
+        set { _selectedOffice = value; OnPropertyChanged(); }
     }
 
     public Parameter? SelectedParameter
@@ -64,7 +97,7 @@ public class FileUploadViewModel : ViewModelBase
     public FileUploadViewModel()
     {
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
-        _fileService = new FileService(); // Simple instantiation for now
+        _fileService = new FileService();
 
         SelectFileCommand = new RelayCommand(_ => ExecuteSelectFile());
         UploadFileCommand = new RelayCommand(async _ => await ExecuteUploadFile(), _ => CanUpload());
@@ -77,11 +110,14 @@ public class FileUploadViewModel : ViewModelBase
     {
         try
         {
-            var depts = await _context.Departments.ToListAsync();
-            foreach (var d in depts) Departments.Add(d);
+            var offices = await _context.Offices.ToListAsync();
+            foreach (var d in offices) Offices.Add(d);
 
             var @params = await _context.Parameters.ToListAsync();
             foreach (var p in @params) Parameters.Add(p);
+
+            var categories = await _context.Categories.ToListAsync();  // ← add this
+            foreach (var c in categories) _categories.Add(c);
 
             await LoadUploadedFilesAsync();
         }
@@ -92,8 +128,9 @@ public class FileUploadViewModel : ViewModelBase
     {
         UploadedFiles.Clear();
         var files = await _context.UploadedFiles
-            .Include(f => f.Department)
+            .Include(f => f.Office)
             .Include(f => f.Parameter)
+             .Include(f => f.Category)
             .OrderByDescending(f => f.UploadDate)
             .ToListAsync();
             
@@ -113,7 +150,7 @@ public class FileUploadViewModel : ViewModelBase
     {
         return !string.IsNullOrWhiteSpace(SelectedFilePath) && 
                SelectedDepartment != null && 
-               SelectedParameter != null;
+               SelectedCategory != null;
     }
 
     private async Task ExecuteUploadFile()
@@ -129,8 +166,8 @@ public class FileUploadViewModel : ViewModelBase
                 StoragePath = storedPath,
                 FileType = fileInfo.Extension,
                 FileSize = fileInfo.Length,
-                DepartmentId = SelectedDepartment!.Id,
-                ParameterId = SelectedParameter!.Id,
+                OfficeId = SelectedDepartment!.Id,
+                ParameterId = SelectedCategory!.Id,
                 UploadDate = DateTime.Now
             };
 
@@ -139,7 +176,6 @@ public class FileUploadViewModel : ViewModelBase
 
             UploadedFiles.Insert(0, uploadedFile);
             
-            // Clear selection
             SelectedFilePath = string.Empty;
             FileName = string.Empty;
             
@@ -165,4 +201,9 @@ public class FileUploadViewModel : ViewModelBase
             }
         }
     }
+
+
+
+
+
 }

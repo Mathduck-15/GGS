@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
+[Table("parameters")]
 public class Parameter
 {
     [Key]
@@ -16,4 +18,15 @@ public class Parameter
     
     [StringLength(255)]
     public string? Description { get; set; }
+
+    public int? CategoryId { get; set; }
+
+    [ForeignKey("CategoryId")]
+    public virtual Category? Category { get; set; }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
 }

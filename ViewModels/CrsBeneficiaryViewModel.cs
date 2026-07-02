@@ -1,0 +1,301 @@
+using System;
+using System.Linq;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Threading.Tasks;
+using System.Windows.Data;
+using System.Windows.Input;
+using GoodGovernanceApp.Models;
+using GoodGovernanceApp.Utilities;
+using GoodGovernanceApp.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Data.Sqlite;
+
+namespace GoodGovernanceApp.ViewModels;
+
+public class CrsBeneficiaryViewModel : ViewModelBase
+{
+    // ── Backing Fields ─────────────────────────────────────────────────────────
+    private string _statusMessage        = "Press Load to fetch beneficiaries.";
+    private bool   _isLoading;
+    private string _searchText           = string.Empty;
+    private string _beneficiaryIdFilter  = string.Empty;
+
+    // ── Collections ────────────────────────────────────────────────────────────
+
+    /// <summary>Master list — never filtered directly.</summary>
+    public ObservableCollection<Beneficiary> Beneficiaries { get; } = new();
+
+    /// <summary>Filtered view bound to the DataGrid.</summary>
+    public ICollectionView BeneficiariesView { get; }
+
+    // ── Properties ─────────────────────────────────────────────────────────────
+
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set { _statusMessage = value; OnPropertyChanged(); }
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set { _isLoading = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>
+    /// Filters by last name, first name, beneficiary ID, or address.
+    /// Updates the view automatically as the user types.
+    /// </summary>
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            _searchText = value;
+            OnPropertyChanged();
+            BeneficiariesView.Refresh();
+            StatusMessage = string.IsNullOrWhiteSpace(value)
+                ? $"✅ Showing all {Beneficiaries.Count:N0} beneficiaries."
+                : $"🔍 Filtering by \"{value}\" — {BeneficiariesView.Cast<Beneficiary>().Count():N0} result(s) found.";
+        }
+    }
+
+    public string BeneficiaryIdFilter
+    {
+        get => _beneficiaryIdFilter;
+        set { _beneficiaryIdFilter = value; OnPropertyChanged(); }
+    }
+
+    // ── Commands ───────────────────────────────────────────────────────────────
+    public ICommand LoadCommand       { get; }
+    public ICommand ClearCommand      { get; }
+    public ICommand SearchByIdCommand { get; }
+    public ICommand OpenAnalyticsCommand { get; }
+
+    // ── Constructor ────────────────────────────────────────────────────────────
+    public CrsBeneficiaryViewModel()
+    {
+        BeneficiariesView = CollectionViewSource.GetDefaultView(Beneficiaries);
+        BeneficiariesView.Filter = FilterBeneficiary;
+
+        LoadCommand       = new RelayCommand(async _ => await LoadBeneficiariesAsync());
+        ClearCommand      = new RelayCommand(_ => ClearSearch());
+        SearchByIdCommand = new RelayCommand(
+            async _ => await SearchByBeneficiaryIdAsync(),
+            _        => !string.IsNullOrWhiteSpace(BeneficiaryIdFilter));
+        OpenAnalyticsCommand = new RelayCommand(ExecuteOpenAnalytics);
+    }
+
+    // ── Filter Logic ───────────────────────────────────────────────────────────
+    private bool FilterBeneficiary(object obj)
+    {
+        if (obj is not Beneficiary b) return false;
+        if (string.IsNullOrWhiteSpace(_searchText)) return true;
+
+        var keyword = _searchText.Trim().ToLower();
+
+        return (b.LastName?.ToLower().Contains(keyword) ?? false)
+            || (b.FirstName?.ToLower().Contains(keyword) ?? false)
+            || (b.MiddleName?.ToLower().Contains(keyword) ?? false)
+            || (b.FullName?.ToLower().Contains(keyword) ?? false)
+            || (b.BeneficiaryId?.ToLower().Contains(keyword) ?? false)
+            || (b.Address?.ToLower().Contains(keyword) ?? false)
+            || (b.Sex?.ToLower().Contains(keyword) ?? false)
+            || (b.MaritalStatus?.ToLower().Contains(keyword) ?? false)
+            || (b.DisabilityType?.ToLower().Contains(keyword) ?? false);
+    }
+
+    private void ClearSearch()
+    {
+        SearchText          = string.Empty;
+        BeneficiaryIdFilter = string.Empty;
+    }
+
+    // ── Data Loading ───────────────────────────────────────────────────────────
+    private void ExecuteOpenAnalytics(object? parameter)
+    {
+        if (parameter is Beneficiary b && !string.IsNullOrWhiteSpace(b.BeneficiaryId))
+        {
+            var fullName = b.DisplayName;
+            var dbContext = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.AppDbContext>();
+            var vm = new GoodGovernanceApp.ViewModels.BeneficiaryAnalyticsViewModel(dbContext, b.BeneficiaryId, fullName);
+            var window = new GoodGovernanceApp.Views.BeneficiaryAnalyticsWindow(vm);
+            window.Show();
+        }
+    }
+    private async Task LoadBeneficiariesAsync()
+    {
+        IsLoading = true;
+        StatusMessage = "Loading beneficiaries...";
+        Beneficiaries.Clear();
+
+        try
+        {
+            if (GoodGovernanceApp.Services.ConnectivityService.IsCrsOnline)
+            {
+                await LoadFromCloudAsync();
+                StatusMessage = $"✅ Loaded {Beneficiaries.Count:N0} beneficiaries from Cloud.";
+            }
+            else
+            {
+                await LoadFromCacheAsync();
+                StatusMessage = $"⚠️ Offline: Loaded {Beneficiaries.Count:N0} beneficiaries from Cache.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"❌ Failed to load: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadFromCloudAsync(string? filterId = null)
+    {
+        using var conn = new MySqlConnector.MySqlConnection(GoodGovernanceApp.Data.DatabaseConfig.CrsConnectionString);
+        await conn.OpenAsync();
+
+        string sql = @"
+            SELECT
+                id, residents_id, beneficiary_id, user_id, civilregistry_id,
+                last_name, first_name, middle_name, full_name,
+                sex, date_of_birth, age, marital_status, address,
+                is_pwd, pwd_id_no, is_senior, senior_id_no,
+                disability_type, cause_of_disability,
+                created_at, updated_at
+            FROM val_beneficiaries ";
+
+        if (!string.IsNullOrEmpty(filterId))
+            sql += " WHERE beneficiary_id LIKE @id ";
+            
+        sql += " ORDER BY last_name, first_name LIMIT 50;";
+
+        using var cmd = new MySqlConnector.MySqlCommand(sql, conn);
+        if (!string.IsNullOrEmpty(filterId))
+            cmd.Parameters.AddWithValue("@id", $"%{filterId}%");
+
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        var dbContext = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.AppDbContext>();
+
+        while (await reader.ReadAsync())
+        {
+            var b = new Beneficiary
+            {
+                Id = reader.GetInt64("id"),
+                ResidentsId = reader.GetInt64("residents_id"),
+                BeneficiaryId = reader["beneficiary_id"]?.ToString() ?? "",
+                UserId = reader.IsDBNull(reader.GetOrdinal("user_id")) ? null : reader.GetInt32("user_id"),
+                CivilRegistryId = reader["civilregistry_id"]?.ToString(),
+                LastName = reader["last_name"]?.ToString(),
+                FirstName = reader["first_name"]?.ToString(),
+                MiddleName = reader["middle_name"]?.ToString(),
+                FullName = reader["full_name"]?.ToString(),
+                Sex = reader["sex"]?.ToString(),
+                DateOfBirthRaw = reader["date_of_birth"]?.ToString(),
+                AgeRaw = reader["age"]?.ToString(),
+                MaritalStatus = reader["marital_status"]?.ToString(),
+                Address = reader["address"]?.ToString(),
+                IsPwd = reader.GetInt32("is_pwd") == 1,
+                PwdIdNo = reader["pwd_id_no"]?.ToString(),
+                IsSenior = reader.GetInt32("is_senior") == 1,
+                SeniorIdNo = reader["senior_id_no"]?.ToString(),
+                DisabilityType = reader["disability_type"]?.ToString(),
+                CauseOfDisability = reader["cause_of_disability"]?.ToString(),
+                CreatedAt = reader.IsDBNull(reader.GetOrdinal("created_at")) ? null : reader.GetDateTime("created_at"),
+                UpdatedAt = reader.IsDBNull(reader.GetOrdinal("updated_at")) ? null : reader.GetDateTime("updated_at"),
+            };
+            Beneficiaries.Add(b);
+
+            // Update Cache
+            var cache = dbContext.CrsBeneficiaryCaches.FirstOrDefault(c => c.BeneficiaryId == b.BeneficiaryId);
+            if (cache == null)
+            {
+                cache = new CrsBeneficiaryCache { BeneficiaryId = b.BeneficiaryId };
+                dbContext.CrsBeneficiaryCaches.Add(cache);
+            }
+            cache.FullName = b.FullName;
+            cache.FirstName = b.FirstName;
+            cache.LastName = b.LastName;
+            cache.MiddleName = b.MiddleName;
+            cache.Sex = b.Sex;
+            if (int.TryParse(b.AgeRaw, out int age)) cache.Age = age;
+            cache.Address = b.Address;
+            cache.MaritalStatus = b.MaritalStatus;
+            cache.IsPwd = b.IsPwd;
+            cache.IsSenior = b.IsSenior;
+            cache.CachedAt = DateTime.Now;
+        }
+        await dbContext.SaveChangesAsync();
+    }
+
+    private async Task LoadFromCacheAsync(string? filterId = null)
+    {
+        var dbContext = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.AppDbContext>();
+        var query = dbContext.CrsBeneficiaryCaches.AsQueryable();
+
+        if (!string.IsNullOrEmpty(filterId))
+            query = query.Where(c => c.BeneficiaryId.Contains(filterId));
+
+        var cachedItems = query.Take(50).ToList();
+
+        foreach (var cache in cachedItems)
+        {
+            Beneficiaries.Add(new Beneficiary
+            {
+                BeneficiaryId = cache.BeneficiaryId,
+                FullName = cache.FullName,
+                FirstName = cache.FirstName,
+                LastName = cache.LastName,
+                MiddleName = cache.MiddleName,
+                Sex = cache.Sex,
+                AgeRaw = cache.Age?.ToString(),
+                Address = cache.Address,
+                MaritalStatus = cache.MaritalStatus,
+                IsPwd = cache.IsPwd,
+                IsSenior = cache.IsSenior
+            });
+        }
+        await Task.CompletedTask;
+    }
+
+    // ── Search by Beneficiary ID ────────────────────────────────────────────────
+    private async Task SearchByBeneficiaryIdAsync()
+    {
+        string id = BeneficiaryIdFilter.Trim();
+        if (string.IsNullOrWhiteSpace(id)) return;
+
+        IsLoading = true;
+        StatusMessage = $"Searching for Beneficiary ID: {id}…";
+        Beneficiaries.Clear();
+
+        try
+        {
+            if (GoodGovernanceApp.Services.ConnectivityService.IsCrsOnline)
+            {
+                await LoadFromCloudAsync(id);
+                StatusMessage = Beneficiaries.Count > 0
+                    ? $"✅ Found {Beneficiaries.Count:N0} result(s) from Cloud for ID '{id}'."
+                    : $"⚠️ No beneficiary found with ID '{id}'.";
+            }
+            else
+            {
+                await LoadFromCacheAsync(id);
+                StatusMessage = Beneficiaries.Count > 0
+                    ? $"⚠️ Offline: Found {Beneficiaries.Count:N0} result(s) in Cache for '{id}'."
+                    : $"⚠️ Offline: No beneficiary found in Cache with ID '{id}'.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"❌ Search failed: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

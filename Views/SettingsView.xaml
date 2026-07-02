@@ -6,70 +6,428 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="800">
+             d:DesignHeight="900" d:DesignWidth="850">
 
     <UserControl.DataContext>
         <viewmodels:SettingsViewModel />
     </UserControl.DataContext>
 
-    <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="System Settings &amp; Configuration" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0 0 0 24">
+                <TextBlock Text="System Settings" FontSize="28" FontWeight="Light"  Foreground="#000000"/>
+                <TextBlock Text="Configure database connections, backups, and app profile" 
+                           FontSize="13" Foreground="#000000" Margin="0 4 0 0"/>
+            </StackPanel>
 
-        <!-- Database Connection Settings -->
-        <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="16">
+            <!-- Application Profile -->
+            <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="AccountFilter" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="#000000"/>
+                        <TextBlock Text="System Application Profile" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#000000"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Update the application logo, photos, and general governance identity shown on the main dashboard." 
+                               FontSize="13" Foreground="#000000" Margin="0 0 0 16"/>
+
+                    <Button Content="⚙ CONFIGURE APPLICATION PROFILE" 
+                            Command="{Binding OpenSystemsProfileCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}" 
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Department Management -->
+            <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="OfficeBuilding" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="#000000"/>
+                        <TextBlock Text="Department Management" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#000000"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Add, edit, and remove departments. Manage office codes and view associated projects." 
+                               FontSize="13" Foreground="#000000" Margin="0 0 0 16"/>
+
+                    <Button Content="🏢 CONFIGURE DEPARTMENTS" 
+                            Command="{Binding OpenDepartmentsCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}" 
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- GGMS Database Connection -->
+            <materialDesign:Card Grid.Row="3" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                  Foreground="#000000"
+                                                 />
+                        <TextBlock Text="GGMS Database Connection" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#000000"/>
+                    </StackPanel>
+
+                    <!-- Preset Buttons -->
+                    <TextBlock Text="Quick Presets — fills both GGMS and CRS simultaneously:" FontSize="12"
+                               Foreground="#000000" Margin="0 0 0 10"/>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
+                        <Grid Margin="0 0 10 0" Width="110">
+                            <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                            <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPreset}" Value="LOCAL">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+
+                        <Grid Margin="0 0 10 0" Width="160">
+                            <Button Content="🌐 NETWORK (LAN)" Command="{Binding PresetNetworkCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                            <Button Content="🌐 NETWORK (LAN)" Command="{Binding PresetNetworkCommand}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPreset}" Value="NETWORK">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+
+                        <Grid Width="190">
+                            <Button Content="☁ REMOTE (Hostinger)" Command="{Binding PresetRemoteCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                            <Button Content="☁ REMOTE (Hostinger)" Command="{Binding PresetRemoteCommand}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPreset}" Value="REMOTE">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- LAN IP Field -->
+                    <TextBox materialDesign:HintAssist.Hint="LAN / Network IP (editable — changes per demo)"
+                             Text="{Binding LanIp, UpdateSourceTrigger=PropertyChanged}" 
+                              Foreground="#000000"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 16"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="Local Connection String"
+                             Text="{Binding LocalConnectionString}"
+                              Foreground="#000000"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 12"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="LAN Connection String"
+                             Text="{Binding LanConnectionString}"
+                              Foreground="#000000"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 12"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="Remote Connection String (Hostinger)"
+                             Text="{Binding RemoteConnectionString}"
+                              Foreground="#000000"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Margin="0 0 0 0"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- CRS Database Connection -->
+            <materialDesign:Card Grid.Row="4" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="DatabaseSearch" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="DarkOrange"/>
+                        <TextBlock  Foreground="#000000" Text="CRS Database Connection (Read Only)" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="⚠ CRS is read-only for GGMS. All 4 fields are manually editable." 
+                               FontSize="12" FontStyle="Italic"
+                               Foreground="#000000" Margin="0 0 0 16"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="CRS Server / IP"
+                                 Text="{Binding CrsServer, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                  Foreground="#000000"
+                                 Margin="0 0 0 12"/>
+                        <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="Port"
+                                 Text="{Binding CrsPort, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                  Foreground="#000000"
+                                 Margin="0 0 0 12"/>
+                    </Grid>
+
+                    <TextBox materialDesign:HintAssist.Hint="CRS Database Name"
+                             Text="{Binding CrsDatabase, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                              Foreground="#000000"
+                             Margin="0 0 0 12"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="CRS Username"
+                                 Text="{Binding CrsUser, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                  Foreground="#000000"/>
+                        <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="CRS Password"
+                                 Text="{Binding CrsPassword, UpdateSourceTrigger=PropertyChanged}"
+                                  Foreground="#000000"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                    </Grid>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Test + Save -->
+            <materialDesign:Card Grid.Row="5" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="CheckNetwork" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                  Foreground="#000000"/>
+                        <TextBlock Text="Test &amp; Save" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#000000"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <Button Content="🔌 TEST BOTH CONNECTIONS" Command="{Binding TestBothCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Margin="0 0 12 0"/>
+                        <ProgressBar IsIndeterminate="True" Width="24" Height="24"
+                                     Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                     VerticalAlignment="Center"
+                                     Visibility="{Binding IsTesting, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding GgmsTestResult}" FontSize="13" FontWeight="Medium" Margin="0 0 0 4"
+                               Foreground="{DynamicResource MaterialDesignBody}"/>
+                    <TextBlock Text="{Binding CrsTestResult}" FontSize="13" FontWeight="Medium" Margin="0 0 0 16"
+                                Foreground="#000000"/>
+
+                    <Button Content="💾 SAVE SETTINGS (REQUIRES RESTART)"
+                            Command="{Binding SaveSettingsCommand}"
+                            HorizontalAlignment="Left"
+                            Style="{StaticResource MaterialDesignRaisedButton}"/>
+
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="13" FontWeight="Medium"
+                               Foreground="Green" Margin="0 12 0 0"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- Backup Configuration                                           -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <materialDesign:Card Grid.Row="6" Margin="0 0 0 16" Padding="24">
             <StackPanel>
-                <TextBlock Text="Database Connections" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 16"/>
 
+                <!-- Header -->
                 <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
-                    <TextBlock Text="Use Remote (Hostinger) Database:" VerticalAlignment="Center" Margin="0 0 16 0"/>
-                    <ToggleButton IsChecked="{Binding UseRemoteDatabase}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
+                    <materialDesign:PackIcon Kind="DatabaseSync" Width="22" Height="22"
+                                            VerticalAlignment="Center" Margin="0 0 8 0"
+                                             Foreground="#000000"/>
+                    <TextBlock Text="Automatic Database Backup" FontSize="18" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Foreground="#000000"/>
                 </StackPanel>
 
-                <TextBox materialDesign:HintAssist.Hint="Local Connection String (MySQL)" 
-                         Text="{Binding LocalConnectionString}" 
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16" />
+                <!-- ── Row 1 : Backup Type + Schedule Type ─────────────── -->
+                <Grid Margin="0 0 0 16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBox materialDesign:HintAssist.Hint="Remote Connection String (Hostinger MySQL)" 
-                         Text="{Binding RemoteConnectionString}" 
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 24" />
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Backup Type" FontSize="12"
+                                   Foreground="#000000" Margin="0 0 0 4"/>
+                        <ComboBox SelectedItem="{Binding BackupType}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                            <ComboBoxItem Content="Full"/>
+                            <ComboBoxItem Content="Differential"/>
+                            <ComboBoxItem Content="Incremental"/>
+                        </ComboBox>
+                        <TextBlock FontSize="10" TextWrapping="Wrap" Margin="0 4 0 0"
+                                   Foreground="#000000">
+                            <Run FontWeight="Bold">Full</Run><Run> — schema + all data (baseline).</Run>
+                            <LineBreak/>
+                            <Run FontWeight="Bold">Differential</Run><Run> — data-only dump (since last full).</Run>
+                            <LineBreak/>
+                            <Run FontWeight="Bold">Incremental</Run><Run> — data delta since last backup.</Run>
+                        </TextBlock>
+                    </StackPanel>
 
-                <Button Content="SAVE SETTINGS (REQUIRES RESTART)" Command="{Binding SaveSettingsCommand}" 
-                        HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Foreground="{DynamicResource PrimaryHueMidBrush}" />
-            </StackPanel>
-        </materialDesign:Card>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Schedule Type" FontSize="12"
+                                   Foreground="#000000" Margin="0 0 0 4"/>
+                        <ComboBox SelectedItem="{Binding ScheduleType}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                            <ComboBoxItem Content="Once"/>
+                            <ComboBoxItem Content="Daily"/>
+                            <ComboBoxItem Content="Weekly"/>
+                            <ComboBoxItem Content="Monthly"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
 
-        <!-- Backup Settings -->
-        <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="16">
-            <StackPanel>
-                <TextBlock Text="Database Backup" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 16"/>
-                <TextBlock Text="Specify the path to 'mysqldump.exe' (usually in MySQL Server/bin)." FontStyle="Italic" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0 0 0 8"/>
+                <!-- ── Row 2 : Date (Once) or Day-of-Month (Monthly) ───── -->
+                <Grid Margin="0 0 0 16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBox materialDesign:HintAssist.Hint="mysqldump.exe Path" 
-                         Text="{Binding MySqlDumpPath}" 
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16" />
+                    <!-- DatePicker: shown for "Once" -->
+                    <StackPanel Grid.Column="0"
+                                Visibility="{Binding IsOnce, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="Run Date &amp; Time" FontSize="12"
+                                   Foreground="#000000" Margin="0 0 0 4"/>
+                        <DatePicker SelectedDate="{Binding NextRunTime}"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                    </StackPanel>
 
+                    <!-- Day of month: shown for "Monthly" -->
+                    <StackPanel Grid.Column="0"
+                                Visibility="{Binding IsMonthlyOrOnce, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <!-- only show when Monthly (not Once) -->
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ScheduleType}" Value="Monthly">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        </StackPanel>
+
+                    <!-- Start time (Next run): always visible -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="First / Next Run Date-Time" FontSize="12"
+                                   Foreground="#000000" Margin="0 0 0 4"/>
+                        <DatePicker SelectedDate="{Binding NextRunTime}"
+                                    Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                        <TextBlock Text="(Time-of-day is preserved from the saved value)"
+                                   FontSize="10" TextWrapping="Wrap" Margin="0 3 0 0"
+                                   Foreground="#000000"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ── Row 3 : Backup Folder ──────────────────────────── -->
+                <TextBlock Text="Backup Destination Folder" FontSize="12"
+                           Foreground="#000000" Margin="0 0 0 4"/>
+                <Grid Margin="0 0 0 16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             materialDesign:HintAssist.Hint="e.g. C:\Backups\GGMS"
+                             Text="{Binding BackupFolder, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                              Foreground="#000000"/>
+                    <Button Grid.Column="2" Content="📁 Browse"
+                            Command="{Binding BrowseBackupFolderCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                </Grid>
+
+                <!-- ── Row 4 : mysqldump path ──────────────────────────── -->
+                <TextBlock Text="mysqldump.exe Path" FontSize="12"
+                           Foreground="#000000" Margin="0 0 0 4"/>
+                <Grid Margin="0 0 0 16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             materialDesign:HintAssist.Hint="e.g. C:\Program Files\MySQL\...\mysqldump.exe"
+                             Text="{Binding MySqlDumpPath, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                              Foreground="#000000"/>
+                    <Button Grid.Column="2" Content="🔍 Browse"
+                            Command="{Binding BrowseMySqlDumpCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                </Grid>
+
+                <!-- ── Row 5 : Enable toggle + Save ───────────────────── -->
+                <StackPanel Orientation="Horizontal" Margin="0 0 0 20">
+                    <ToggleButton IsChecked="{Binding IsBackupEnabled}"
+                                  Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                  VerticalAlignment="Center"/>
+                    <TextBlock Text="Enable Automatic Backup" FontSize="14"
+                               VerticalAlignment="Center" Margin="12 0 0 0"  Foreground="#000000"/>
+                </StackPanel>
+
+                <Button Content="💾 SAVE BACKUP SETTINGS"
+                        Command="{Binding SaveBackupSettingsCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        HorizontalAlignment="Left" Margin="0 0 0 20"/>
+
+                <!-- Status / Next run -->
+                <TextBlock Text="{Binding BackupStatusMessage}" FontSize="13" FontWeight="Medium"
+                           Foreground="Green" Margin="0 0 0 20" TextWrapping="Wrap"/>
+
+                <!-- ── Row 6 : Manual trigger buttons ─────────────────── -->
+                <Separator Margin="0 0 0 16"/>
+                <TextBlock Text="Manual Backup — run now" FontSize="13" FontWeight="SemiBold"
+                           Margin="0 0 0 12"
+                           Foreground="#000000"/>
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="RUN FULL BACKUP" Command="{Binding FullBackupCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 16 0" />
-                            
-                    <Button Content="RUN DIFFERENTIAL BACKUP" Command="{Binding DifferentialBackupCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 16 0" />
-
-                    <Button Content="RUN INCREMENTAL BACKUP" Command="{Binding IncrementalBackupCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" />
+                    <Button Content="⚡ FULL BACKUP"
+                            Command="{Binding FullBackupCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 10 0"/>
+                    <Button Content="⚡ DIFFERENTIAL"
+                            Command="{Binding DifferentialBackupCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0 0 10 0"/>
+                    <Button Content="⚡ INCREMENTAL"
+                            Command="{Binding IncrementalBackupCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"/>
                 </StackPanel>
+
             </StackPanel>
         </materialDesign:Card>
 
-        <!-- Status Message -->
-        <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" FontSize="16" Foreground="Green" FontWeight="Medium" VerticalAlignment="Top"/>
-        
     </Grid>
+</ScrollViewer>
 </UserControl>

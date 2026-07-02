@@ -1,30 +1,36 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
+[Table("transactions")]
 public class Transaction
 {
     [Key]
     public int Id { get; set; }
-    
-    [Required]
-    public int CategoryId { get; set; }
-    public Category Category { get; set; } = null!;
-    
-    [Required]
-    public decimal Amount { get; set; }
-    
-    [Required]
-    public DateTime Date { get; set; } = DateTime.Now;
-    
-    [StringLength(255)]
-    public string? Description { get; set; }
-    
-    public int? UserId { get; set; }
-    public User? User { get; set; }
-    
-    [Required]
-    [StringLength(20)]
-    public string TransactionType { get; set; } = "Expense"; // Income, Expense
+
+    [Column("project_code")]
+    [StringLength(45)]
+    public string? ProjectCode { get; set; }
+
+    [Column("Amount")]
+    public decimal? Amount { get; set; }
+
+    [Column("voucher_code")]
+    [StringLength(10)]
+    public string? VoucherCode { get; set; }
+
+    [Column("transaction_type")]
+    [StringLength(45)]
+    public string? TransactionType { get; set; } = "Expense";
+
+    [Column("date")]
+    public DateTime? Date { get; set; } = DateTime.Now;
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
 }

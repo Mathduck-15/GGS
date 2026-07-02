@@ -2,13 +2,26 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:GoodGovernanceApp"
+             xmlns:localConverters="clr-namespace:GoodGovernanceApp.Converters"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="DeepPurple" SecondaryColor="Lime" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <!-- Material Design theme -->
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Teal" SecondaryColor="Cyan"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml"/>
+                <!-- Metro Tile styles -->
+                <ResourceDictionary Source="pack://application:,,,/GoodGovernanceApp;component/Views/Styles/MetroTileStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- ── Value Converters ─────────────────────────────────── -->
+            <localConverters:NullToVisibilityConverter          x:Key="NullToVisibilityConverter"/>
+            <localConverters:StringToVisibilityConverter        x:Key="StringToVisibilityConverter"/>
+            <localConverters:InvertBooleanConverter             x:Key="InvertBooleanConverter"/>
+            <localConverters:BoolToVisibilityConverter          x:Key="BooleanToVisibilityConverter"/>
+            <localConverters:InverseBoolToVisibilityConverter   x:Key="InverseBoolToVisibilityConverter"/>
+            <localConverters:StringToSolidColorBrushConverter   x:Key="StringToSolidColorBrushConverter"/>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

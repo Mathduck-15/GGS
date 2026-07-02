@@ -14,85 +14,271 @@ namespace GoodGovernanceApp;
 public partial class App : Application
 {
     public static IHost? AppHost { get; private set; }
+    public static IConfiguration Config { get; set; } = null!;
 
     public App()
     {
-        // Set global culture to Philippines (en-PH) for currency (₱)
         var culture = new CultureInfo("en-PH");
         Thread.CurrentThread.CurrentCulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
 
-        // Ensure WPF UI elements respect this culture
         FrameworkElement.LanguageProperty.OverrideMetadata(
             typeof(FrameworkElement),
             new FrameworkPropertyMetadata(System.Windows.Markup.XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
+        string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GoodGovernanceApp");
+        Directory.CreateDirectory(appDataFolder);
+        string appDataSettingsPath = Path.Combine(appDataFolder, "appsettings.json");
+
+        if (!File.Exists(appDataSettingsPath))
+        {
+            string baseSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+            if (File.Exists(baseSettingsPath))
+                File.Copy(baseSettingsPath, appDataSettingsPath);
+        }
+
         AppHost = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
-                config.SetBasePath(Directory.GetCurrentDirectory());
+                config.Sources.Clear();
+                config.SetBasePath(appDataFolder);
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
             })
             .ConfigureServices((context, services) =>
             {
-                // Retrieve Configuration
-                IConfiguration config = context.Configuration;
-                bool useRemote = config.GetValue<bool>("AppSettings:UseRemoteDatabase");
-
-                // Configure DbContext based on selection
                 services.AddDbContext<AppDbContext>(options =>
                 {
-                    if (useRemote)
-                    {
-                        string connStr = config.GetConnectionString("RemoteConnection") ?? "";
-                        options.UseMySql(connStr, ServerVersion.AutoDetect(connStr));
-                    }
-                    else
-                    { //  ?? "Server=____;Database=____;User=___;Password=___;"
-                        string connStr = config.GetConnectionString("LocalConnection");
-                        options.UseMySql(connStr, ServerVersion.AutoDetect(connStr));
-                    }
-                });
+                    options.UseSqlite($"Data Source={Path.Combine(appDataFolder, "ggms.db")}");
+                }, ServiceLifetime.Transient, ServiceLifetime.Transient);
 
-                // Register Services
+                services.AddDbContext<CloudDbContext>((serviceProvider, options) =>
+                {
+                    try
+                    {
+                        var connStr = DatabaseConfig.ConnectionString;
+                        options.UseMySql(connStr, new MySqlServerVersion(new Version(8, 0, 31)));
+                    }
+                    catch
+                    {
+                        // No valid MySQL connection string configured — use a dummy so DI doesn't crash.
+                        // The CloudDbContext will only be used when IsOnline = true.
+                        options.UseMySql("Server=localhost;Database=ggms;User=root;Password=;", new MySqlServerVersion(new Version(8, 0, 31)));
+                    }
+                }, ServiceLifetime.Transient, ServiceLifetime.Transient);
+
+                services.AddSingleton<DatabaseHelper>();
+                services.AddSingleton<GoodGovernanceApp.Services.ValidationService>();
                 services.AddSingleton<GoodGovernanceApp.Services.SessionService>();
                 services.AddSingleton<GoodGovernanceApp.Services.FileService>();
                 services.AddSingleton<GoodGovernanceApp.Services.BackupService>();
 
-                // Register Views
                 services.AddTransient<MainWindow>();
                 services.AddTransient<GoodGovernanceApp.Views.LoginWindow>();
                 services.AddTransient<GoodGovernanceApp.ViewModels.LoginViewModel>();
             })
             .Build();
+
+        Config = AppHost.Services.GetRequiredService<IConfiguration>();
     }
 
     protected override async void OnStartup(StartupEventArgs e)
     {
         await AppHost!.StartAsync();
 
-        // Ensure database is created and migrations are applied
-        using (var scope = AppHost.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            dbContext.Database.Migrate();
-            
-            // Seed 30 Dummy records if empty
-            DatabaseSeeder.SeedData(dbContext);
-        }
+        GoodGovernanceApp.Services.ConnectivityService.StartMonitoring();
+        GoodGovernanceApp.Services.SyncService.StartAutoSync();
 
-        var loginWindow = AppHost.Services.GetRequiredService<GoodGovernanceApp.Views.LoginWindow>();
-        loginWindow.Show();
+        string appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "GoodGovernanceApp");
+
+        Directory.CreateDirectory(Path.Combine(appData, "Logos"));
+        Directory.CreateDirectory(Path.Combine(appData, "ProfilePhotos"));
 
         base.OnStartup(e);
+
+        // ── Initialise SQLite database BEFORE showing the login window ──────────
+        await Task.Run(async () =>
+        {
+            using var scope = AppHost.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            try
+            {
+                var dbContext = services.GetRequiredService<AppDbContext>();
+
+                // Step 1: Create all SQLite tables from EF model
+                bool created = await dbContext.Database.EnsureCreatedAsync();
+                System.Diagnostics.Debug.WriteLine($"[DB Init] EnsureCreated result: {created}");
+
+                // ── Step 2: Verify the users table actually exists ────────────────
+                bool usersTableExists = false;
+                try
+                {
+                    var conn = dbContext.Database.GetDbConnection();
+                    if (conn.State != System.Data.ConnectionState.Open)
+                        await conn.OpenAsync();
+
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='users';";
+                    var result = await cmd.ExecuteScalarAsync();
+                    usersTableExists = result != null;
+                    System.Diagnostics.Debug.WriteLine($"[DB Init] 'users' table exists: {usersTableExists}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DB Init] Table check failed: {ex.Message}");
+                }
+
+                // ── Step 3: Connectivity check (warning only, not a blocker) ─────
+                Exception? connError = null;
+                bool canConn = await Task.Run(() =>
+                {
+                    try { return dbContext.Database.CanConnect(); }
+                    catch (Exception ex) { connError = ex; return false; }
+                });
+
+                if (!canConn)
+                {
+                    string dbMode = Config["AppSettings:DatabaseMode"] ?? "Local";
+                    if (dbMode != "Local")
+                    {
+                        string errorMsg = "Cloud/LAN Database Connection Failed!\n\nThe application will continue using the local SQLite database.";
+                        if (connError != null)
+                        {
+                            string realErr = connError.InnerException?.Message ?? connError.Message;
+                            errorMsg += $"\n\nError Details:\n{realErr}";
+                        }
+                        Application.Current.Dispatcher.Invoke(() =>
+                            MessageBox.Show(errorMsg, "Cloud Sync Warning",
+                                MessageBoxButton.OK, MessageBoxImage.Warning));
+                    }
+                }
+
+                // ── Step 4: SQLite schema patches (safe to run on every startup) ──
+                //   Two-step pattern:
+                //   1) ADD COLUMN as TEXT NULL — works on ALL SQLite versions.
+                //      (SQLite rejects NOT NULL with non-constant DEFAULT expressions.)
+                //   2) UPDATE to backfill any rows that still have a NULL SyncId.
+                //   Each statement is wrapped in try/catch so it is silently skipped
+                //   if the column already exists.
+                await Task.Run(() =>
+                {
+                    var conn = dbContext.Database.GetDbConnection();
+                    if (conn.State != System.Data.ConnectionState.Open)
+                        conn.Open();
+
+                    // UUID expression that works in SQLite (generates a v4-like UUID)
+                    const string uuidExpr =
+                        "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' ||" +
+                        " substr(lower(hex(randomblob(2))),2) || '-' ||" +
+                        " substr('89ab', abs(random()) % 4 + 1, 1) ||" +
+                        " substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))";
+
+                    void AddSyncCols(string table)
+                    {
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            // Step 1 – add as nullable (never fails on existing column)
+                            cmd.CommandText = $"ALTER TABLE \"{table}\" ADD COLUMN \"SyncId\" TEXT NULL;";
+                            try { cmd.ExecuteNonQuery(); } catch { }
+
+                            cmd.CommandText = $"ALTER TABLE \"{table}\" ADD COLUMN \"updated_at\" TEXT NULL;";
+                            try { cmd.ExecuteNonQuery(); } catch { }
+
+                            // Step 2 – backfill existing rows that have no SyncId
+                            cmd.CommandText = $"UPDATE \"{table}\" SET \"SyncId\" = ({uuidExpr}) WHERE \"SyncId\" IS NULL OR \"SyncId\" = '';";
+                            try { cmd.ExecuteNonQuery(); } catch { }
+                        }
+                    }
+
+                    void AddCol(string table, string column, string typeDef)
+                    {
+                        using var cmd = conn.CreateCommand();
+                        cmd.CommandText = $"ALTER TABLE \"{table}\" ADD COLUMN \"{column}\" {typeDef};";
+                        try { cmd.ExecuteNonQuery(); } catch { }
+                    }
+
+                    // All tables that participate in bidirectional sync
+                    AddSyncCols("project_details");
+                    AddSyncCols("users");
+                    AddSyncCols("tbl_offices");
+                    AddSyncCols("master_budget");
+                    AddSyncCols("budget_allocations");
+                    AddSyncCols("tbl_program_provision");
+                    AddSyncCols("tbl_services");
+                    AddSyncCols("transactions");
+                    AddSyncCols("tbl_transaction");
+                    AddSyncCols("consolidated_transactions");
+                    AddSyncCols("yearlybudgets");
+                    AddSyncCols("officeallocations");
+
+                    // Extra columns added later by schema evolution
+                    AddCol("project_details",        "voucher_code", "TEXT NULL");
+                    AddCol("transactions",            "voucher_code", "TEXT NULL");
+                    AddCol("tbl_transaction",         "voucher_code", "TEXT NULL");
+                    AddCol("tbl_offices",             "office_code",  "TEXT NULL");
+                    AddCol("officeallocations",       "office_id",    "INTEGER NULL");
+                    AddCol("consolidated_transactions", "barangay",   "TEXT NULL");
+                    AddCol("consolidated_transactions", "household_no", "TEXT NULL");
+                });
+
+                // ── Step 4b: MySQL-only schema patches ───────────────────────────
+                string mode = Config["AppSettings:DatabaseMode"] ?? "Local";
+                if (mode != "Local")
+                {
+                    await Task.Run(() =>
+                    {
+                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
+                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
+
+                        try
+                        {
+                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 0;");
+                            dbContext.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS officeallocations;");
+                            dbContext.Database.ExecuteSqlRaw(@"
+                                CREATE TABLE officeallocations (
+                                    Id INT AUTO_INCREMENT PRIMARY KEY,
+                                    YearlyBudgetId INT NOT NULL,
+                                    office_code VARCHAR(30) NOT NULL,
+                                    AllocatedAmount DECIMAL(65,30) NOT NULL,
+                                    CONSTRAINT FK_officeallocations_YearlyBudgets FOREIGN KEY (YearlyBudgetId) REFERENCES YearlyBudgets (Id) ON DELETE CASCADE,
+                                    CONSTRAINT FK_officeallocations_tbl_offices FOREIGN KEY (office_code) REFERENCES tbl_offices (office_code) ON DELETE CASCADE
+                                ) CHARACTER SET=utf8mb4;
+                            ");
+                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;");
+                        }
+                        catch
+                        {
+                            try { dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;"); } catch { }
+                        }
+                    });
+                }
+
+                // ── Step 5: Seed only after tables are confirmed to exist ─────────
+                if (usersTableExists)
+                {
+                    await Task.Run(() => DatabaseSeeder.SeedData(dbContext));
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[DB Init] Skipping seed — 'users' table missing after EnsureCreated. Delete ggms.db and restart.");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[App Startup] DB init error: {ex.Message}\n{ex.StackTrace}");
+            }
+        });
+
+        // Show login window only AFTER the database is fully initialized
+        var loginWindow = AppHost.Services.GetRequiredService<GoodGovernanceApp.Views.LoginWindow>();
+        loginWindow.Show();
     }
 
     protected override async void OnExit(ExitEventArgs e)
     {
         await AppHost!.StopAsync();
         AppHost.Dispose();
-
         base.OnExit(e);
     }
 }
-

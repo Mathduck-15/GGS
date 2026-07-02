@@ -7,97 +7,245 @@
              xmlns:local="clr-namespace:GoodGovernanceApp.Views"
              xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="800">
+             d:DesignHeight="600" d:DesignWidth="900">
     <UserControl.DataContext>
         <viewmodels:UserManagementViewModel />
     </UserControl.DataContext>
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- Status Badge Style -->
+        <Style x:Key="StatusBadge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6 2"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="1*"/>
-        </Grid.ColumnDefinitions>
+    <TabControl materialDesign:ColorZoneAssist.Mode="PrimaryLight" Margin="8">
 
-        <!-- Left Side: List & Search -->
-        <materialDesign:Card Grid.Column="0" Margin="8" Padding="16">
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!--  TAB 1: USERS                                             -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <TabItem Header="👤  Users">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
 
-                <!-- Search Bar -->
-                <TextBox Grid.Row="0" materialDesign:HintAssist.Hint="Search Users..." 
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16">
-                    <TextBox.InputBindings>
-                        <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
-                    </TextBox.InputBindings>
-                </TextBox>
+                <!-- Left: List & Search -->
+                <materialDesign:Card Grid.Column="0" Margin="8" Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                <!-- Users DataGrid -->
-                <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" AutoGenerateColumns="False" 
-                          SelectedItem="{Binding SelectedUser}" IsReadOnly="True" 
-                          CanUserAddRows="False" materialDesign:DataGridAssist.CellPadding="12 8">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" />
-                        <DataGridTextColumn Header="Username" Binding="{Binding Username}" />
-                        <DataGridTextColumn Header="Dept" Binding="{Binding Department.Name}" Width="Auto" />
-                        <DataGridTextColumn Header="Specific Role" Binding="{Binding DepartmentRole.Name}" Width="Auto" />
-                        <DataGridTextColumn Header="System Role" Binding="{Binding Role}" />
-                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                        <TextBox Grid.Row="0" materialDesign:HintAssist.Hint="Search Users..." 
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 16"  Foreground="#000000">
+                        </TextBox>
+
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" AutoGenerateColumns="False" 
+                                  SelectedItem="{Binding SelectedUser}" IsReadOnly="True" 
+                                  CanUserAddRows="False" materialDesign:DataGridAssist.CellPadding="12 8">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" />
+                                <DataGridTextColumn Header="Username" Binding="{Binding Name}" />
+                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" />
+                                <DataGridTextColumn Header="System Role" Binding="{Binding Role}" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- Right: Edit/Add Form -->
+                <materialDesign:Card Grid.Column="1" Margin="8" Padding="16">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                        <TextBlock Text="User Details" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#000000"/>
+
+                        <!-- Admin Profile Photo Upload -->
+                        <Grid Width="120" Height="120" HorizontalAlignment="Center" Margin="0 0 0 8">
+                            <!-- Fallback Icon -->
+                            <materialDesign:PackIcon Kind="AccountCircle" Width="120" Height="120"
+                                                     Foreground="{DynamicResource PrimaryHueMidBrush}" />
+                            
+                            <!-- Actual Photo -->
+                            <Ellipse>
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding SelectedUserProfilePhotoSource}" Stretch="UniformToFill" />
+                                </Ellipse.Fill>
+                            </Ellipse>
+                        </Grid>
+
+                        <Button Content="UPLOAD PHOTO" 
+                                Command="{Binding UploadPhotoCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                HorizontalAlignment="Center" Margin="0 0 0 24"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
+
+                        <TextBox materialDesign:HintAssist.Hint="Username" 
+                         Foreground="#000000"
+             Text="{Binding SelectedUser.Name}" 
+             IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                        <TextBox materialDesign:HintAssist.Hint="Email" 
+                                  Foreground="#000000"
+             Text="{Binding SelectedUser.Email}" 
+             IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                        <PasswordBox materialDesign:HintAssist.Hint="Password (Leave blank to keep)"
+                                     Name="UserPasswordBox"
+                                     IsEnabled="{Binding IsEditing}"
+                                     PasswordChanged="UserPasswordBox_PasswordChanged"
+                                     Margin="0 0 0 16" Foreground="#000000" />
+
+                        <ComboBox materialDesign:HintAssist.Hint="System Role"  Foreground="#000000"
+              ItemsSource="{Binding Roles}" 
+              SelectedItem="{Binding SelectedUser.Role}" 
+              IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                        <ComboBox materialDesign:HintAssist.Hint="Department" 
+                                   Foreground="#000000"
+              ItemsSource="{Binding Offices}" 
+              DisplayMemberPath="Name" SelectedValuePath="Id"
+              SelectedValue="{Binding SelectedOfficeId}" 
+              IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+
+                        <CheckBox Content="Is Active" 
+              IsChecked="{Binding SelectedUser.IsActive}" 
+              IsEnabled="{Binding IsEditing}" Margin="0 0 0 24"  Foreground="#000000" />
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="ADD NEW" Command="{Binding AddCommand}" Margin="0 0 8 0" 
+                Style="{StaticResource MaterialDesignOutlinedButton}" 
+                Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+
+                            <Button Content="EDIT" Command="{Binding EditCommand}" Margin="0 0 8 0" 
+                Style="{StaticResource MaterialDesignOutlinedButton}" 
+                Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+
+                            <Button Content="DELETE" Command="{Binding DeleteCommand}" Margin="0 0 8 0" 
+                Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="Red" 
+                Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+
+                            <Button Content="SAVE" Command="{Binding SaveCommand}" Margin="0 0 8 0" 
+                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
+
+                            <Button Content="CANCEL" Command="{Binding CancelCommand}" 
+                Style="{StaticResource MaterialDesignFlatButton}" 
+                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
+                        </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </materialDesign:Card>
             </Grid>
-        </materialDesign:Card>
+        </TabItem>
 
-        <!-- Right Side: Edit/Add Form -->
-        <materialDesign:Card Grid.Column="1" Margin="8" Padding="16">
-            <StackPanel>
-                <TextBlock Text="User Details" FontSize="20" FontWeight="Bold" Margin="0 0 0 16"/>
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!--  TAB 2: VALIDATE USERS                                    -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <TabItem Header="✅  Validation Requests">
+            <materialDesign:Card Margin="8" Padding="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <TextBox materialDesign:HintAssist.Hint="Username" Text="{Binding SelectedUser.Username}" 
-                         IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
-                
-                <PasswordBox materialDesign:HintAssist.Hint="Password (Leave blank to keep)" 
-                             IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
-                
-                <ComboBox materialDesign:HintAssist.Hint="System Role" ItemsSource="{Binding Roles}" 
-                          SelectedItem="{Binding SelectedUser.Role}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                    <!-- Header -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 0 12">
+                        <TextBlock Text="Validate Users" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Button Content="🔄 REFRESH" Command="{Binding RefreshValidateUsersCommand}"
+                                Style="{StaticResource MaterialDesignFlatButton}" Margin="16 0 0 0"/>
+                    </StackPanel>
 
-                <ComboBox materialDesign:HintAssist.Hint="Department" ItemsSource="{Binding Departments}" 
-                          DisplayMemberPath="Name" SelectedValuePath="Id"
-                          SelectedValue="{Binding SelectedDepartmentId}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                    <!-- Filter Pills -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0 0 0 12">
+                        <TextBlock Text="Filter:" VerticalAlignment="Center" Margin="0 0 8 0"/>
+                        <RadioButton Content="All" IsChecked="{Binding FilterAll}" GroupName="StatusFilter"
+                                     Style="{StaticResource MaterialDesignTabRadioButton}" Margin="0 0 4 0"/>
+                        <RadioButton Content="Pending" IsChecked="{Binding FilterPending}" GroupName="StatusFilter"
+                                     Style="{StaticResource MaterialDesignTabRadioButton}" Margin="0 0 4 0"/>
+                        <RadioButton Content="Accepted" IsChecked="{Binding FilterAccepted}" GroupName="StatusFilter"
+                                     Style="{StaticResource MaterialDesignTabRadioButton}" Margin="0 0 4 0"/>
+                        <RadioButton Content="Rejected" IsChecked="{Binding FilterRejected}" GroupName="StatusFilter"
+                                     Style="{StaticResource MaterialDesignTabRadioButton}"/>
+                    </StackPanel>
 
-                <ComboBox materialDesign:HintAssist.Hint="Specific Role (Head/Sec/etc)" ItemsSource="{Binding DepartmentRoles}" 
-                          DisplayMemberPath="Name" SelectedValuePath="Id"
-                          SelectedValue="{Binding SelectedUser.DepartmentRoleId}" IsEnabled="{Binding IsEditing}" Margin="0 0 0 16" />
+                    <!-- Validate Users DataGrid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding ValidateUsersView}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              materialDesign:DataGridAssist.CellPadding="12 8"
+                              SelectedItem="{Binding SelectedValidateUser}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID"       Binding="{Binding Id}"            Width="50"/>
+                            <DataGridTextColumn Header="Civil ID" Binding="{Binding  CivilRegistryId }"  Width="120"/>
+                            <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}"      Width="*"/>
+                            <DataGridTextColumn Header="Email"    Binding="{Binding Email}"          Width="*"/>
+                            <DataGridTextColumn Header="Phone"    Binding="{Binding Phone}"          Width="120"/>
+                            <DataGridTextColumn Header="Address"  Binding="{Binding Address}"        Width="*"/>
+                        
+                            <DataGridTextColumn Header="Submitted" Binding="{Binding CreatedAt, StringFormat=\{0:MM/dd/yyyy\}}" Width="110"/>
 
-                <CheckBox Content="Is Active" IsChecked="{Binding SelectedUser.IsActive}" 
-                          IsEnabled="{Binding IsEditing}" Margin="0 0 0 24" />
+                            <!-- Status column with colour-coded badge -->
+                            <DataGridTemplateColumn Header="Status" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="4" Padding="6 2" HorizontalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="pending">
+                                                            <Setter Property="Background" Value="#FFF3CD"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="accepted">
+                                                            <Setter Property="Background" Value="#D4EDDA"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="rejected">
+                                                            <Setter Property="Background" Value="#F8D7DA"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Status}" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="pending">
+                                                                <Setter Property="Foreground" Value="#856404"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="accepted">
+                                                                <Setter Property="Foreground" Value="#155724"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="rejected">
+                                                                <Setter Property="Foreground" Value="#721C24"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="ADD NEW" Command="{Binding AddCommand}" Margin="0 0 8 0" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
-                    
-                    <Button Content="EDIT" Command="{Binding AddCommand}" Margin="0 0 8 0" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
+                            <DataGridTextColumn Header="Validated At" Binding="{Binding ValidatedAt, StringFormat=\{0:MM/dd/yyyy\}}" Width="110"/>
+                            <DataGridTextColumn Header="Reason" Binding="{Binding RejectionReason}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </materialDesign:Card>
+        </TabItem>
 
-                    <Button Content="DELETE" Command="{Binding DeleteCommand}" Margin="0 0 8 0" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="Red" 
-                            Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}" />
-
-                    <Button Content="SAVE" Command="{Binding SaveCommand}" Margin="0 0 8 0" 
-                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
-                    
-                    <Button Content="CANCEL" Command="{Binding CancelCommand}" Style="{StaticResource MaterialDesignFlatButton}" 
-                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}" />
-                </StackPanel>
-            </StackPanel>
-        </materialDesign:Card>
-    </Grid>
+    </TabControl>
 </UserControl>

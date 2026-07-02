@@ -3,12 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
-        Title="Database Connection Settings" Height="450" Width="500"
+        Title="Database Connection Settings" Height="486" Width="640"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         FontFamily="{DynamicResource MaterialDesignFont}">
-    
+
     <Window.DataContext>
         <viewmodels:SettingsViewModel />
     </Window.DataContext>
@@ -20,43 +20,124 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Database Configuration" FontSize="24" FontWeight="Light" Margin="0 0 0 16"/>
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0 0 0 16">
+            <TextBlock Text="Database Configuration" FontSize="24" FontWeight="Light" Foreground="#000000"/>
+            <TextBlock Text="Select a preset or manually enter your connection details." 
+                       FontSize="12" Foreground="#000000" Margin="0 4 0 0"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <materialDesign:Card Margin="0 0 0 16" Padding="16">
+
+                <!-- GGMS Connection -->
+                <materialDesign:Card Margin="0 0 0 16" Padding="20">
                     <StackPanel>
-                        <TextBlock Text="Connections" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 12"/>
-                        
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
-                            <TextBlock Text="Use Remote Database:" VerticalAlignment="Center" Margin="0 0 16 0"/>
-                            <ToggleButton IsChecked="{Binding UseRemoteDatabase}" Style="{StaticResource MaterialDesignSwitchToggleButton}" />
+                            <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
+                                                     VerticalAlignment="Center" Margin="0 0 8 0"
+                                                     Foreground="#000000"/>
+                            <TextBlock Text="GGMS Database" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#000000"/>
                         </StackPanel>
 
-                        <TextBox materialDesign:HintAssist.Hint="Local Connection String" 
-                                 Text="{Binding LocalConnectionString}" 
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 12" />
+                        <!-- Preset Buttons -->
+                        <TextBlock Text="Quick Presets — fills both GGMS and CRS simultaneously:" FontSize="12"
+                                   Foreground="#000000" Margin="0 0 0 10"/>
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                            <Grid Margin="0 0 8 0" Width="100">
+                                <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                <Button Content="🖥 LOCAL" Command="{Binding PresetLocalCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPreset}" Value="LOCAL">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
 
-                        <TextBox materialDesign:HintAssist.Hint="Remote Connection String" 
-                                 Text="{Binding RemoteConnectionString}" 
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0 0 0 12" />
+                            <Grid Margin="0 0 8 0" Width="130">
+                                <Button Content="🌐 NETWORK" Command="{Binding PresetNetworkCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                <Button Content="🌐 NETWORK" Command="{Binding PresetNetworkCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPreset}" Value="NETWORK">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+
+                            <Grid Width="130">
+                                <Button Content="☁ REMOTE" Command="{Binding PresetRemoteCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                <Button Content="☁ REMOTE" Command="{Binding PresetRemoteCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPreset}" Value="REMOTE">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        
+
                     </StackPanel>
                 </materialDesign:Card>
 
-                <materialDesign:Card Padding="16">
+                <!-- CRS Connection -->
+               
+
+                <!-- Test Connection -->
+                <materialDesign:Card Padding="20">
                     <StackPanel>
-                        <TextBlock Text="Backup Utility" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 12"/>
-                        <TextBox materialDesign:HintAssist.Hint="mysqldump.exe Path" 
-                                 Text="{Binding MySqlDumpPath}" 
-                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                            <materialDesign:PackIcon Kind="CheckNetwork" Width="20" Height="20" 
+                                                     VerticalAlignment="Center" Margin="0 0 8 0"
+                                                     Foreground="#000000"/>
+                            <TextBlock Text="Test Connections" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#000000"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 12">
+                            <Button x:Name="TestConnectionBtn" Content="🔌 TEST BOTH"
+                                    Command="{Binding TestBothCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0 0 12 0"/>
+                            <ProgressBar x:Name="TestProgress" IsIndeterminate="True"
+                                         Width="24" Height="24"
+                                         Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                         VerticalAlignment="Center"
+                                         Visibility="{Binding IsTesting, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding GgmsTestResult}" FontSize="13" FontWeight="Medium" Margin="0 0 0 4"
+                                   Foreground="{DynamicResource MaterialDesignBody}"/>
+                        <TextBlock Text="{Binding CrsTestResult}" FontSize="13" FontWeight="Medium"
+                                   Foreground="{DynamicResource MaterialDesignBody}"/>
                     </StackPanel>
                 </materialDesign:Card>
+
             </StackPanel>
         </ScrollViewer>
 
+        <!-- Footer -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 16 0 0">
             <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Margin="0 0 16 0" Foreground="Green"/>
-            <Button Content="SAVE &amp; CLOSE" Command="{Binding SaveSettingsCommand}" Click="SaveButton_Click" />
+            <Button Content="SAVE &amp; CLOSE" Command="{Binding SaveSettingsCommand}" Click="SaveButton_Click"
+                    Style="{StaticResource MaterialDesignRaisedButton}"/>
         </StackPanel>
     </Grid>
 </Window>

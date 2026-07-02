@@ -1,0 +1,106 @@
+<UserControl x:Class="GoodGovernanceApp.Views.AuditLogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000"
+             TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+             TextElement.FontFamily="{DynamicResource MaterialDesignFont}"
+             Background="{DynamicResource MaterialDesignPaper}">
+
+    <UserControl.DataContext>
+        <viewmodels:AuditLogViewModel/>
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="System Audit Logs" FontSize="32" FontWeight="Light"/>
+            <TextBlock Text="View the history of user actions and changes in the system." FontSize="14" Foreground="{DynamicResource MaterialDesignToolTipBackground}" Margin="0,4,0,0" Opacity="0.8"/>
+        </StackPanel>
+
+        <!-- Toolbar -->
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Search Box -->
+                <TextBox Grid.Column="0" 
+                         materialDesign:HintAssist.Hint="Search by Username, Action, Model, or Description..."
+                         materialDesign:HintAssist.IsFloating="True"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,16,0" VerticalAlignment="Center"/>
+
+                <!-- Refresh Button -->
+                <Button Grid.Column="1" Command="{Binding RefreshCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- DataGrid inside a Card -->
+        <materialDesign:Card Grid.Row="2">
+            <Grid>
+                <DataGrid ItemsSource="{Binding FilteredAuditLogs}" 
+                          AutoGenerateColumns="False" 
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          Background="Transparent"
+                          VerticalScrollBarVisibility="Auto">
+                    
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Date &amp; Time" Binding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="160" FontWeight="SemiBold"/>
+                        <DataGridTextColumn Header="User" Binding="{Binding Username}" Width="150"/>
+                        <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="120">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Module / Type" Binding="{Binding ModelType}" Width="150"/>
+                        <DataGridTextColumn Header="Record ID" Binding="{Binding ModelId}" Width="100"/>
+                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Loading Overlay -->
+                <Border Background="#88000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" IsIndeterminate="True" Width="40" Height="40" Foreground="White"/>
+                        <TextBlock Text="Loading logs..." Foreground="White" Margin="0,16,0,0" FontSize="16"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

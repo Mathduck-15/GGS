@@ -1,0 +1,57 @@
+<Window x:Class="GoodGovernanceApp.Views.OtpVerificationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GoodGovernanceApp.Views"
+        mc:Ignorable="d"
+        Title="OtpVerificationWindow" Height="450" Width="438"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+
+
+    <StackPanel Margin="32" VerticalAlignment="Center">
+
+        <materialDesign:PackIcon Kind="ShieldLock" Width="48" Height="48"
+                                 HorizontalAlignment="Center"
+                                 Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                 Margin="0 0 0 12"/>
+
+        <TextBlock x:Name="TitleText" Text="Verification" FontSize="20" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" Margin="0 0 0 6"/>
+
+        <TextBlock x:Name="SubtitleText"
+                   FontSize="12" Foreground="#000000"
+                   HorizontalAlignment="Center" TextAlignment="Center"
+                   TextWrapping="Wrap" Margin="0 0 0 20"/>
+
+        <TextBox x:Name="OtpInput"
+         materialDesign:HintAssist.Hint="Enter 6-digit OTP"
+         materialDesign:HintAssist.Foreground="#000000"
+         materialDesign:HintAssist.IsFloating="False"
+         Foreground="Black"
+         Background="#888888"
+         MaxLength="6" FontSize="22" TextAlignment="Center"
+         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+         HorizontalAlignment="Center" Width="200"
+         Margin="0 0 0 16"/>
+
+        <Button Content="? VERIFY &amp; PROCEED"
+                Width="200" Height="40" FontSize="13"
+                Style="{StaticResource MaterialDesignRaisedButton}"
+                Click="VerifyButton_Click"
+                Margin="0 0 0 10"/>
+
+        <Button Content="? Resend OTP"
+                Width="200" Height="36" FontSize="12"
+                Style="{StaticResource MaterialDesignOutlinedButton}"
+                Click="ResendButton_Click"
+                Margin="0 0 0 12"/>
+
+        <TextBlock x:Name="StatusText"
+                   HorizontalAlignment="Center" FontSize="12"
+                   TextAlignment="Center" TextWrapping="Wrap"/>
+
+    </StackPanel>
+</Window>

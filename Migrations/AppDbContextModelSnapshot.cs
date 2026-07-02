@@ -22,6 +22,56 @@ namespace GoodGovernanceApp.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("GoodGovernanceApp.Models.AuditTrail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .HasColumnType("longtext")
+                        .HasColumnName("action");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<long?>("ModelId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("model_id");
+
+                    b.Property<string>("ModelType")
+                        .HasColumnType("longtext")
+                        .HasColumnName("model_type");
+
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("office_id");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("audit_trails", (string)null);
+                });
+
             modelBuilder.Entity("GoodGovernanceApp.Models.Budget", b =>
                 {
                     b.Property<int>("Id")
@@ -36,6 +86,9 @@ namespace GoodGovernanceApp.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("Year")
                         .HasColumnType("int");
 
@@ -43,7 +96,61 @@ namespace GoodGovernanceApp.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("OfficeId");
+
                     b.ToTable("Budgets");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.BudgetAllocation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("AllocatedAmount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("amount");
+
+                    b.Property<long?>("AllocatedById")
+                        .HasColumnType("bigint")
+                        .HasColumnName("allocated_by");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<long?>("MasterBudgetId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("master_budget_id");
+
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("office_id");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AllocatedById");
+
+                    b.HasIndex("MasterBudgetId");
+
+                    b.HasIndex("OfficeId");
+
+                    b.ToTable("budget_allocations", (string)null);
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.Category", b =>
@@ -63,12 +170,20 @@ namespace GoodGovernanceApp.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("categories", (string)null);
                 });
 
-            modelBuilder.Entity("GoodGovernanceApp.Models.Department", b =>
+            modelBuilder.Entity("GoodGovernanceApp.Models.ConsolidatedTransactions", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -76,48 +191,172 @@ namespace GoodGovernanceApp.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("decimal(20,4)")
+                        .HasColumnName("amount");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
+                    b.Property<string>("Barangay")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("barangay");
+
+                    b.Property<string>("BeneficiaryId")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("beneficiary_id");
+
+                    b.Property<string>("CivilRegistryId")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("civil_registry_id");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("FullName")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("full_name");
+
+                    b.Property<string>("HouseholdNo")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("household_no");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("last_name");
+
+                    b.Property<string>("MiddleName")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("middle_name");
+
+                    b.Property<string>("OfficeId")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("office_id");
+
+                    b.Property<string>("OfficeName")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("office_name");
+
+                    b.Property<string>("ProjectCode")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("project_code");
+
+                    b.Property<string>("ProjectName")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("project_name");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<string>("TransactionType")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("transaction_type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("consolidated_transactions");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.CrsBeneficiaryCache", b =>
+                {
+                    b.Property<int>("BeneficiaryCacheId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("beneficiary_cache_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BeneficiaryCacheId"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext")
+                        .HasColumnName("address");
+
+                    b.Property<int?>("Age")
+                        .HasColumnType("int")
+                        .HasColumnName("age");
+
+                    b.Property<string>("BeneficiaryId")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("beneficiary_id");
+
+                    b.Property<DateTime>("CachedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("cached_at");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date")
+                        .HasColumnName("date_of_birth");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("FullName")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("full_name");
 
-                    b.HasKey("Id");
+                    b.Property<bool>("IsPwd")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_pwd");
 
-                    b.ToTable("Departments");
-                });
+                    b.Property<bool>("IsSenior")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_senior");
 
-            modelBuilder.Entity("GoodGovernanceApp.Models.DepartmentAllocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("LastName")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("last_name");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("MaritalStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("marital_status");
 
-                    b.Property<decimal>("AllocatedAmount")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<string>("MiddleName")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("middle_name");
 
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("int");
+                    b.Property<string>("Sex")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("sex");
 
-                    b.Property<decimal>("SpentAmount")
-                        .HasColumnType("decimal(65,30)");
+                    b.HasKey("BeneficiaryCacheId");
 
-                    b.Property<int>("YearlyBudgetId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("YearlyBudgetId");
-
-                    b.ToTable("DepartmentAllocations");
+                    b.ToTable("crs_beneficiary_cache");
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.DepartmentRole", b =>
@@ -128,11 +367,7 @@ namespace GoodGovernanceApp.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
@@ -141,9 +376,12 @@ namespace GoodGovernanceApp.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
+                    b.HasIndex("OfficeId");
 
                     b.ToTable("DepartmentRoles");
                 });
@@ -163,8 +401,8 @@ namespace GoodGovernanceApp.Migrations
                     b.Property<DateTime>("EvaluationDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("EvaluatorId")
-                        .HasColumnType("int");
+                    b.Property<long>("EvaluatorId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Score")
                         .HasColumnType("int");
@@ -181,6 +419,130 @@ namespace GoodGovernanceApp.Migrations
                     b.ToTable("Evaluations");
                 });
 
+            modelBuilder.Entity("GoodGovernanceApp.Models.MasterBudget", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<long?>("CreatedById")
+                        .HasColumnType("bigint")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<string>("FiscalYear")
+                        .HasColumnType("longtext")
+                        .HasColumnName("budget_year");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("total_budget");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.ToTable("master_budget", (string)null);
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.Office", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext")
+                        .HasColumnName("name");
+
+                    b.Property<string>("OfficeCode")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("office_code");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficeCode")
+                        .IsUnique();
+
+                    b.ToTable("tbl_offices", (string)null);
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.OfficeAllocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AllocatedAmount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("OfficeCode")
+                        .HasColumnType("longtext")
+                        .HasColumnName("office_code");
+
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("office_id");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("YearlyBudgetId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficeId");
+
+                    b.HasIndex("YearlyBudgetId");
+
+                    b.ToTable("officeallocations");
+                });
+
             modelBuilder.Entity("GoodGovernanceApp.Models.Parameter", b =>
                 {
                     b.Property<int>("Id")
@@ -188,6 +550,9 @@ namespace GoodGovernanceApp.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasMaxLength(255)
@@ -198,13 +563,63 @@ namespace GoodGovernanceApp.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Parameters");
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("parameters", (string)null);
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.ProgramProvision", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext")
+                        .HasColumnName("program");
+
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("office_id");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfficeId");
+
+                    b.ToTable("tbl_program_provision", (string)null);
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.SystemLog", b =>
@@ -226,8 +641,8 @@ namespace GoodGovernanceApp.Migrations
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -236,42 +651,162 @@ namespace GoodGovernanceApp.Migrations
                     b.ToTable("SystemLogs");
                 });
 
+            modelBuilder.Entity("GoodGovernanceApp.Models.TblService", b =>
+                {
+                    b.Property<long>("ServicesId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("services_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("ServicesId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("ServicesId");
+
+                    b.ToTable("tbl_services", (string)null);
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.TblTransaction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("amount");
+
+                    b.Property<long?>("BudgetAllocationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("budget_allocation_id");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<long?>("DistributedById")
+                        .HasColumnType("bigint")
+                        .HasColumnName("distributed_by_id");
+
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("office_id");
+
+                    b.Property<long?>("ProgramId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("program_id");
+
+                    b.Property<long?>("ServicesId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("services_id");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("VoucherCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("voucher_code");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetAllocationId");
+
+                    b.HasIndex("DistributedById");
+
+                    b.HasIndex("OfficeId");
+
+                    b.HasIndex("ProgramId");
+
+                    b.HasIndex("ServicesId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("tbl_transaction", (string)null);
+                });
+
             modelBuilder.Entity("GoodGovernanceApp.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("Amount");
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("Date")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("date");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("ProjectCode")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("project_code");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
 
                     b.Property<string>("TransactionType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)")
+                        .HasColumnName("transaction_type");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("VoucherCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("voucher_code");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Transactions");
+                    b.ToTable("transactions", (string)null);
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.UploadedFile", b =>
@@ -282,7 +817,7 @@ namespace GoodGovernanceApp.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DepartmentId")
+                    b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<string>("FileName")
@@ -297,6 +832,9 @@ namespace GoodGovernanceApp.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
+                    b.Property<long>("OfficeId")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("ParameterId")
                         .HasColumnType("int");
 
@@ -309,7 +847,9 @@ namespace GoodGovernanceApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("OfficeId");
 
                     b.HasIndex("ParameterId");
 
@@ -318,42 +858,181 @@ namespace GoodGovernanceApp.Migrations
 
             modelBuilder.Entity("GoodGovernanceApp.Models.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<int?>("DepartmentId")
-                        .HasColumnType("int");
+                    b.Property<string>("AboutMe")
+                        .HasColumnType("longtext")
+                        .HasColumnName("about_me");
 
-                    b.Property<int?>("DepartmentRoleId")
-                        .HasColumnType("int");
+                    b.Property<long?>("ConstituentId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("constituent_id");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("longtext")
+                        .HasColumnName("location");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("name");
+
+                    b.Property<long?>("OfficeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("office_id");
+
+                    b.Property<string>("OfficeType")
+                        .HasColumnType("longtext")
+                        .HasColumnName("office_type");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("password");
+
+                    b.Property<long?>("Phone")
+                        .HasColumnType("bigint")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("ProfilePhoto")
+                        .HasColumnType("longtext")
+                        .HasColumnName("profile_photo");
+
+                    b.Property<string>("RememberToken")
+                        .HasColumnType("longtext")
+                        .HasColumnName("remember_token");
 
                     b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("longtext")
+                        .HasDefaultValue("user")
+                        .HasColumnName("role");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                    b.Property<string>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("longtext")
+                        .HasDefaultValue("active")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
+                    b.HasIndex("Email")
+                        .IsUnique();
 
-                    b.HasIndex("DepartmentRoleId");
+                    b.HasIndex("OfficeId");
 
-                    b.ToTable("Users");
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.ValidateUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("longtext")
+                        .HasColumnName("address");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("category_id");
+
+                    b.Property<string>("CivilRegistryId")
+                        .HasColumnType("longtext")
+                        .HasColumnName("civil_registryid");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("longtext")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Firstname")
+                        .HasColumnType("longtext")
+                        .HasColumnName("firstname");
+
+                    b.Property<string>("Lastname")
+                        .HasColumnType("longtext")
+                        .HasColumnName("lastname");
+
+                    b.Property<string>("Middlename")
+                        .HasColumnType("longtext")
+                        .HasColumnName("middlename");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("longtext")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("Photo")
+                        .HasColumnType("longtext")
+                        .HasColumnName("photo");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("longtext")
+                        .HasColumnName("rejection_reason");
+
+                    b.Property<string>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("longtext")
+                        .HasDefaultValue("pending")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("validated_at");
+
+                    b.Property<long?>("ValidatedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("validated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("validate_users", (string)null);
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.YearlyBudget", b =>
@@ -368,15 +1047,82 @@ namespace GoodGovernanceApp.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
 
                     b.Property<int>("Year")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("YearlyBudgets");
+                    b.ToTable("yearlybudgets", (string)null);
+                });
+
+            modelBuilder.Entity("ProjectDetail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal?>("Budget")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("total_budget");
+
+                    b.Property<string>("ContactPerson")
+                        .HasColumnType("longtext")
+                        .HasColumnName("contact_person");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext")
+                        .HasColumnName("project");
+
+                    b.Property<string>("OfficeCode")
+                        .HasColumnType("longtext")
+                        .HasColumnName("office_code");
+
+                    b.Property<string>("ProjectDetailsID")
+                        .HasColumnType("longtext")
+                        .HasColumnName("project_details_id");
+
+                    b.Property<Guid>("SyncId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("SyncId");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("VoucherCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("voucher_code");
+
+                    b.Property<int?>("YearlyBudgetId")
+                        .HasColumnType("int")
+                        .HasColumnName("yearly_budget_id");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("project_details", (string)null);
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.Budget", b =>
@@ -387,37 +1133,48 @@ namespace GoodGovernanceApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Category");
+
+                    b.Navigation("Office");
                 });
 
-            modelBuilder.Entity("GoodGovernanceApp.Models.DepartmentAllocation", b =>
+            modelBuilder.Entity("GoodGovernanceApp.Models.BudgetAllocation", b =>
                 {
-                    b.HasOne("GoodGovernanceApp.Models.Department", "Department")
+                    b.HasOne("GoodGovernanceApp.Models.User", "AllocatedBy")
                         .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AllocatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("GoodGovernanceApp.Models.YearlyBudget", "YearlyBudget")
+                    b.HasOne("GoodGovernanceApp.Models.MasterBudget", "MasterBudget")
                         .WithMany("Allocations")
-                        .HasForeignKey("YearlyBudgetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("MasterBudgetId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Department");
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("YearlyBudget");
+                    b.Navigation("AllocatedBy");
+
+                    b.Navigation("MasterBudget");
+
+                    b.Navigation("Office");
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.DepartmentRole", b =>
                 {
-                    b.HasOne("GoodGovernanceApp.Models.Department", "Department")
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
                         .WithMany("Roles")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Department");
+                    b.Navigation("Office");
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.Evaluation", b =>
@@ -439,6 +1196,54 @@ namespace GoodGovernanceApp.Migrations
                     b.Navigation("UploadedFile");
                 });
 
+            modelBuilder.Entity("GoodGovernanceApp.Models.MasterBudget", b =>
+                {
+                    b.HasOne("GoodGovernanceApp.Models.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.OfficeAllocation", b =>
+                {
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GoodGovernanceApp.Models.YearlyBudget", "YearlyBudget")
+                        .WithMany("Allocations")
+                        .HasForeignKey("YearlyBudgetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Office");
+
+                    b.Navigation("YearlyBudget");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.Parameter", b =>
+                {
+                    b.HasOne("GoodGovernanceApp.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.ProgramProvision", b =>
+                {
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Office");
+                });
+
             modelBuilder.Entity("GoodGovernanceApp.Models.SystemLog", b =>
                 {
                     b.HasOne("GoodGovernanceApp.Models.User", "User")
@@ -449,29 +1254,60 @@ namespace GoodGovernanceApp.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GoodGovernanceApp.Models.Transaction", b =>
+            modelBuilder.Entity("GoodGovernanceApp.Models.TblTransaction", b =>
                 {
-                    b.HasOne("GoodGovernanceApp.Models.Category", "Category")
-                        .WithMany("Transactions")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("GoodGovernanceApp.Models.BudgetAllocation", "BudgetAllocation")
+                        .WithMany()
+                        .HasForeignKey("BudgetAllocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GoodGovernanceApp.Models.User", "DistributedBy")
+                        .WithMany()
+                        .HasForeignKey("DistributedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GoodGovernanceApp.Models.ProgramProvision", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GoodGovernanceApp.Models.TblService", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServicesId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("GoodGovernanceApp.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Category");
+                    b.Navigation("BudgetAllocation");
+
+                    b.Navigation("DistributedBy");
+
+                    b.Navigation("Office");
+
+                    b.Navigation("Program");
+
+                    b.Navigation("Service");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.UploadedFile", b =>
                 {
-                    b.HasOne("GoodGovernanceApp.Models.Department", "Department")
+                    b.HasOne("GoodGovernanceApp.Models.Category", "Category")
                         .WithMany()
-                        .HasForeignKey("DepartmentId")
+                        .HasForeignKey("CategoryId");
+
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -481,39 +1317,60 @@ namespace GoodGovernanceApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Department");
+                    b.Navigation("Category");
+
+                    b.Navigation("Office");
 
                     b.Navigation("Parameter");
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.User", b =>
                 {
-                    b.HasOne("GoodGovernanceApp.Models.Department", "Department")
+                    b.HasOne("GoodGovernanceApp.Models.Office", "Office")
                         .WithMany("Users")
-                        .HasForeignKey("DepartmentId")
+                        .HasForeignKey("OfficeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GoodGovernanceApp.Models.DepartmentRole", "DepartmentRole")
+                    b.Navigation("Office");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.ValidateUser", b =>
+                {
+                    b.HasOne("GoodGovernanceApp.Models.Category", "Category")
                         .WithMany()
-                        .HasForeignKey("DepartmentRoleId");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Department");
+                    b.HasOne("GoodGovernanceApp.Models.User", "AppUser")
+                        .WithOne("ValidationInfo")
+                        .HasForeignKey("GoodGovernanceApp.Models.ValidateUser", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("DepartmentRole");
+                    b.Navigation("AppUser");
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.Category", b =>
                 {
                     b.Navigation("Budgets");
-
-                    b.Navigation("Transactions");
                 });
 
-            modelBuilder.Entity("GoodGovernanceApp.Models.Department", b =>
+            modelBuilder.Entity("GoodGovernanceApp.Models.MasterBudget", b =>
+                {
+                    b.Navigation("Allocations");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.Office", b =>
                 {
                     b.Navigation("Roles");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("GoodGovernanceApp.Models.User", b =>
+                {
+                    b.Navigation("ValidationInfo");
                 });
 
             modelBuilder.Entity("GoodGovernanceApp.Models.YearlyBudget", b =>

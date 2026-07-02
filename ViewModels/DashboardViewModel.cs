@@ -6,6 +6,8 @@ using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using LiveCharts;
+using LiveCharts.Wpf;
 
 namespace GoodGovernanceApp.ViewModels;
 
@@ -16,17 +18,37 @@ public class DashboardViewModel : ViewModelBase
     private decimal _totalIncome;
     private decimal _totalExpense;
     private int _activeUsersCount;
-    
+
+    int currentYear = DateTime.Now.Year;
+
     // Custom chart data
     private double _incomeHeight;
     private double _expenseHeight;
     private List<DeptAllocationData> _deptAllocations = new List<DeptAllocationData>();
+
+
+    private SeriesCollection _deptPieSeries = new SeriesCollection();
+    private SeriesCollection _deptProject  = new SeriesCollection();
+
+    public SeriesCollection DeptProjectPieSeries
+    {
+        get => _deptProject;
+        set { _deptProject = value; OnPropertyChanged(); }
+    }
+
+    public SeriesCollection DeptPieSeries
+    {
+        get => _deptPieSeries;
+        set { _deptPieSeries = value; OnPropertyChanged(); }
+    }
 
     public decimal TotalBudget
     {
         get => _totalBudget;
         set { _totalBudget = value; OnPropertyChanged(); }
     }
+
+
 
     public decimal TotalIncome
     {
@@ -83,34 +105,63 @@ public class DashboardViewModel : ViewModelBase
 
         try
         {
-            TotalBudget = await _context.Budgets.SumAsync(b => b.Amount);
+            TotalBudget = await _context.YearlyBudgets.SumAsync(b => b.TotalAmount);
             
             TotalIncome = await _context.Transactions
-                                        .Where(t => t.TransactionType == "Income")
-                                        .SumAsync(t => t.Amount);
+                                        .SumAsync(t => t.Amount ?? 0);
 
             TotalExpense = await _context.Transactions
-                                         .Where(t => t.TransactionType == "Expense")
-                                         .SumAsync(t => t.Amount);
+                                         .SumAsync(t => t.Amount ?? 0);
 
             ActiveUsersCount = await _context.Users
-                                             .CountAsync(u => u.IsActive);
+                                             .CountAsync(u => u.Status == "active");
 
-            var deptData = await _context.DepartmentAllocations
-                .Include(a => a.Department)
-                .GroupBy(a => a.Department.Name)
-                .Select(g => new DeptAllocationData { Name = g.Key, Amount = (double)g.Sum(a => a.AllocatedAmount) })
+
+            var currentYear = DateTime.Now.Year;
+
+            var projectData = await _context.ProjectDetails
+                .Join(_context.YearlyBudgets,
+                    p => p.YearlyBudgetId,
+                    y => y.Id,
+                    (p, y) => new { p, y })
+                .Where(x => x.y.Year == currentYear)
+                .GroupBy(x => x.p.Name)
+                .Select(g => new DeptAllocationData
+                {
+                    Name = g.Key,
+                    Amount = (double)g.Sum(x => x.p.Budget ?? 0)
+                })
                 .ToListAsync();
 
-            if (deptData.Count > 0)
+            var seriesproject = new SeriesCollection();
+
+            foreach (var d in projectData)  // <-- use projectData now
             {
-                DeptAllocations = deptData;
+                seriesproject.Add(new LiveCharts.Wpf.PieSeries
+                {
+                    Title = d.Name,
+                    Values = new ChartValues<double> { d.Amount },
+                    DataLabels = true
+                });
             }
-            else
+            DeptProjectPieSeries = seriesproject;
+
+
+            var officeData = await _context.OfficeAllocations
+            .Include(a => a.Office)
+            .GroupBy(a => a.Office!.Name)
+            .Select(g => new DeptAllocationData { Name = g.Key, Amount = (double)g.Sum(a => a.AllocatedAmount) })
+            .ToListAsync();
+
+            var series = new SeriesCollection(); foreach (var d in officeData) { series.Add(new LiveCharts.Wpf.PieSeries
             {
-                DeptAllocations = new List<DeptAllocationData> { new DeptAllocationData { Name = "General", Amount = 100 } };
-            }
-            
+                Title = d.Name,
+                Values = new ChartValues<double> { d.Amount }, DataLabels = true
+            }); } DeptPieSeries = series;
+
+
+
+
             UpdateChartHeights();
         }
         catch { }

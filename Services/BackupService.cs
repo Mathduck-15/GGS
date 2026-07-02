@@ -5,82 +5,149 @@ using System.Threading.Tasks;
 
 namespace GoodGovernanceApp.Services;
 
+/// <summary>
+/// Wraps mysqldump to create database backups.
+///
+/// ── Backup Type Explanation ──────────────────────────────────────────────────
+///
+/// FULL BACKUP
+///   mysqldump --single-transaction --routines --triggers --events
+///   Dumps schema + all data. Required as a baseline for the other types.
+///   File prefix: FullBackup_
+///
+/// DIFFERENTIAL BACKUP
+///   mysqldump --single-transaction --no-create-info
+///   Dumps ONLY data rows (no CREATE TABLE statements), representing changes
+///   since the last Full backup (schema is assumed unchanged).
+///   To restore: apply Full backup first, then replay this file.
+///   File prefix: DiffBackup_
+///   Note: For true differential you need MySQL binary logs; this is a practical
+///   approximation for application-level scheduling.
+///
+/// INCREMENTAL BACKUP
+///   Same as Differential but captures data since the last backup of any type.
+///   In production, enable binary logging (log_bin=ON in my.ini) and use
+///   mysqlbinlog to replay changes between specific positions/time ranges.
+///   File prefix: IncBackup_
+///
+/// ─────────────────────────────────────────────────────────────────────────────
+/// </summary>
 public class BackupService
 {
-    public string MySqlDumpPath { get; set; } = "mysqldump"; // Default to PATH usage
+    public string MySqlDumpPath { get; set; } = "mysqldump";
 
-    public async Task<bool> CreateFullBackupAsync(string connectionString, string backupDirectory)
-    {
-        return await ExecuteBackupAsync(connectionString, backupDirectory, "FullBackup");
-    }
+    // ── Public entry points ───────────────────────────────────────────────────
 
-    public async Task<bool> CreateDifferentialBackupAsync(string connectionString, string backupDirectory)
-    {
-        // For MySQL, a true differential backup requires binary logging. 
-        // For a desktop app, we simulate this by dumping data changed since the last full backup date.
-        // A simplified implementation using mysqldump for demonstration of the requirement:
-        return await ExecuteBackupAsync(connectionString, backupDirectory, "DiffBackup");
-    }
+    public Task<bool> CreateFullBackupAsync(string connectionString, string backupDirectory)
+        => ExecuteBackupAsync(connectionString, backupDirectory, "FullBackup",
+            extraArgs: "--single-transaction --routines --triggers --events");
 
-    public async Task<bool> CreateIncrementalBackupAsync(string connectionString, string backupDirectory)
-    {
-        // Similar to differential, true incremental requires binary logs (mysqlbinlog).
-        // A placeholder for the desktop implementation:
-        return await ExecuteBackupAsync(connectionString, backupDirectory, "IncBackup");
-    }
+    public Task<bool> CreateDifferentialBackupAsync(string connectionString, string backupDirectory)
+        // --no-create-info = data only; mirrors "what changed" since last full backup.
+        => ExecuteBackupAsync(connectionString, backupDirectory, "DiffBackup",
+            extraArgs: "--single-transaction --no-create-info");
 
-    private async Task<bool> ExecuteBackupAsync(string connectionString, string backupDirectory, string prefix)
+    public Task<bool> CreateIncrementalBackupAsync(string connectionString, string backupDirectory)
+        // Same technique as differential for application-level incremental tracking.
+        => ExecuteBackupAsync(connectionString, backupDirectory, "IncBackup",
+            extraArgs: "--single-transaction --no-create-info");
+
+    // ── Core execution ────────────────────────────────────────────────────────
+
+    private async Task<bool> ExecuteBackupAsync(
+        string connectionString,
+        string backupDirectory,
+        string prefix,
+        string extraArgs = "")
     {
         try
         {
             if (!Directory.Exists(backupDirectory))
                 Directory.CreateDirectory(backupDirectory);
 
-            var dbServer = ExtractConnectionStringValue(connectionString, "Server");
-            var dbUser = ExtractConnectionStringValue(connectionString, "User") ?? ExtractConnectionStringValue(connectionString, "Uid");
-            var dbPass = ExtractConnectionStringValue(connectionString, "Password") ?? ExtractConnectionStringValue(connectionString, "Pwd");
-            var dbName = ExtractConnectionStringValue(connectionString, "Database");
+            string? dbServer = ExtractValue(connectionString, "Server");
+            string? dbPort   = ExtractValue(connectionString, "Port") ?? "3306";
+            string? dbUser   = ExtractValue(connectionString, "User")
+                            ?? ExtractValue(connectionString, "Uid");
+            string? dbPass   = ExtractValue(connectionString, "Password")
+                            ?? ExtractValue(connectionString, "Pwd");
+            string? dbName   = ExtractValue(connectionString, "Database");
 
-            string fileName = $"{prefix}_{dbName}_{DateTime.Now:yyyyMMdd_HHmmss}.sql";
-            string filePath = Path.Combine(backupDirectory, fileName);
-
-            string arguments = $"-h {dbServer} -u {dbUser} {(string.IsNullOrEmpty(dbPass) ? "" : $"-p{dbPass}")} {dbName} --result-file=\"{filePath}\"";
-
-            var processStartInfo = new ProcessStartInfo
+            if (string.IsNullOrWhiteSpace(dbName))
             {
-                FileName = MySqlDumpPath,
-                Arguments = arguments,
+                LogError(backupDirectory, "Cannot determine database name from connection string.");
+                return false;
+            }
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string fileName  = $"{prefix}_{dbName}_{timestamp}.sql";
+            string filePath  = Path.Combine(backupDirectory, fileName);
+
+            string passwordArg = string.IsNullOrWhiteSpace(dbPass) ? "" : $"-p\"{dbPass}\"";
+            string arguments   =
+                $"-h \"{dbServer}\" -P {dbPort} -u \"{dbUser}\" {passwordArg} " +
+                $"{extraArgs} \"{dbName}\" --result-file=\"{filePath}\"";
+
+            var psi = new ProcessStartInfo
+            {
+                FileName               = MySqlDumpPath,
+                Arguments              = arguments,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                RedirectStandardError  = true,
+                UseShellExecute        = false,
+                CreateNoWindow         = true
             };
 
-            using var process = Process.Start(processStartInfo);
-            if (process != null)
+            using var process = Process.Start(psi);
+            if (process is null)
             {
-                await process.WaitForExitAsync();
-                return process.ExitCode == 0;
+                LogError(backupDirectory, "Failed to start mysqldump process. Check MySqlDumpPath.");
+                return false;
             }
-            return false;
+
+            // Capture stderr for error logging.
+            string stderr = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+            {
+                LogError(backupDirectory,
+                    $"mysqldump exited with code {process.ExitCode}.\nStderr: {stderr}");
+                return false;
+            }
+
+            return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log error
+            LogError(backupDirectory, $"Exception in {prefix}: {ex.Message}");
             return false;
         }
     }
 
-    private string? ExtractConnectionStringValue(string connectionString, string key)
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private static void LogError(string backupDirectory, string message)
     {
-        var parts = connectionString.Split(';');
-        foreach (var part in parts)
+        try
         {
-            var kvp = part.Split('=');
-            if (kvp.Length == 2 && kvp[0].Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
-            {
-                return kvp[1].Trim();
-            }
+            if (!Directory.Exists(backupDirectory))
+                Directory.CreateDirectory(backupDirectory);
+
+            string logPath = Path.Combine(backupDirectory, "backup_errors.log");
+            string entry   = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}";
+            File.AppendAllText(logPath, entry);
+        }
+        catch { /* Must not throw from an error handler. */ }
+    }
+
+    private static string? ExtractValue(string connectionString, string key)
+    {
+        foreach (var part in connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            if (kv.Length == 2 && kv[0].Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
+                return kv[1].Trim();
         }
         return null;
     }

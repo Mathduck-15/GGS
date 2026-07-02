@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:GoodGovernanceApp.Views"
+        xmlns:converters="clr-namespace:GoodGovernanceApp.Converters"
         mc:Ignorable="d"
-        Title="Good Governance Management - Login" Height="450" Width="400"
+        Title="Good Governance Management - Login" Height="642" Width="965"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -16,28 +17,210 @@
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
         Name="LoginWin">
-    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <!-- Inverse: True→Collapsed, False→Visible -->
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+    </Window.Resources>
+
     <Grid>
-        <materialDesign:Card Width="300" VerticalAlignment="Center" Padding="16">
-            <StackPanel>
-                <TextBlock Text="Welcome Back" FontSize="24" FontWeight="Bold" Margin="0 0 0 8" HorizontalAlignment="Center"/>
-                <TextBlock Text="Login to your account" FontSize="14" Foreground="Gray" Margin="0 0 0 24" HorizontalAlignment="Center"/>
-                
-                <TextBox materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 16" />
-                
-                <PasswordBox materialDesign:HintAssist.Hint="Password" Style="{StaticResource MaterialDesignFloatingHintPasswordBox}" 
-                             Name="PasswordBoxControl" Margin="0 0 0 8" PasswordChanged="PasswordBox_PasswordChanged"/>
-                
-                <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" Margin="0 0 0 16" HorizontalAlignment="Center"/>
-                
-                <Button Content="LOGIN" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=LoginWin}" 
-                        Style="{StaticResource MaterialDesignRaisedButton}" Margin="0 8 0 0"/>
-                
-                <Button Content="Database Connection Settings" Command="{Binding OpenDbSettingsCommand}" 
-                        Style="{StaticResource MaterialDesignFlatButton}" Margin="0 16 0 0" 
-                        Foreground="{DynamicResource PrimaryHueMidBrush}" />
+        <Grid.ColumnDefinitions>
+            <!-- Left panel: logo/branding -->
+            <ColumnDefinition Width="*" />
+            <!-- Right panel: login card -->
+            <ColumnDefinition Width="380" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ── LEFT PANEL ── -->
+        <!-- ── LEFT PANEL ── -->
+        <!-- ── LEFT PANEL ── -->
+        <Grid Grid.Column="0"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Stretch">
+
+            <Image Source="pack://application:,,,/Assets/Images/bg.jpg"
+           Stretch="UniformToFill"
+           HorizontalAlignment="Center"
+           VerticalAlignment="Center"/>
+
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#CC006064" Offset="0"/>
+                        <GradientStop Color="#CC00838F" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <Rectangle VerticalAlignment="Top" Height="5">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        
+                       
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <StackPanel VerticalAlignment="Center"
+                HorizontalAlignment="Center" Height="358" Width="377">
+
+                <Image Width="161" Height="161"
+               Stretch="Uniform"
+               HorizontalAlignment="Center"
+               Margin="0 0 0 24">
+                    <Image.Source>
+                        <Binding Path="LogoSource"/>
+                    </Image.Source>
+                </Image>
+
+                <TextBlock Text="{Binding GovernanceName}"
+                   FontSize="26" FontWeight="Bold"
+                   Foreground="White"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"/>
+
+                <TextBlock Text="{Binding Address}"
+                   FontSize="17" FontWeight="Light"
+                   Foreground="#BBDEFB"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"/>
+
+                <Separator Margin="24 20" Background="#4DFFFFFF"/>
+
+                <TextBlock Text="Transparency · Accountability · Integrity"
+                   FontSize="20"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   Foreground="White"/>
             </StackPanel>
-        </materialDesign:Card>
+
+        </Grid>
+
+        <!-- ── RIGHT PANEL ── -->
+        <Grid Grid.Column="1">
+            <materialDesign:Card VerticalAlignment="Center"
+                                 Margin="24,0,24,0"
+                                 Padding="24" Height="479">
+                <StackPanel>
+
+                    <Border CornerRadius="10" Padding="8" MaxHeight="450" Height="138">
+                        <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" />
+                    </Border>
+
+                    <TextBlock Text="Welcome Back"
+                               FontSize="24" FontWeight="Bold"
+                               Margin="0 0 0 8"
+                               HorizontalAlignment="Center"
+                                Foreground="#000000"/>
+                    <TextBlock Text="Login to your account"
+                               FontSize="14" Foreground="Gray"
+                               Margin="0 0 0 24"
+                               HorizontalAlignment="Center"/>
+
+                    <!-- Username or Email -->
+                    <TextBox materialDesign:HintAssist.Hint="Username or Email"
+                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                              Foreground="#000000"
+                             Margin="0 0 0 16"/>
+
+                    <!-- Password with show/hide toggle -->
+                    <Grid Margin="0 0 0 8">
+                        <!-- Hidden password (masked) -->
+                        <PasswordBox materialDesign:HintAssist.Hint="Password"
+                                     Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
+                                     Name="PasswordBoxControl"
+                                     PasswordChanged="PasswordBox_PasswordChanged"
+                                     Foreground="#000000"
+                                     Padding="0,0,36,0"
+                                     Visibility="{Binding IsPasswordVisible,
+                                         Converter={StaticResource InverseBoolToVis},
+                                         FallbackValue=Visible}"/>
+
+                        <!-- Visible password (plain text) -->
+                        <TextBox materialDesign:HintAssist.Hint="Password"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                 Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                 Foreground="#000000"
+                                 Padding="0,0,36,0"
+                                 Visibility="{Binding IsPasswordVisible,
+                                     Converter={StaticResource BooleanToVisibilityConverter},
+                                     FallbackValue=Collapsed}"/>
+
+                        <!-- Eye toggle button -->
+                        <ToggleButton HorizontalAlignment="Right"
+                                      VerticalAlignment="Bottom"
+                                      Margin="0,0,0,4"
+                                      Width="28" Height="28"
+                                      Padding="0"
+                                      IsChecked="{Binding IsPasswordVisible}"
+                                      Style="{StaticResource MaterialDesignFlatToggleButton}"
+                                      ToolTip="Show / Hide Password">
+                            <materialDesign:PackIcon>
+                                <materialDesign:PackIcon.Style>
+                                    <Style TargetType="materialDesign:PackIcon">
+                                        <Setter Property="Kind" Value="EyeOutline"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                                <Setter Property="Kind" Value="EyeOffOutline"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                        </ToggleButton>
+                    </Grid>
+
+                    <!-- Error / status message -->
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="Red"
+                               Margin="0 0 0 12"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               FontSize="12"/>
+
+                    <!-- LOGIN button + spinner -->
+                    <Grid Margin="0 8 0 0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+
+                        <Button Grid.Column="0"
+                        Content="Cheat"
+                        Command="{Binding CheatCommand}"
+                        CommandParameter="{Binding ElementName=LoginWin}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"/>
+
+                        <Button Grid.Column="1"
+                                Content="LOGIN"
+                                Command="{Binding LoginCommand}"
+                                CommandParameter="{Binding ElementName=LoginWin}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"/>
+
+                        <ProgressBar Grid.Column="2"
+                                     Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                     IsIndeterminate="True"
+                                     Width="24" Height="24"
+                                     Margin="10 0 0 0"
+                                     VerticalAlignment="Center"
+                                     Visibility="{Binding IsLoggingIn, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </Grid>
+
+                    <Button Content="Database Connection Settings"
+                            Command="{Binding OpenDbSettingsCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Margin="0 16 0 0"
+                             Foreground="#000000"/>
+
+
+                </StackPanel>
+            </materialDesign:Card>
+        </Grid>
+
     </Grid>
 </Window>

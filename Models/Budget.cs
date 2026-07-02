@@ -16,4 +16,8 @@ public class Budget
     
     [Required]
     public int Year { get; set; }
+
+    // Office linkage
+    public long? OfficeId { get; set; }
+    public virtual Office? Office { get; set; }
 }

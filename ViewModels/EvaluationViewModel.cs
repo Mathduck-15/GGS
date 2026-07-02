@@ -74,7 +74,8 @@ public class EvaluationViewModel : ViewModelBase
             var evaluatedFileIds = await _context.Evaluations.Select(e => e.UploadedFileId).ToListAsync();
             
             var files = await _context.UploadedFiles
-                .Include(f => f.Department)
+                .Include(f => f.Office)
+                    .Include(f => f.Category)
                 .Include(f => f.Parameter)
                 .Where(f => !evaluatedFileIds.Contains(f.Id))
                 .ToListAsync();
@@ -84,6 +85,7 @@ public class EvaluationViewModel : ViewModelBase
 
             var past = await _context.Evaluations
                 .Include(e => e.UploadedFile)
+                .ThenInclude(f => f.Category)
                 .Include(e => e.Evaluator)
                 .OrderByDescending(e => e.EvaluationDate)
                 .Take(50)

@@ -1,9 +1,14 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
+[Table("categories")]
+
 public class Category
 {
+   
+
     [Key]
     public int Id { get; set; }
     
@@ -15,5 +20,10 @@ public class Category
     public string? Description { get; set; }
     
     public ICollection<Budget> Budgets { get; set; } = new List<Budget>();
-    public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
 }

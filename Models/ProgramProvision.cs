@@ -1,0 +1,34 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GoodGovernanceApp.Models;
+
+[Table("tbl_program_provision")]
+public class ProgramProvision
+{
+    [Key]
+    [Column("id")]
+    public long Id { get; set; }
+
+    [Column("program")]
+    public string Name { get; set; } = string.Empty;
+
+    [Column("description")]
+    public string? Description { get; set; }
+
+    [Column("office_id")]
+    public long? OfficeId { get; set; }
+
+    [ForeignKey("OfficeId")]
+    public virtual Office? Office { get; set; }
+
+    [Column("created_at")]
+    public DateTime? CreatedAt { get; set; }
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+    [Column("SyncId")]
+    public Guid SyncId { get; set; } = Guid.NewGuid();
+
+}

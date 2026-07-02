@@ -6,10 +6,11 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="1100">
+             d:DesignHeight="800" d:DesignWidth="1100"
+             xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf">
              
     <UserControl.DataContext>
-        <viewmodels:DashboardViewModel />
+        <viewmodels:DashboardViewModel/>
     </UserControl.DataContext>
 
     <ScrollViewer>
@@ -20,7 +21,8 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="Dashboard Overview" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+            <TextBlock Grid.Row="0" Text="Dashboard Overview" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="#000000"/>
+
 
             <!-- Summary Cards -->
             <UniformGrid Grid.Row="1" Columns="4" Rows="1">
@@ -28,30 +30,22 @@
                 <materialDesign:Card Margin="8" Padding="16" UniformCornerRadius="8">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
-                            <materialDesign:PackIcon Kind="BankOutline" Width="32" Height="32" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                            <TextBlock Text="Total Budget" FontSize="16" Foreground="{DynamicResource MaterialDesignBodyLight}" VerticalAlignment="Center" Margin="8 0 0 0"/>
+                            <materialDesign:PackIcon Kind="BankOutline" Width="32" Height="32"  Foreground="#000000"/>
+                            <TextBlock Text="Total Budget this year" FontSize="16" Foreground="#000000" VerticalAlignment="Center" Margin="8 0 0 0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding TotalBudget, StringFormat={}{0:C}}" FontSize="28" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalBudget, StringFormat=PHP {0:N2}}" FontSize="28" FontWeight="SemiBold"  Foreground="#000000"/>
                     </StackPanel>
                 </materialDesign:Card>
 
                 <!-- Total Income Card -->
-                <materialDesign:Card Margin="8" Padding="16" UniformCornerRadius="8">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
-                            <materialDesign:PackIcon Kind="TrendingUp" Width="32" Height="32" Foreground="Green"/>
-                            <TextBlock Text="Total Income" FontSize="16" Foreground="{DynamicResource MaterialDesignBodyLight}" VerticalAlignment="Center" Margin="8 0 0 0"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding TotalIncome, StringFormat={}{0:C}}" FontSize="28" FontWeight="SemiBold" Foreground="Green"/>
-                    </StackPanel>
-                </materialDesign:Card>
+           
 
                 <!-- Total Expense Card -->
                 <materialDesign:Card Margin="8" Padding="16" UniformCornerRadius="8">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                             <materialDesign:PackIcon Kind="TrendingDown" Width="32" Height="32" Foreground="Red"/>
-                            <TextBlock Text="Total Expense" FontSize="16" Foreground="{DynamicResource MaterialDesignBodyLight}" VerticalAlignment="Center" Margin="8 0 0 0"/>
+                            <TextBlock Text="Total Expense" FontSize="16" Foreground="#000000" VerticalAlignment="Center" Margin="8 0 0 0"/>
                         </StackPanel>
                         <TextBlock Text="{Binding TotalExpense, StringFormat={}{0:C}}" FontSize="28" FontWeight="SemiBold" Foreground="Red"/>
                     </StackPanel>
@@ -61,10 +55,10 @@
                 <materialDesign:Card Margin="8" Padding="16" UniformCornerRadius="8">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
-                            <materialDesign:PackIcon Kind="AccountGroupOutline" Width="32" Height="32" Foreground="{DynamicResource SecondaryHueMidBrush}"/>
-                            <TextBlock Text="Active Users" FontSize="16" Foreground="{DynamicResource MaterialDesignBodyLight}" VerticalAlignment="Center" Margin="8 0 0 0"/>
+                            <materialDesign:PackIcon Kind="AccountGroupOutline" Width="32" Height="32"  Foreground="#000000"/>
+                            <TextBlock Text="Active Users" FontSize="16" Foreground="#000000" VerticalAlignment="Center" Margin="8 0 0 0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding ActiveUsersCount}" FontSize="28" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ActiveUsersCount}" FontSize="28" FontWeight="SemiBold"  Foreground="#000000"/>
                     </StackPanel>
                 </materialDesign:Card>
             </UniformGrid>
@@ -73,6 +67,7 @@
             <Grid Grid.Row="2" Margin="0 8 0 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="1*"/>
                     <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
 
@@ -83,7 +78,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="Financial Performance (Income vs Expense)" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 16"/>
+                        <TextBlock Text="Financial Performance (Income vs Expense)" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 16"  Foreground="#000000"/>
                         
                         <!-- Chart Area -->
                         <Grid Grid.Row="1" VerticalAlignment="Bottom" Height="300" Margin="20 0">
@@ -92,19 +87,7 @@
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
                             
-                            <!-- Income Bar -->
-                            <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
-                                <TextBlock Text="{Binding TotalIncome, StringFormat={}{0:C0}}" HorizontalAlignment="Center" Margin="0 0 0 4" FontSize="12" FontWeight="Bold" Foreground="Green"/>
-                                <Border Height="{Binding IncomeHeight}" Width="60" CornerRadius="4 4 0 0">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                                            <GradientStop Color="#FF4CAF50" Offset="0"/>
-                                            <GradientStop Color="#884CAF50" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                </Border>
-                                <TextBlock Text="Income" HorizontalAlignment="Center" Margin="0 8 0 0" FontWeight="SemiBold"/>
-                            </StackPanel>
+                           
 
                             <!-- Expense Bar -->
                             <StackPanel Grid.Column="1" VerticalAlignment="Bottom">
@@ -117,7 +100,7 @@
                                         </LinearGradientBrush>
                                     </Border.Background>
                                 </Border>
-                                <TextBlock Text="Expense" HorizontalAlignment="Center" Margin="0 8 0 0" FontWeight="SemiBold"/>
+                                <TextBlock Text="Expense" HorizontalAlignment="Center" Margin="0 8 0 0" FontWeight="SemiBold"  Foreground="#000000"/>
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -130,24 +113,25 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="Budget Distribution" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 16"/>
-                        
-                        <ItemsControl Grid.Row="1" ItemsSource="{Binding DeptAllocations}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0 8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Ellipse Width="12" Height="12" Fill="{DynamicResource PrimaryHueMidBrush}" VerticalAlignment="Center" Margin="0 0 12 0"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontSize="14"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding Amount, StringFormat={}{0:C0}}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <TextBlock Text="Budget Distribution" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 16"  Foreground="#000000"/>
+
+                        <lvc:PieChart Grid.Row="1" 
+                        Series="{Binding DeptPieSeries}" 
+                        Height="250"/>
+                    </Grid>
+                </materialDesign:Card>
+
+                <materialDesign:Card Grid.Column="2" Margin="8" Padding="16" UniformCornerRadius="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Budget project" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 16"  Foreground="#000000"/>
+
+                        <lvc:PieChart Grid.Row="1" 
+                        Series="{Binding DeptProjectPieSeries}" 
+                         Height="250"/>
                     </Grid>
                 </materialDesign:Card>
             </Grid>

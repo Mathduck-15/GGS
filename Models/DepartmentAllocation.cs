@@ -23,5 +23,5 @@ public class DepartmentAllocation
     [Required]
     public decimal AllocatedAmount { get; set; }
 
-    public decimal SpentAmount { get; set; } = 0;
+
 }

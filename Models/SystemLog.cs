@@ -11,7 +11,7 @@ public class SystemLog
     [Required]
     public DateTime Timestamp { get; set; } = DateTime.Now;
     
-    public int? UserId { get; set; }
+    public long? UserId { get; set; }
     public User? User { get; set; }
     
     [Required]

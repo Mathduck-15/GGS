@@ -18,7 +18,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="File Evaluation Center" FontSize="28" FontWeight="Light" Margin="0 0 0 24"/>
+        <TextBlock Grid.Row="0" Text="File Evaluation Center" FontSize="28" FontWeight="Light" Margin="0 0 0 24"   Foreground="#000000"/>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -28,21 +28,61 @@
 
             <!-- Pending Files List -->
             <materialDesign:Card Grid.Column="0" Margin="0 0 12 0">
-                <Grid Margin="16">
+                <Grid Margin="24">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    
-                    <TextBlock Text="Pending Reviews" FontSize="18" FontWeight="Bold" Margin="0 0 0 12"/>
-                    
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding PendingFiles}" SelectedItem="{Binding SelectedFile}" 
-                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">
+
+                    <TextBlock Grid.Row="0" Text="Pending Reviews" FontSize="22" FontWeight="Bold"  Foreground="#000000" 
+               Margin="0 0 0 0"/>
+
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding PendingFiles}" SelectedItem="{Binding SelectedFile}" 
+              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
+              SelectionMode="Single" RowHeight="40" ColumnHeaderHeight="40"
+              BorderThickness="1" GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="*"/>
-                            <DataGridTextColumn Header="Dept" Binding="{Binding Department.Name}" Width="Auto"/>
-                            <DataGridTextColumn Header="Type" Binding="{Binding FileType}" Width="Auto"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding UploadDate, StringFormat={}{0:d}}" Width="Auto"/>
+                            <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="2*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8 0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Office" Binding="{Binding Office.Name}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8 0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Category" Binding="{Binding Category.Name}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8 0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Type" Binding="{Binding FileType}" Width="Auto">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8 0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Date" Binding="{Binding UploadDate, StringFormat={}{0:d}}" Width="Auto">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8 0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -51,9 +91,9 @@
             <!-- Evaluation Form -->
             <materialDesign:Card Grid.Column="1" Margin="12 0 0 0" VerticalAlignment="Top">
                 <StackPanel Margin="16">
-                    <TextBlock Text="Evaluation Form" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"/>
+                    <TextBlock Text="Evaluation Form" FontSize="18" FontWeight="Bold" Margin="0 0 0 16"  Foreground="#000000"/>
 
-                    <TextBlock Text="Evaluating:" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    <TextBlock Text="Evaluating:" Foreground="#000000"/>
                     <TextBlock Text="{Binding SelectedFile.FileName}" FontSize="16" FontWeight="SemiBold" Margin="0 0 0 24"/>
 
                     <Button Content="READ FILE" Command="{Binding OpenFileCommand}" 
@@ -72,7 +112,7 @@
 
                     <Separator Margin="0 0 0 24"/>
 
-                    <TextBlock Text="Score (0 - 100)" Margin="0 0 0 8"/>
+                    <TextBlock Text="Score (0 - 100)" Margin="0 0 0 8"  Foreground="#000000"/>
                     <Slider Minimum="0" Maximum="100" Value="{Binding Score}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0 0 0 24"/>
                     <TextBlock Text="{Binding Score}" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Margin="0 -20 0 16"/>
 
@@ -80,6 +120,7 @@
                              Text="{Binding Comments}" 
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" 
                              Height="120" TextWrapping="Wrap" AcceptsReturn="True"
+                              Foreground="#000000"
                              Margin="0 0 0 24"/>
 
                     <Button Content="SUBMIT SCORE" Command="{Binding SubmitEvaluationCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>
