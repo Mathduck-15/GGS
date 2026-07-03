@@ -34,15 +34,6 @@ public partial class AddProjectWindow : Window
         YearPopup.IsOpen = false;
     }
 
-    // ── Beneficiary ID – press Enter to search ───────────────────────────────────
-    private void BeneficiaryIdBox_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter && ViewModel.LookupBeneficiaryCommand.CanExecute(null))
-        {
-            ViewModel.LookupBeneficiaryCommand.Execute(null);
-            e.Handled = true;
-        }
-    }
 
     // ── Buttons ──────────────────────────────────────────────────────────────────
     private void Cancel_Click(object sender, RoutedEventArgs e)

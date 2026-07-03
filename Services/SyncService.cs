@@ -82,20 +82,20 @@ public class SyncService
             OnSyncProgress?.Invoke("Syncing services...");
             await SyncTableAsync(localDb, cloudDb, localDb.TblServices, cloudDb.TblServices);
 
-            OnSyncProgress?.Invoke("Syncing transactions...");
-            await SyncTableAsync(localDb, cloudDb, localDb.Transactions, cloudDb.Transactions);
-
-            OnSyncProgress?.Invoke("Syncing office transactions...");
-            await SyncTableAsync(localDb, cloudDb, localDb.TblTransactions, cloudDb.TblTransactions);
-
-            OnSyncProgress?.Invoke("Syncing project details...");
-            await SyncTableAsync(localDb, cloudDb, localDb.ProjectDetails, cloudDb.ProjectDetails);
-
             OnSyncProgress?.Invoke("Syncing yearly budgets...");
             await SyncTableAsync(localDb, cloudDb, localDb.YearlyBudgets, cloudDb.YearlyBudgets);
 
             OnSyncProgress?.Invoke("Syncing office allocations...");
             await SyncTableAsync(localDb, cloudDb, localDb.OfficeAllocations, cloudDb.OfficeAllocations);
+
+            OnSyncProgress?.Invoke("Syncing project details...");
+            await SyncTableAsync(localDb, cloudDb, localDb.ProjectDetails, cloudDb.ProjectDetails);
+
+            OnSyncProgress?.Invoke("Syncing transactions...");
+            await SyncTableAsync(localDb, cloudDb, localDb.Transactions, cloudDb.Transactions);
+
+            OnSyncProgress?.Invoke("Syncing office transactions...");
+            await SyncTableAsync(localDb, cloudDb, localDb.TblTransactions, cloudDb.TblTransactions);
 
             OnSyncProgress?.Invoke("Syncing consolidated transactions...");
             await SyncTableAsync(localDb, cloudDb, localDb.ConsolidatedTransactions, cloudDb.ConsolidatedTransactions);
@@ -156,6 +156,12 @@ public class SyncService
             ("officeallocations",         "SyncId",    "CHAR(36) NOT NULL DEFAULT (UUID())"),
             ("officeallocations",         "updated_at","DATETIME NULL"),
             ("officeallocations",         "office_id", "BIGINT NULL"),
+            ("project_details",           "voucher_code", "VARCHAR(45) NULL"),
+            ("transactions",              "voucher_code", "VARCHAR(45) NULL"),
+            ("tbl_transaction",           "voucher_code", "VARCHAR(45) NULL"),
+            ("tbl_offices",               "office_code",  "VARCHAR(45) NULL"),
+            ("consolidated_transactions", "barangay",     "VARCHAR(45) NULL"),
+            ("consolidated_transactions", "household_no", "VARCHAR(45) NULL"),
         };
 
         var conn = cloudDb.Database.GetDbConnection();
@@ -201,8 +207,13 @@ public class SyncService
         var cloudRecords = await cloudSet.AsNoTracking().ToListAsync();
 
         // Build lookup dictionaries by SyncId for fast matching
-        var localById = localRecords.ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
-        var cloudById = cloudRecords.ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
+        // Guard: skip rows where SyncId is empty (startup patch may not have reached them yet)
+        var localById = localRecords
+            .Where(r => (Guid)syncIdProp.GetValue(r)! != Guid.Empty)
+            .ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
+        var cloudById = cloudRecords
+            .Where(r => (Guid)syncIdProp.GetValue(r)! != Guid.Empty)
+            .ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
 
         // ── Push local → cloud ────────────────────────────────────────────────
         var cloudToAdd    = new List<T>();
@@ -261,7 +272,9 @@ public class SyncService
 
         // Reload cloud records (may have been just inserted)
         cloudRecords = await cloudSet.AsNoTracking().ToListAsync();
-        cloudById    = cloudRecords.ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
+        cloudById    = cloudRecords
+            .Where(r => (Guid)syncIdProp.GetValue(r)! != Guid.Empty)
+            .ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
 
         foreach (var cloud in cloudRecords)
         {

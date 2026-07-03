@@ -154,7 +154,75 @@ public partial class App : Application
                     }
                 }
 
-                // ── Step 4: MySQL-only schema patches ────────────────────────────
+                // ── Step 4: SQLite schema patches (safe to run on every startup) ──
+                //   Two-step pattern:
+                //   1) ADD COLUMN as TEXT NULL — works on ALL SQLite versions.
+                //      (SQLite rejects NOT NULL with non-constant DEFAULT expressions.)
+                //   2) UPDATE to backfill any rows that still have a NULL SyncId.
+                //   Each statement is wrapped in try/catch so it is silently skipped
+                //   if the column already exists.
+                await Task.Run(() =>
+                {
+                    var conn = dbContext.Database.GetDbConnection();
+                    if (conn.State != System.Data.ConnectionState.Open)
+                        conn.Open();
+
+                    // UUID expression that works in SQLite (generates a v4-like UUID)
+                    const string uuidExpr =
+                        "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' ||" +
+                        " substr(lower(hex(randomblob(2))),2) || '-' ||" +
+                        " substr('89ab', abs(random()) % 4 + 1, 1) ||" +
+                        " substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))";
+
+                    void AddSyncCols(string table)
+                    {
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            // Step 1 – add as nullable (never fails on existing column)
+                            cmd.CommandText = $"ALTER TABLE \"{table}\" ADD COLUMN \"SyncId\" TEXT NULL;";
+                            try { cmd.ExecuteNonQuery(); } catch { }
+
+                            cmd.CommandText = $"ALTER TABLE \"{table}\" ADD COLUMN \"updated_at\" TEXT NULL;";
+                            try { cmd.ExecuteNonQuery(); } catch { }
+
+                            // Step 2 – backfill existing rows that have no SyncId
+                            cmd.CommandText = $"UPDATE \"{table}\" SET \"SyncId\" = ({uuidExpr}) WHERE \"SyncId\" IS NULL OR \"SyncId\" = '';";
+                            try { cmd.ExecuteNonQuery(); } catch { }
+                        }
+                    }
+
+                    void AddCol(string table, string column, string typeDef)
+                    {
+                        using var cmd = conn.CreateCommand();
+                        cmd.CommandText = $"ALTER TABLE \"{table}\" ADD COLUMN \"{column}\" {typeDef};";
+                        try { cmd.ExecuteNonQuery(); } catch { }
+                    }
+
+                    // All tables that participate in bidirectional sync
+                    AddSyncCols("project_details");
+                    AddSyncCols("users");
+                    AddSyncCols("tbl_offices");
+                    AddSyncCols("master_budget");
+                    AddSyncCols("budget_allocations");
+                    AddSyncCols("tbl_program_provision");
+                    AddSyncCols("tbl_services");
+                    AddSyncCols("transactions");
+                    AddSyncCols("tbl_transaction");
+                    AddSyncCols("consolidated_transactions");
+                    AddSyncCols("yearlybudgets");
+                    AddSyncCols("officeallocations");
+
+                    // Extra columns added later by schema evolution
+                    AddCol("project_details",        "voucher_code", "TEXT NULL");
+                    AddCol("transactions",            "voucher_code", "TEXT NULL");
+                    AddCol("tbl_transaction",         "voucher_code", "TEXT NULL");
+                    AddCol("tbl_offices",             "office_code",  "TEXT NULL");
+                    AddCol("officeallocations",       "office_id",    "INTEGER NULL");
+                    AddCol("consolidated_transactions", "barangay",   "TEXT NULL");
+                    AddCol("consolidated_transactions", "household_no", "TEXT NULL");
+                });
+
+                // ── Step 4b: MySQL-only schema patches ───────────────────────────
                 string mode = Config["AppSettings:DatabaseMode"] ?? "Local";
                 if (mode != "Local")
                 {
@@ -162,9 +230,6 @@ public partial class App : Application
                     {
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE project_details ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE transactions ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
-                        try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_transaction ADD COLUMN voucher_code VARCHAR(10) NULL;"); } catch { }
 
                         try
                         {

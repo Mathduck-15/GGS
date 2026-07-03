@@ -43,6 +43,14 @@ namespace GoodGovernanceApp.Models
         [StringLength(45)]
         public string? LastName { get; set; }
 
+        [Column("barangay")]
+        [StringLength(45)]
+        public string? Barangay { get; set; }
+
+        [Column("household_no")]
+        [StringLength(45)]
+        public string? HouseholdNo { get; set; }
+
         [Column("office_id")]
         [StringLength(45)]
         public string? OfficeId { get; set; }

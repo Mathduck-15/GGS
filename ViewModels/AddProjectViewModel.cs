@@ -20,10 +20,6 @@ public class AddProjectViewModel : ViewModelBase
     private string _projectName     = string.Empty;
     private string _description     = string.Empty;
     private string _totalBudget     = string.Empty;
-    private string _beneficiaryId   = string.Empty;
-    private string _beneficiaryName  = string.Empty;
-    private bool   _hasBeneficiary   = false;
-    private bool   _showNotFound     = false;
     private int?   _selectedYear;
     private string _selectedOfficeCode = string.Empty;
     private int?   _resolvedYearlyBudgetId;
@@ -60,37 +56,6 @@ public class AddProjectViewModel : ViewModelBase
         set { _totalBudget = value; OnPropertyChanged(); }
     }
 
-    public string BeneficiaryId
-    {
-        get => _beneficiaryId;
-        set
-        {
-            _beneficiaryId = value;
-            OnPropertyChanged();
-            // Clear previous result when the ID is edited
-            HasBeneficiary = false;
-            ShowNotFound   = false;
-            BeneficiaryName = string.Empty;
-        }
-    }
-
-    public string BeneficiaryName
-    {
-        get => _beneficiaryName;
-        private set { _beneficiaryName = value; OnPropertyChanged(); }
-    }
-
-    public bool HasBeneficiary
-    {
-        get => _hasBeneficiary;
-        private set { _hasBeneficiary = value; OnPropertyChanged(); }
-    }
-
-    public bool ShowNotFound
-    {
-        get => _showNotFound;
-        private set { _showNotFound = value; OnPropertyChanged(); }
-    }
 
     public int? SelectedYear
     {
@@ -119,9 +84,8 @@ public class AddProjectViewModel : ViewModelBase
     public ObservableCollection<string> FilteredOfficeCodes   { get; } = new();
 
     // ── Commands ─────────────────────────────────────────────────────────────────
-    public ICommand SaveCommand              { get; }
-    public ICommand CancelCommand            { get; }
-    public ICommand LookupBeneficiaryCommand { get; }
+    public ICommand SaveCommand   { get; }
+    public ICommand CancelCommand { get; }
 
     // Raised when save succeeds – the Window subscribes to close itself
     public event EventHandler? SaveSucceeded;
@@ -131,11 +95,8 @@ public class AddProjectViewModel : ViewModelBase
     {
         _db = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
 
-        SaveCommand              = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
-        CancelCommand            = new RelayCommand(_ => { });
-        LookupBeneficiaryCommand = new RelayCommand(
-            async _ => await LookupBeneficiaryAsync(),
-            _  => !string.IsNullOrWhiteSpace(BeneficiaryId));
+        SaveCommand   = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
+        CancelCommand = new RelayCommand(_ => { });
 
         _ = InitializeAsync();
     }
@@ -305,79 +266,7 @@ public class AddProjectViewModel : ViewModelBase
         });
     }
 
-    // ── Beneficiary lookup ───────────────────────────────────────────────────────
-    private async Task LookupBeneficiaryAsync()
-    {
-        HasBeneficiary  = false;
-        ShowNotFound    = false;
-        BeneficiaryName = string.Empty;
 
-        string id = BeneficiaryId.Trim();
-        if (string.IsNullOrWhiteSpace(id)) return;
-
-        try
-        {
-            if (GoodGovernanceApp.Services.ConnectivityService.IsCrsOnline)
-            {
-                // ONLINE: Fetch from CRS Hostinger
-                const string sql = "SELECT full_name FROM val_beneficiaries WHERE beneficiary_id = @id LIMIT 1;";
-                using var conn = new MySqlConnector.MySqlConnection(GoodGovernanceApp.Data.DatabaseConfig.CrsConnectionString);
-                await conn.OpenAsync();
-                using var cmd = new MySqlConnector.MySqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                
-                var result = await cmd.ExecuteScalarAsync();
-                string? name = result?.ToString();
-
-                if (!string.IsNullOrWhiteSpace(name))
-                {
-                    BeneficiaryName = name;
-                    HasBeneficiary  = true;
-
-                    // Cache locally for offline use
-                    const string cacheSql = @"
-                        INSERT INTO crs_beneficiary_cache (beneficiary_id, full_name, cached_at)
-                        VALUES (@id, @name, CURRENT_TIMESTAMP)
-                        ON CONFLICT(beneficiary_id) DO UPDATE SET full_name = @name, cached_at = CURRENT_TIMESTAMP;";
-                    try
-                    {
-                        await _db.ExecuteNonQueryAsync(cacheSql, 
-                            new SqliteParameter("@id", id),
-                            new SqliteParameter("@name", name));
-                    }
-                    catch { /* ignore cache write errors */ }
-                }
-                else
-                {
-                    ShowNotFound = true;
-                }
-            }
-            else
-            {
-                // OFFLINE: Fetch from local SQLite cache
-                const string sql = "SELECT full_name FROM crs_beneficiary_cache WHERE beneficiary_id = @id LIMIT 1;";
-                var result = await _db.ExecuteScalarAsync(sql, new SqliteParameter("@id", id));
-                string? name = result?.ToString();
-                
-                if (!string.IsNullOrWhiteSpace(name))
-                {
-                    BeneficiaryName = name + " (Cached)";
-                    HasBeneficiary  = true;
-                }
-                else
-                {
-                    ShowNotFound = true;
-                }
-            }
-        }
-        catch
-        {
-            ShowNotFound = true;
-        }
-
-        System.Windows.Application.Current?.Dispatcher.Invoke(
-            System.Windows.Input.CommandManager.InvalidateRequerySuggested);
-    }
 
     // ── Validation ───────────────────────────────────────────────────────────────
     private bool CanSave()
@@ -424,15 +313,15 @@ public class AddProjectViewModel : ViewModelBase
 
         const string insertSql = @"
         INSERT INTO project_details
-            (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at, voucher_code)
+            (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at, voucher_code, SyncId)
         VALUES
-            (@pid, @project, @desc, @code, @budget, @contact, @ybid, NOW(), NOW(), @voucher);";
+            (@pid, @project, @desc, @code, @budget, @contact, @ybid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, @voucher, @syncId1);";
 
         const string insertSqlTransaction = @"
         INSERT INTO transactions
-            (project_code, Amount, voucher_code, date, transaction_type)
+            (project_code, Amount, voucher_code, date, transaction_type, SyncId, updated_at)
         VALUES
-            (@pid, @budget, @voucher, NOW(), @transtype);";
+            (@pid, @budget, @voucher, CURRENT_TIMESTAMP, @transtype, @syncId2, CURRENT_TIMESTAMP);";
 
         // --- INSERT 1: project_details ---
         int rowsAffected = 0;
@@ -444,11 +333,10 @@ public class AddProjectViewModel : ViewModelBase
                 new SqliteParameter("@desc",    (object?)Description ?? DBNull.Value),
                 new SqliteParameter("@code",    SelectedOfficeCode),
                 new SqliteParameter("@budget",  (object?)budget ?? DBNull.Value),
-                new SqliteParameter("@contact", string.IsNullOrWhiteSpace(BeneficiaryId)
-                                                   ? DBNull.Value
-                                                   : (object)BeneficiaryId.Trim()),
+                new SqliteParameter("@contact", DBNull.Value),
                 new SqliteParameter("@ybid",    (object?)_resolvedYearlyBudgetId ?? DBNull.Value),
-                new SqliteParameter("@voucher", VoucherCode));
+                new SqliteParameter("@voucher", VoucherCode),
+                new SqliteParameter("@syncId1", Guid.NewGuid().ToString()));
         }
         catch (Exception ex)
         {
@@ -465,13 +353,36 @@ public class AddProjectViewModel : ViewModelBase
                 new SqliteParameter("@pid", ProjectId),
                 new SqliteParameter("@budget", (object?)budget ?? DBNull.Value),
                 new SqliteParameter("@voucher", VoucherCode),
-                new SqliteParameter("@transtype", transaction_type));
+                new SqliteParameter("@transtype", transaction_type),
+                new SqliteParameter("@syncId2", Guid.NewGuid().ToString()));
         }
         catch (Exception ex)
         {
             MessageBox.Show($"transactions INSERT failed:\n{ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
+        }
+
+        // --- INSERT 3: audit_trails ---
+        try
+        {
+            var session = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Services.SessionService>();
+            long userId = session.CurrentUser?.Id ?? 0;
+            
+            const string auditSql = @"
+            INSERT INTO audit_trails 
+                (user_id, action, model_type, model_id, description, created_at, updated_at, SyncId)
+            VALUES
+                (@uid, 'create', 'project_details', 0, @auddesc, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, @syncId3);";
+                
+            await _db.ExecuteNonQueryAsync(auditSql,
+                new Microsoft.Data.Sqlite.SqliteParameter("@uid", userId),
+                new Microsoft.Data.Sqlite.SqliteParameter("@auddesc", $"Created new project '{ProjectName}' (ID: {ProjectId}) with voucher '{VoucherCode}'."),
+                new Microsoft.Data.Sqlite.SqliteParameter("@syncId3", Guid.NewGuid().ToString()));
+        }
+        catch (Exception)
+        {
+            // Fail silently for audit logs so it doesn't stop the user if logging fails
         }
 
         MessageBox.Show($"Project \"{ProjectName}\" saved successfully!", "Success",

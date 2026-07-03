@@ -187,6 +187,20 @@
                                 <TextBlock Grid.Column="2" Text="Reports" VerticalAlignment="Center" FontSize="14"/>
                             </Grid>
                         </Button>
+
+                        <Button Style="{StaticResource NavButtonStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
+                                    <materialDesign:PackIcon Kind="FormatListBulleted" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Grid.Column="2" Text="Audit Log" VerticalAlignment="Center" FontSize="14"/>
+                            </Grid>
+                        </Button>
                     </StackPanel>
                 </ScrollViewer>
 

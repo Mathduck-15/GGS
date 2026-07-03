@@ -17,6 +17,8 @@ namespace GoodGovernanceApp.ViewModels
         public string FirstName { get; set; } = string.Empty;
         public string MiddleName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
+        public string Barangay { get; set; } = string.Empty;
+        public string HouseholdNo { get; set; } = string.Empty;
         public string OfficeId { get; set; } = string.Empty;
         public string OfficeName { get; set; } = string.Empty;
         public string TransactionType { get; set; } = string.Empty;
@@ -40,6 +42,8 @@ namespace GoodGovernanceApp.ViewModels
                     FirstName = t.FirstName ?? string.Empty,
                     MiddleName = t.MiddleName ?? string.Empty,
                     LastName = t.LastName ?? string.Empty,
+                    Barangay = t.Barangay ?? string.Empty,
+                    HouseholdNo = t.HouseholdNo ?? string.Empty,
                     OfficeId = t.OfficeId ?? string.Empty,
                     OfficeName = t.OfficeName ?? string.Empty,
                     TransactionType = t.TransactionType ?? string.Empty,

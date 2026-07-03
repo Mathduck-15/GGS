@@ -263,6 +263,7 @@ public class MainViewModel : ViewModelBase
 
             new() { Name="File Center",      Icon="CloudUpload",      ViewToken="FileUpload",     TileColor="#FF00838F", Group="System"     },
             new() { Name="Evaluation Center",Icon="FileCertificate",  ViewToken="Evaluation",     TileColor="#FF827717", Group="Reports"    },
+            new() { Name="Audit Log",        Icon="FormatListBulleted",ViewToken="AuditLog",      TileColor="#FF455A64", Group="System"     },
             new() { Name="Settings & Backups",Icon="DatabaseSettings",ViewToken="Settings",       TileColor="#FF263238", Group="System"     },
         };
 
@@ -320,6 +321,10 @@ public class MainViewModel : ViewModelBase
                 {
                     "BeneficiaryId" => $"Consolidated – ID: {searchDialog.SearchValue}",
                     "FullName"      => $"Consolidated – Name: {searchDialog.SearchValue}",
+                    "ProjectCode"   => $"Consolidated – Project: {searchDialog.SearchValue}",
+                    "OfficeCode"    => $"Consolidated – Office: {searchDialog.SearchValue}",
+                    "Barangay"      => $"Consolidated – Brgy: {searchDialog.SearchValue}",
+                    "HouseholdNo"   => $"Consolidated – Household: {searchDialog.SearchValue}",
                     _               => "Consolidated Transactions"
                 };
                 IsShowingDashboard = false;
@@ -408,6 +413,9 @@ public class MainViewModel : ViewModelBase
                 break;
             case "Evaluation":
                 CurrentView = new Views.EvaluationView();
+                break;
+            case "AuditLog":
+                CurrentView = new Views.AuditLogView();
                 break;
             default:
                 CurrentView = new System.Windows.Controls.TextBlock

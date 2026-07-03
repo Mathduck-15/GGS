@@ -2,19 +2,25 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Consolidated Transactions – Search" Height="450" Width="460"
+        Title="Consolidated Transactions – Search" Height="450" Width="680"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="220"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0" Margin="0 0 24 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0 0 0 20">
@@ -42,6 +48,39 @@
                              Content="Search by Full Name"
                              GroupName="SearchMode"
                              FontSize="13" Foreground="#000000"
+                             IsChecked="True"
+                             Margin="0 0 0 8"
+                             Checked="SearchMode_Changed"
+                             Style="{StaticResource MaterialDesignRadioButton}"/>
+
+                <RadioButton x:Name="RadioProjectCode"
+                             Content="Search by Project Code"
+                             GroupName="SearchMode"
+                             FontSize="13" Foreground="#000000"
+                             Margin="0 0 0 8"
+                             Checked="SearchMode_Changed"
+                             Style="{StaticResource MaterialDesignRadioButton}"/>
+
+                <RadioButton x:Name="RadioOfficeCode"
+                             Content="Search by Office Code"
+                             GroupName="SearchMode"
+                             FontSize="13" Foreground="#000000"
+                             Margin="0 0 0 8"
+                             Checked="SearchMode_Changed"
+                             Style="{StaticResource MaterialDesignRadioButton}"/>
+
+                <RadioButton x:Name="RadioBarangay"
+                             Content="Search by Barangay"
+                             GroupName="SearchMode"
+                             FontSize="13" Foreground="#000000"
+                             Margin="0 0 0 8"
+                             Checked="SearchMode_Changed"
+                             Style="{StaticResource MaterialDesignRadioButton}"/>
+
+                <RadioButton x:Name="RadioHouseholdNo"
+                             Content="Search by Household No"
+                             GroupName="SearchMode"
+                             FontSize="13" Foreground="#000000"
                              Margin="0 0 0 8"
                              Checked="SearchMode_Changed"
                              Style="{StaticResource MaterialDesignRadioButton}"/>
@@ -50,28 +89,46 @@
                              Content="View Entire Table"
                              GroupName="SearchMode"
                              FontSize="13" Foreground="#000000"
-                             IsChecked="True"
+                             Margin="0 0 0 8"
                              Checked="SearchMode_Changed"
                              Style="{StaticResource MaterialDesignRadioButton}"/>
             </StackPanel>
         </materialDesign:Card>
 
         <!-- Search Input — always in the visual tree, visibility toggled on the wrapper -->
-        <StackPanel Grid.Row="2" x:Name="SearchInputPanel" Visibility="Collapsed" Margin="0 0 0 16">
-            <TextBlock x:Name="SearchLabel" Text="Enter Beneficiary ID:"
+        <StackPanel Grid.Row="2" x:Name="SearchInputPanel" Visibility="Visible" Margin="0 0 0 16">
+            <TextBlock x:Name="SearchLabel" Text="Enter Full Name:"
                        FontSize="13" FontWeight="SemiBold"
                        Foreground="#000000" Margin="0 0 0 8"/>
-            <!-- Plain WPF TextBox — no MaterialDesign style, guaranteed to accept input -->
-            <TextBox x:Name="SearchTextBox"
-                     FontSize="14"
-                     Foreground="#000000"
-                     Background="White"
-                     BorderBrush="#AAAAAA"
-                     BorderThickness="1"
-                     Padding="8 6"
-                     CaretBrush="#000000"
-                     Height="36"
-                     VerticalContentAlignment="Center"/>
+            <Grid>
+                <!-- Plain WPF TextBox — no MaterialDesign style, guaranteed to accept input -->
+                <TextBox x:Name="SearchTextBox"
+                         FontSize="14"
+                         Foreground="#000000"
+                         Background="White"
+                         BorderBrush="#AAAAAA"
+                         BorderThickness="1"
+                         Padding="8 6"
+                         CaretBrush="#000000"
+                         Height="36"
+                         VerticalContentAlignment="Center"
+                         TextChanged="SearchTextBox_TextChanged"/>
+
+                <!-- Auto-suggestion Popup -->
+                <Popup x:Name="SuggestionsPopup"
+                       PlacementTarget="{Binding ElementName=SearchTextBox}"
+                       Placement="Bottom"
+                       StaysOpen="False"
+                       IsOpen="False"
+                       MaxHeight="150">
+                    <Border BorderBrush="#AAAAAA" BorderThickness="1" Background="White">
+                        <ListBox x:Name="SuggestionsListBox"
+                                 SelectionChanged="SuggestionsListBox_SelectionChanged"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 Width="{Binding ElementName=SearchTextBox, Path=ActualWidth}"/>
+                    </Border>
+                </Popup>
+            </Grid>
         </StackPanel>
 
         <!-- Action Buttons -->
@@ -82,5 +139,41 @@
             <Button Content="Proceed" Click="ProceedButton_Click"
                     Style="{StaticResource MaterialDesignRaisedButton}"/>
         </StackPanel>
+        </Grid>
+
+        <!-- Right Column: Recent Project Codes and Office Codes -->
+        <materialDesign:Card Grid.Column="1" Padding="12">
+            <StackPanel>
+                <TextBlock Text="Recent Project Codes" FontSize="14" FontWeight="SemiBold"
+                           Foreground="#000000" Margin="0 0 0 8"/>
+                
+                <ListBox x:Name="RecentProjectsListBox"
+                         SelectionChanged="RecentProjectsListBox_SelectionChanged"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         MaxHeight="120"
+                         Style="{StaticResource MaterialDesignListBox}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="13" Padding="4" Cursor="Hand"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Text="Recent Office Codes" FontSize="14" FontWeight="SemiBold"
+                           Foreground="#000000" Margin="0 16 0 8"/>
+                
+                <ListBox x:Name="RecentOfficeCodesListBox"
+                         SelectionChanged="RecentOfficeCodesListBox_SelectionChanged"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         MaxHeight="120"
+                         Style="{StaticResource MaterialDesignListBox}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="13" Padding="4" Cursor="Hand"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </materialDesign:Card>
     </Grid>
 </Window>

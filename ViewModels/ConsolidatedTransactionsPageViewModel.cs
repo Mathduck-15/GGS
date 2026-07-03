@@ -85,9 +85,11 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
         new() { string.Empty, "Active", "Inactive", "Pending", "Completed" };
 
     // ── Commands ──────────────────────────────────────────────────────────────
-    public ICommand RefreshCommand             { get; }
+    public ICommand RefreshCommand                 { get; }
     public ICommand ClearConsolidatedFilterCommand { get; }
-    public ICommand OpenAnalyticsCommand { get; }
+    public ICommand OpenAnalyticsCommand           { get; }
+    public ICommand OpenOfficeAnalyticsCommand     { get; }
+    public ICommand OpenProjectAnalyticsCommand    { get; }
 
     public ConsolidatedTransactionsPageViewModel()
     {
@@ -108,6 +110,26 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
             {
                 var vm = new BeneficiaryAnalyticsViewModel(_dbContext, t.BeneficiaryId, t.FullName);
                 var window = new BeneficiaryAnalyticsWindow(vm);
+                window.ShowDialog();
+            }
+        });
+
+        OpenOfficeAnalyticsCommand = new RelayCommand(row =>
+        {
+            if (row is ConsolidatedTransactionsViewModel t && !string.IsNullOrWhiteSpace(t.OfficeId))
+            {
+                var vm = new OfficeAnalyticsViewModel(_dbContext, t.OfficeId, t.OfficeName);
+                var window = new OfficeAnalyticsWindow(vm);
+                window.ShowDialog();
+            }
+        });
+
+        OpenProjectAnalyticsCommand = new RelayCommand(row =>
+        {
+            if (row is ConsolidatedTransactionsViewModel t && !string.IsNullOrWhiteSpace(t.ProjectCode))
+            {
+                var vm = new ProjectAnalyticsViewModel(_dbContext, t.ProjectCode, t.ProjectCode);
+                var window = new ProjectAnalyticsWindow(vm);
                 window.ShowDialog();
             }
         });
@@ -184,7 +206,10 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
                     || row.FirstName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.MiddleName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.LastName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.Barangay.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.HouseholdNo.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.OfficeId.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.OfficeName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Status.Contains(q, StringComparison.OrdinalIgnoreCase)
@@ -215,6 +240,10 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
         switch (mode)
         {
             case "BeneficiaryId":
+            case "ProjectCode":
+            case "OfficeCode":
+            case "Barangay":
+            case "HouseholdNo":
                 ConsolidatedFilterFreeText = value;
                 break;
             case "FullName":

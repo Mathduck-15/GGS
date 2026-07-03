@@ -213,8 +213,7 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <!-- Project -->
-                        <DataGridTextColumn Header="Project Code" Binding="{Binding ProjectCode}" Width="130">
+                        <DataGridTextColumn Header="Barangay" Binding="{Binding Barangay}" Width="140">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="White"/>
@@ -224,8 +223,7 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <!-- Office -->
-                        <DataGridTextColumn Header="Office ID" Binding="{Binding OfficeId}" Width="100">
+                        <DataGridTextColumn Header="Household No." Binding="{Binding HouseholdNo}" Width="120">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="White"/>
@@ -234,6 +232,36 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
+
+                        <!-- Project -->
+                        <DataGridTemplateColumn Header="Project Code" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock VerticalAlignment="Center" Margin="5,0">
+                                        <Hyperlink Command="{Binding DataContext.OpenProjectAnalyticsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                   CommandParameter="{Binding}"
+                                                   Foreground="#4DD0E1" TextDecorations="Underline">
+                                            <TextBlock Text="{Binding ProjectCode}"/>
+                                        </Hyperlink>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Office -->
+                        <DataGridTemplateColumn Header="Office Code" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock VerticalAlignment="Center" Margin="5,0">
+                                        <Hyperlink Command="{Binding DataContext.OpenOfficeAnalyticsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                   CommandParameter="{Binding}"
+                                                   Foreground="#4DD0E1" TextDecorations="Underline">
+                                            <TextBlock Text="{Binding OfficeId}"/>
+                                        </Hyperlink>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="Office Name" Binding="{Binding OfficeName}" Width="160">
                             <DataGridTextColumn.ElementStyle>

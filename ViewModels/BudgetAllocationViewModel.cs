@@ -145,13 +145,61 @@ public class BudgetAllocationViewModel : ViewModelBase
             .Where(a => a.YearlyBudgetId == SelectedYearlyBudget.Id)
             .ToListAsync();
 
-        // Calculate SpentAmount per office from tbl_transaction
-        var officeIds = offices.Select(o => o.Id).ToList();
-        var spentByOffice = await _context.TblTransactions
-            .Where(t => t.OfficeId.HasValue && officeIds.Contains(t.OfficeId.Value))
-            .GroupBy(t => t.OfficeId!.Value)
-            .Select(g => new { OfficeId = g.Key, Spent = g.Sum(t => t.Amount) })
-            .ToDictionaryAsync(x => x.OfficeId, x => x.Spent);
+        // Calculate SpentAmount per office from actual project transactions and consolidated_transactions
+        var officeCodes = offices.Where(o => !string.IsNullOrEmpty(o.OfficeCode)).Select(o => o.OfficeCode).ToList();
+
+        // 1. Map project details to get office_code for each project
+        var projectDetailsList = await _context.ProjectDetails
+            .Where(p => officeCodes.Contains(p.OfficeCode))
+            .Select(p => new { p.ProjectDetailsID, p.OfficeCode })
+            .ToListAsync();
+
+        var projectCodes = projectDetailsList
+            .Where(p => !string.IsNullOrEmpty(p.ProjectDetailsID))
+            .Select(p => p.ProjectDetailsID!)
+            .ToList();
+
+        var txSpentByOfficeCode = new Dictionary<string, decimal>();
+
+        if (projectCodes.Any())
+        {
+            var projectSpent = await _context.Transactions
+                .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
+                .GroupBy(t => t.ProjectCode)
+                .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
+                .ToListAsync();
+
+            foreach (var item in projectSpent)
+            {
+                var oCode = projectDetailsList.FirstOrDefault(p => p.ProjectDetailsID == item.ProjectCode)?.OfficeCode;
+                if (!string.IsNullOrEmpty(oCode))
+                {
+                    if (!txSpentByOfficeCode.ContainsKey(oCode))
+                        txSpentByOfficeCode[oCode] = 0;
+                    txSpentByOfficeCode[oCode] += item.Spent;
+                }
+            }
+        }
+
+        // 2. Add consolidated transactions directly linked to office code
+        var consolidatedSpent = await _context.ConsolidatedTransactions
+            .Where(c => c.OfficeId != null && officeCodes.Contains(c.OfficeId))
+            .GroupBy(c => c.OfficeId)
+            .Select(g => new { OfficeCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
+            .ToDictionaryAsync(x => x.OfficeCode!, x => x.Spent);
+
+        // 3. Build the final dictionary mapped by office.Id
+        var spentByOffice = new Dictionary<long, decimal>();
+        foreach (var office in offices)
+        {
+            if (string.IsNullOrEmpty(office.OfficeCode)) continue;
+
+            decimal totalSpent = 0;
+            if (txSpentByOfficeCode.TryGetValue(office.OfficeCode, out decimal ts)) totalSpent += ts;
+            if (consolidatedSpent.TryGetValue(office.OfficeCode, out decimal cs)) totalSpent += cs;
+
+            spentByOffice[office.Id] = totalSpent;
+        }
 
         foreach (var office in offices)
         {

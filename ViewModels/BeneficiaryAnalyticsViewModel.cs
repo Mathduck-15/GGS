@@ -81,6 +81,13 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
         set { _statusBreakdownSeries = value; OnPropertyChanged(); }
     }
 
+    private SeriesCollection _officeBreakdownSeries = new();
+    public SeriesCollection OfficeBreakdownSeries
+    {
+        get => _officeBreakdownSeries;
+        set { _officeBreakdownSeries = value; OnPropertyChanged(); }
+    }
+
     private SeriesCollection _monthlyTrendSeries = new();
     public SeriesCollection MonthlyTrendSeries
     {
@@ -144,7 +151,8 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                 TransactionDate = t.Date,
                 Status          = "Completed",
                 Source          = "Department Budget",
-                CreatedAt       = t.Date ?? DateTime.MinValue
+                CreatedAt       = t.Date ?? DateTime.MinValue,
+                OfficeId        = linkedProjects.FirstOrDefault(p => p.ProjectDetailsID == t.ProjectCode)?.OfficeCode ?? "Unknown"
             }).ToList();
 
             // ── Step 5: Map consolidated transactions into unified view model ──────
@@ -158,7 +166,8 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                 TransactionDate = ct.TransactionDate,
                 Status          = ct.Status ?? "Unknown",
                 Source          = "Consolidated",
-                CreatedAt       = ct.CreatedAt ?? DateTime.MinValue
+                CreatedAt       = ct.CreatedAt ?? DateTime.MinValue,
+                OfficeId        = ct.OfficeId ?? "Unknown"
             }).ToList();
 
             // ── Step 6: Merge both lists ──────────────────────────────────────────
@@ -212,6 +221,21 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                     DataLabels = true
                 });
             StatusBreakdownSeries = sourceSeries;
+
+            // ── Step 10.5: Pie Chart — Office Breakdown ─────────────────────────────
+            var officeSeries = new SeriesCollection();
+            foreach (var grp in combinedList
+                .GroupBy(t => string.IsNullOrWhiteSpace(t.OfficeId) ? "Unknown" : t.OfficeId)
+                .Select(g => new { Office = g.Key, Amount = g.Sum(x => x.Amount) }))
+            {
+                officeSeries.Add(new PieSeries
+                {
+                    Title      = grp.Office,
+                    Values     = new ChartValues<decimal> { grp.Amount },
+                    DataLabels = true
+                });
+            }
+            OfficeBreakdownSeries = officeSeries;
 
             // ── Step 11: Monthly Trend – two columns per month (one per source) ───
             var allMonths = combinedList

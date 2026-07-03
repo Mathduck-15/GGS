@@ -254,14 +254,15 @@ public class ValidationService
     {
         await _db.ExecuteNonQueryAsync(@"
             INSERT INTO audit_trails
-                (user_id, action, model_type, model_id, description, created_at, updated_at)
+                (user_id, action, model_type, model_id, description, created_at, updated_at, SyncId)
             VALUES
-                (@userId, @action, @modelType, @modelId, @desc, @ts, @ts)",
+                (@userId, @action, @modelType, @modelId, @desc, @ts, @ts, @syncId)",
             new SqliteParameter("@userId",    userId),
             new SqliteParameter("@action",    action),
             new SqliteParameter("@modelType", modelType),
             new SqliteParameter("@modelId",   modelId),
             new SqliteParameter("@desc",      description),
-            new SqliteParameter("@ts",        timestamp));
+            new SqliteParameter("@ts",        timestamp),
+            new SqliteParameter("@syncId",    Guid.NewGuid().ToString()));
     }
 }

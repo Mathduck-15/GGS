@@ -82,6 +82,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- Transaction Types (Pie Chart) -->
@@ -103,13 +104,25 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Transaction Status Count" FontWeight="SemiBold" Margin="8 8 0 8"/>
+                    <TextBlock Text="Transaction Source Count" FontWeight="SemiBold" Margin="8 8 0 8"/>
                     <lvc:PieChart Grid.Row="1" Series="{Binding StatusBreakdownSeries}" LegendLocation="Bottom" Hoverable="True"/>
                 </Grid>
             </materialDesign:Card>
 
+            <!-- Office Breakdown (Pie Chart) -->
+            <materialDesign:Card Grid.Row="2" Grid.Column="0" Margin="8" Padding="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Spending by Office Code" FontWeight="SemiBold" Margin="8 8 0 8"/>
+                    <lvc:PieChart Grid.Row="1" Series="{Binding OfficeBreakdownSeries}" LegendLocation="Bottom" Hoverable="True"/>
+                </Grid>
+            </materialDesign:Card>
+
             <!-- Monthly Trend & Recent Transactions -->
-            <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
+            <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
