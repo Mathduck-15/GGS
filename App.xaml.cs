@@ -220,6 +220,9 @@ public partial class App : Application
                     AddCol("officeallocations",       "office_id",    "INTEGER NULL");
                     AddCol("consolidated_transactions", "barangay",   "TEXT NULL");
                     AddCol("consolidated_transactions", "household_no", "TEXT NULL");
+                    AddCol("project_details",         "status",       "TEXT NOT NULL DEFAULT 'active'");
+                    AddCol("project_details",         "system_name",  "TEXT NULL");
+                    AddCol("consolidated_transactions", "project_details_id", "TEXT NULL");
                 });
 
                 // ── Step 4b: MySQL-only schema patches ───────────────────────────

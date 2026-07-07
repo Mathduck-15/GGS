@@ -108,7 +108,7 @@ namespace GoodGovernanceApp.ViewModels
             {
                 // 1. Get all projects belonging to this office
                 var linkedProjects = await _dbContext.ProjectDetails
-                    .Where(pd => pd.OfficeCode == OfficeCode && pd.ProjectDetailsID != null)
+                    .Where(pd => pd.OfficeCode == OfficeCode && pd.ProjectDetailsID != null && pd.Status == "active")
                     .ToListAsync();
 
                 var projectCodes = linkedProjects

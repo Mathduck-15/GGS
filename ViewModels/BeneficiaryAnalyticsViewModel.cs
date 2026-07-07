@@ -121,7 +121,7 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
         {
             // ── Step 1: Find all dept projects linked to this Beneficiary ID ─────
             var linkedProjects = await _dbContext.ProjectDetails
-                .Where(pd => pd.ContactPerson == BeneficiaryId && pd.ProjectDetailsID != null)
+                .Where(pd => pd.ContactPerson == BeneficiaryId && pd.ProjectDetailsID != null && pd.Status == "active")
                 .ToListAsync();
 
             var projectCodes = linkedProjects

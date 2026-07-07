@@ -19,6 +19,10 @@ namespace GoodGovernanceApp.Models
         [StringLength(45)]
         public string? ProjectCode { get; set; }
 
+        [Column("project_details_id")]
+        [StringLength(45)]
+        public string? ProjectDetailsId { get; set; }
+
         [Column("project_name")]
         [StringLength(45)]
         public string? ProjectName { get; set; }

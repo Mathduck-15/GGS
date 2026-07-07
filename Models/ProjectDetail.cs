@@ -20,8 +20,14 @@ public class ProjectDetail
     [Column("office_code")]
     public string? OfficeCode { get; set; }
 
+    [Column("system_name")]
+    public string? SystemName { get; set; }
+
     [Column("total_budget")]
     public decimal? Budget { get; set; }
+
+    [Column("status")]
+    public string Status { get; set; } = "active";
 
     [Column("contact_person")]
     public string? ContactPerson { get; set; }

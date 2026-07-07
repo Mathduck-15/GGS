@@ -121,7 +121,7 @@ public class DepartmentManagementViewModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine($"Name: {SelectedDepartment.Name}");
             System.Diagnostics.Debug.WriteLine($"OfficeCode: '{SelectedDepartment.OfficeCode}'");
 
-            var allProjects = await _context.ProjectDetails.ToListAsync();
+            var allProjects = await _context.ProjectDetails.Where(p => p.Status == "active").ToListAsync();
             System.Diagnostics.Debug.WriteLine($"=== All Projects in DB ({allProjects.Count}) ===");
             foreach (var p in allProjects)
                 System.Diagnostics.Debug.WriteLine($"  Project: {p.Name} | OfficeCode: '{p.OfficeCode}'");

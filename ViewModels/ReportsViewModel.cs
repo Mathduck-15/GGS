@@ -280,7 +280,7 @@ public class ReportsViewModel : ViewModelBase
         TotalBudget    = await _context.YearlyBudgets.SumAsync(b => b.TotalAmount);
         TotalExpenses  = await _context.Transactions.SumAsync(t => t.Amount ?? 0);
         ActiveUsers    = await _context.Users.CountAsync(u => u.Status == "active");
-        TotalProjects  = await _context.ProjectDetails.CountAsync();
+        TotalProjects  = await _context.ProjectDetails.CountAsync(p => p.Status == "active");
 
         // Dept budget distribution pie
         var officeData = await _context.OfficeAllocations
@@ -297,6 +297,7 @@ public class ReportsViewModel : ViewModelBase
         // Project budget pie
         var currentYear = DateTime.Now.Year;
         var projectData = await _context.ProjectDetails
+            .Where(p => p.Status == "active")
             .Join(_context.YearlyBudgets,
                 p => p.YearlyBudgetId, y => y.Id,
                 (p, y) => new { p, y })

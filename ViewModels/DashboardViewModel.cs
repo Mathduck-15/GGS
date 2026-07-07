@@ -120,6 +120,7 @@ public class DashboardViewModel : ViewModelBase
             var currentYear = DateTime.Now.Year;
 
             var projectData = await _context.ProjectDetails
+                .Where(p => p.Status == "active")
                 .Join(_context.YearlyBudgets,
                     p => p.YearlyBudgetId,
                     y => y.Id,

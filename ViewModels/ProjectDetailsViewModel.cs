@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -47,7 +47,7 @@ public class ProjectDetailsViewModel : ViewModelBase
     // ✅ replaced LoadDataAsync + FilterByOfficeCode with this single method
     private async Task LoadAndFilterAsync(string? officeCode)
     {
-        _allProjects = await _context.ProjectDetails.ToListAsync();
+        _allProjects = await _context.ProjectDetails.Where(p => p.Status == "active").ToListAsync();
 
         SelectedDepartmentRoles.Clear();
 
