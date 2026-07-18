@@ -62,6 +62,48 @@ public class TblTransaction
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 
+    [Column("registry_id")]
+    public long? RegistryId { get; set; }
+
+    [Column("date_applied_")]
+    public DateTime? DateApplied { get; set; }
+
+    [Column("date_approved")]
+    public DateTime? DateApproved { get; set; }
+
+    [Column("status")]
+    public string? Status { get; set; }
+
+    [Column("purpose")]
+    public string? Purpose { get; set; }
+
+    [Column("recipient_type")]
+    public string? RecipientType { get; set; }
+
+    [Column("recipient_name")]
+    public string? RecipientName { get; set; }
+
+    [Column("priority")]
+    public string? Priority { get; set; }
+
+    [Column("expected_completion_date")]
+    public DateTime? ExpectedCompletionDate { get; set; }
+
+    [Column("return_reason")]
+    public string? ReturnReason { get; set; }
+
+    [Column("returned_at")]
+    public DateTime? ReturnedAt { get; set; }
+
+    [Column("constituent_id")]
+    public long? ConstituentId { get; set; }
+
+    [Column("request_id")]
+    public long? RequestId { get; set; }
+
+    [Column("transaction_type")]
+    public string? TransactionType { get; set; }
+
     [Column("voucher_code")]
     [StringLength(10)]
     public string? VoucherCode { get; set; }

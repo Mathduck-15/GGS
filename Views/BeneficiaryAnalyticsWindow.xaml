@@ -18,9 +18,10 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>   <!-- Row 0: Header -->
+            <RowDefinition Height="Auto"/>   <!-- Row 1: CRS Demographic Profile -->
+            <RowDefinition Height="Auto"/>   <!-- Row 2: Summary Cards -->
+            <RowDefinition Height="*"/>      <!-- Row 3: Charts + DataGrid -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
@@ -30,8 +31,201 @@
             <TextBlock Text="{Binding BeneficiaryId, StringFormat='ID: {0}'}" FontSize="14" Foreground="Gray"/>
         </StackPanel>
 
+        <!-- CRS Demographic Profile Card -->
+        <materialDesign:Card Grid.Row="1" Margin="0 0 0 16" Padding="16">
+            <!-- Single root child for Card: an outer Grid that hosts both states -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- not-found notice -->
+                    <RowDefinition Height="Auto"/>  <!-- profile detail -->
+                </Grid.RowDefinitions>
+
+                <!-- Not-found notice: shown when no CRS record matches this ID -->
+                <StackPanel Grid.Row="0"
+                            Visibility="{Binding CrsProfileNotFound, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AlertCircleOutline"
+                                                Width="18" Height="18"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                Margin="0 0 8 0"/>
+                        <TextBlock Text="No CRS record found for this Beneficiary ID."
+                                   FontSize="13" FontStyle="Italic"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Profile detail grid: collapsed when CrsProfileNotFound = true -->
+                <Grid Grid.Row="1">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CrsProfileNotFound}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MinWidth="120"/>  <!-- label -->
+                    <ColumnDefinition Width="*"/>                    <!-- value -->
+                    <ColumnDefinition Width="24"/>                   <!-- gutter -->
+                    <ColumnDefinition Width="Auto" MinWidth="120"/>  <!-- label -->
+                    <ColumnDefinition Width="*"/>                    <!-- value -->
+                    <ColumnDefinition Width="24"/>                   <!-- gutter -->
+                    <ColumnDefinition Width="Auto" MinWidth="120"/>  <!-- label -->
+                    <ColumnDefinition Width="*"/>                    <!-- value -->
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- section title -->
+                    <RowDefinition Height="6"/>     <!-- spacer -->
+                    <RowDefinition Height="Auto"/>  <!-- row 1 -->
+                    <RowDefinition Height="Auto"/>  <!-- row 2 -->
+                    <RowDefinition Height="Auto"/>  <!-- row 3 (PWD / Senior) -->
+                </Grid.RowDefinitions>
+
+                <!-- Section title -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="8"
+                            Orientation="Horizontal" Margin="0 0 0 4">
+                    <materialDesign:PackIcon Kind="AccountDetails"
+                                            Width="18" Height="18"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                            Margin="0 0 8 0"/>
+                    <TextBlock Text="CRS Demographic Profile"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryHueMidBrush}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="(Civil Registry System — READ ONLY)"
+                               FontSize="11" Foreground="Gray"
+                               VerticalAlignment="Center" Margin="8 0 0 0"/>
+                </StackPanel>
+
+                <!-- Row 2: Sex | Date of Birth | Age -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Sex:"
+                           FontWeight="SemiBold" VerticalAlignment="Center" Margin="0 0 8 4"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Sex}"
+                           VerticalAlignment="Center" Margin="0 0 0 4"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="Date of Birth:"
+                           FontWeight="SemiBold" VerticalAlignment="Center" Margin="0 0 8 4"/>
+                <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding DisplayDateOfBirth}"
+                           VerticalAlignment="Center" Margin="0 0 0 4"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="6" Text="Age:"
+                           FontWeight="SemiBold" VerticalAlignment="Center" Margin="0 0 8 4"/>
+                <TextBlock Grid.Row="2" Grid.Column="7" Text="{Binding DisplayAge}"
+                           VerticalAlignment="Center" Margin="0 0 0 4"/>
+
+                <!-- Row 3: Marital Status | Classifications | Address -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Marital Status:"
+                           FontWeight="SemiBold" VerticalAlignment="Top" Margin="0 0 8 4"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MaritalStatus}"
+                           VerticalAlignment="Top" Margin="0 0 0 4"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="3" Text="Classifications:"
+                           FontWeight="SemiBold" VerticalAlignment="Top" Margin="0 0 8 4"/>
+                <TextBlock Grid.Row="3" Grid.Column="4" Text="{Binding Classifications}"
+                           VerticalAlignment="Top" Margin="0 0 0 4"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="6" Text="Address:"
+                           FontWeight="SemiBold" VerticalAlignment="Top" Margin="0 0 8 4"/>
+                <TextBlock Grid.Row="3" Grid.Column="7" Text="{Binding Address}"
+                           VerticalAlignment="Top" TextWrapping="Wrap" Margin="0 0 0 4"/>
+
+                <!-- Row 4: PWD details | Senior details -->
+                <!-- PWD block -->
+                <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                            Orientation="Horizontal" Margin="0 4 0 0">
+                    <materialDesign:PackIcon Kind="Wheelchair"
+                                            Width="16" Height="16"
+                                            VerticalAlignment="Center"
+                                            Margin="0 0 6 0">
+                        <materialDesign:PackIcon.Style>
+                            <Style TargetType="materialDesign:PackIcon">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPwd}" Value="True">
+                                        <Setter Property="Foreground" Value="#FF8E24AA"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </materialDesign:PackIcon.Style>
+                    </materialDesign:PackIcon>
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="PWD: No"/>
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPwd}" Value="True">
+                                        <Setter Property="Text" Value="PWD: Yes"/>
+                                        <Setter Property="Foreground" Value="#FF8E24AA"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <!-- PWD ID shown only when IsPwd = true -->
+                    <TextBlock VerticalAlignment="Center"
+                               Foreground="#FF8E24AA" Margin="6 0 0 0"
+                               Visibility="{Binding IsPwd, Converter={StaticResource BoolToVis}}">
+                        <Run Text="ID:"/>
+                        <Run Text="{Binding PwdIdNo}"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Senior Citizen block -->
+                <StackPanel Grid.Row="4" Grid.Column="3" Grid.ColumnSpan="2"
+                            Orientation="Horizontal" Margin="0 4 0 0">
+                    <materialDesign:PackIcon Kind="Star"
+                                            Width="16" Height="16"
+                                            VerticalAlignment="Center"
+                                            Margin="0 0 6 0">
+                        <materialDesign:PackIcon.Style>
+                            <Style TargetType="materialDesign:PackIcon">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSenior}" Value="True">
+                                        <Setter Property="Foreground" Value="#FFF57C00"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </materialDesign:PackIcon.Style>
+                    </materialDesign:PackIcon>
+                    <TextBlock VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Senior Citizen: No"/>
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSenior}" Value="True">
+                                        <Setter Property="Text" Value="Senior Citizen: Yes"/>
+                                        <Setter Property="Foreground" Value="#FFF57C00"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <!-- Senior ID shown only when IsSenior = true -->
+                    <TextBlock VerticalAlignment="Center"
+                               Foreground="#FFF57C00" Margin="6 0 0 0"
+                               Visibility="{Binding IsSenior, Converter={StaticResource BoolToVis}}">
+                        <Run Text="ID:"/>
+                        <Run Text="{Binding SeniorIdNo}"/>
+                    </TextBlock>
+                </StackPanel>
+                </Grid><!-- end inner profile Grid -->
+            </Grid><!-- end outer wrapper Grid -->
+        </materialDesign:Card>
+
         <!-- Summary Cards -->
-        <Grid Grid.Row="1" Margin="0 0 0 16">
+        <Grid Grid.Row="2" Margin="0 0 0 16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -73,7 +267,7 @@
         </Grid>
 
         <!-- Charts & DataGrid -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="4*"/>
                 <ColumnDefinition Width="6*"/>
@@ -179,7 +373,7 @@
         </Grid>
 
         <!-- Loading Indicator -->
-        <Border Grid.RowSpan="3" Background="#88000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+        <Border Grid.RowSpan="4" Background="#88000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" IsIndeterminate="True" Width="40" Height="40" Foreground="White"/>
                 <TextBlock Text="Generating Analytics..." Foreground="White" FontSize="16" Margin="0 16 0 0"/>

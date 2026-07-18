@@ -12,10 +12,10 @@ We need to generate a standalone build that is separated from development files.
 Open a terminal in the `C:\Users\Asus\Documents\GGS\GoodGovernanceApp` directory and run:
 
 ```bash
-dotnet publish -c Release -r win-x64 --self-contained false -o .\publish
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o .\publish
 ```
 
-*Note: If you want to include the .NET runtime directly so users don't have to install it, change `--self-contained false` to `--self-contained true`.*
+This produces a **self-contained single-file executable** that bundles the .NET runtime — recipients do **NOT** need to install .NET separately. The output will be in the `.\publish` folder.
 
 ## Step 2: Create the Inno Setup Script (`installer.iss`)
 Create a new file named `installer.iss` in the project root with the following content:

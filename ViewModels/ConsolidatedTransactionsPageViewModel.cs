@@ -126,9 +126,9 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
 
         OpenProjectAnalyticsCommand = new RelayCommand(row =>
         {
-            if (row is ConsolidatedTransactionsViewModel t && !string.IsNullOrWhiteSpace(t.ProjectCode))
+            if (row is ConsolidatedTransactionsViewModel t && !string.IsNullOrWhiteSpace(t.ProjectDetailsId))
             {
-                var vm = new ProjectAnalyticsViewModel(_dbContext, t.ProjectCode, t.ProjectCode);
+                var vm = new ProjectAnalyticsViewModel(_dbContext, t.ProjectDetailsId, t.ProjectDetailsId);
                 var window = new ProjectAnalyticsWindow(vm);
                 window.ShowDialog();
             }
@@ -208,7 +208,8 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
                     || row.LastName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Barangay.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.HouseholdNo.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.ProjectDetailsId.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.ProjectName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.OfficeId.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.OfficeName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)

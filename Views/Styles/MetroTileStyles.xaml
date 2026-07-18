@@ -4,23 +4,23 @@
     <!-- =============================================
          METRO TILE COLOR PALETTE
          ============================================= -->
-    <SolidColorBrush x:Key="MetroTeal"         Color="#FF009688"/>
-    <SolidColorBrush x:Key="MetroBlue"         Color="#FF1565C0"/>
-    <SolidColorBrush x:Key="MetroIndigo"       Color="#FF3949AB"/>
-    <SolidColorBrush x:Key="MetroOrange"       Color="#FFE65100"/>
-    <SolidColorBrush x:Key="MetroGreen"        Color="#FF2E7D32"/>
-    <SolidColorBrush x:Key="MetroDarkTeal"     Color="#FF00695C"/>
-    <SolidColorBrush x:Key="MetroPurple"       Color="#FF6A1B9A"/>
-    <SolidColorBrush x:Key="MetroCrimson"      Color="#FFC62828"/>
-    <SolidColorBrush x:Key="MetroBluegrey"     Color="#FF37474F"/>
-    <SolidColorBrush x:Key="MetroCyan"         Color="#FF00838F"/>
-    <SolidColorBrush x:Key="MetroAmber"        Color="#FFE65100"/>
-    <SolidColorBrush x:Key="MetroSlate"        Color="#FF263238"/>
+    <SolidColorBrush x:Key="MetroTeal"         Color="#D90000"/>
+    <SolidColorBrush x:Key="MetroBlue"         Color="#8DB355"/>
+    <SolidColorBrush x:Key="MetroIndigo"       Color="#D90000"/>
+    <SolidColorBrush x:Key="MetroOrange"       Color="#8DB355"/>
+    <SolidColorBrush x:Key="MetroGreen"        Color="#D90000"/>
+    <SolidColorBrush x:Key="MetroDarkTeal"     Color="#8DB355"/>
+    <SolidColorBrush x:Key="MetroPurple"       Color="#D90000"/>
+    <SolidColorBrush x:Key="MetroCrimson"      Color="#8DB355"/>
+    <SolidColorBrush x:Key="MetroBluegrey"     Color="#D90000"/>
+    <SolidColorBrush x:Key="MetroCyan"         Color="#8DB355"/>
+    <SolidColorBrush x:Key="MetroAmber"        Color="#D90000"/>
+    <SolidColorBrush x:Key="MetroSlate"        Color="#8DB355"/>
 
     <!-- App Background / Header colors -->
-    <SolidColorBrush x:Key="AppHeaderBrush"    Color="#FFF3F4F6"/>
-    <SolidColorBrush x:Key="AppBgBrush"        Color="#FFF9FAFB"/>
-    <SolidColorBrush x:Key="AppBgLightBrush"   Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="AppHeaderBrush"    Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="AppBgBrush"        Color="#F3F5F7"/>
+    <SolidColorBrush x:Key="AppBgLightBrush"   Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TileHoverOverlay"  Color="#11000000"/>
 
     <!-- =============================================
@@ -220,3 +220,4 @@
     </Style>
 
 </ResourceDictionary>
+

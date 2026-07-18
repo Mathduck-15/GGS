@@ -28,16 +28,16 @@
         <!-- ── Page Header ────────────────────────────────────────────────── -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="Reports &amp; Analytics"
-                       FontSize="28" FontWeight="Light" Foreground="#1E293B"/>
+                       FontSize="28" FontWeight="Light" Foreground="#000000"/>
             <TextBlock Text="Select a report type to view data and charts"
-                       FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                       FontSize="13" Foreground="#8DB355" Margin="0,4,0,0"/>
         </StackPanel>
 
         <!-- ── Selector Bar ───────────────────────────────────────────────── -->
-        <Border Grid.Row="1" Background="White" CornerRadius="12"
+        <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="12"
                 Padding="16,12" Margin="0,0,0,16">
             <Border.Effect>
-                <DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/>
+                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
             </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -80,40 +80,40 @@
                     <!-- KPI cards -->
                     <UniformGrid Columns="4" Rows="1" Margin="0,0,0,16">
                         <!-- Total Budget -->
-                        <Border Background="#0F172A" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="BankOutline" Foreground="#60A5FA" Width="28" Height="28"/>
-                                <TextBlock Text="Total Budget" Foreground="#94A3B8" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="BankOutline" Foreground="#8DB355" Width="28" Height="28"/>
+                                <TextBlock Text="Total Budget" Foreground="#8DB355" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding TotalBudget, StringFormat='₱{0:N2}'}"
                                            Foreground="White" FontSize="22" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Total Expenses -->
-                        <Border Background="#7F1D1D" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
+                        <Border Background="#D90000" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="TrendingDown" Foreground="#FCA5A5" Width="28" Height="28"/>
-                                <TextBlock Text="Total Expenses" Foreground="#FCA5A5" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="TrendingDown" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Total Expenses" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding TotalExpenses, StringFormat='₱{0:N2}'}"
                                            Foreground="White" FontSize="22" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Active Users -->
-                        <Border Background="#064E3B" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="AccountGroupOutline" Foreground="#6EE7B7" Width="28" Height="28"/>
-                                <TextBlock Text="Active Users" Foreground="#6EE7B7" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="AccountGroupOutline" Foreground="#8DB355" Width="28" Height="28"/>
+                                <TextBlock Text="Active Users" Foreground="#8DB355" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding ActiveUsers}"
                                            Foreground="White" FontSize="22" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Total Projects -->
-                        <Border Background="#1E1B4B" CornerRadius="12" Margin="8,0,0,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="8,0,0,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="FolderMultipleOutline" Foreground="#A5B4FC" Width="28" Height="28"/>
-                                <TextBlock Text="Total Projects" Foreground="#A5B4FC" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="FolderMultipleOutline" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Total Projects" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding TotalProjects}"
                                            Foreground="White" FontSize="22" FontWeight="Bold"/>
                             </StackPanel>
@@ -128,10 +128,10 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Dept Budget Distribution pie -->
-                        <Border Grid.Column="0" Background="White" CornerRadius="12"
+                        <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="12"
                                 Margin="0,0,8,0" Padding="20">
                             <Border.Effect>
-                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
                             </Border.Effect>
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -139,7 +139,7 @@
                                     <RowDefinition Height="280"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Budget Distribution by Office"
-                                           FontSize="16" FontWeight="SemiBold" Foreground="#1E293B"
+                                           FontSize="16" FontWeight="SemiBold" Foreground="#000000"
                                            Margin="0,0,0,12"/>
                                 <lvc:PieChart Grid.Row="1"
                                               Series="{Binding DeptBudgetSeries}"
@@ -149,10 +149,10 @@
                         </Border>
 
                         <!-- Project Budget pie -->
-                        <Border Grid.Column="1" Background="White" CornerRadius="12"
+                        <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="12"
                                 Margin="8,0,0,0" Padding="20">
                             <Border.Effect>
-                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
                             </Border.Effect>
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -160,7 +160,7 @@
                                     <RowDefinition Height="280"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Budget by Project (Current Year)"
-                                           FontSize="16" FontWeight="SemiBold" Foreground="#1E293B"
+                                           FontSize="16" FontWeight="SemiBold" Foreground="#000000"
                                            Margin="0,0,0,12"/>
                                 <lvc:PieChart Grid.Row="1"
                                               Series="{Binding ProjectBudgetSeries}"
@@ -178,28 +178,28 @@
 
                     <!-- KPI cards -->
                     <UniformGrid Columns="3" Rows="1" Margin="0,0,0,16">
-                        <Border Background="#1E3A5F" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="TableMultiple" Foreground="#93C5FD" Width="28" Height="28"/>
-                                <TextBlock Text="Total Records" Foreground="#93C5FD" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="TableMultiple" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Total Records" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding ConsolidatedTotalCount}"
                                            Foreground="White" FontSize="28" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#14532D" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="CurrencyPhp" Foreground="#86EFAC" Width="28" Height="28"/>
-                                <TextBlock Text="Total Amount" Foreground="#86EFAC" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="CurrencyPhp" Foreground="#8DB355" Width="28" Height="28"/>
+                                <TextBlock Text="Total Amount" Foreground="#8DB355" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding ConsolidatedTotalAmount, StringFormat='₱{0:N2}'}"
                                            Foreground="White" FontSize="22" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#3B0764" CornerRadius="12" Margin="8,0,0,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="8,0,0,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="ChartBar" Foreground="#D8B4FE" Width="28" Height="28"/>
-                                <TextBlock Text="Avg per Record" Foreground="#D8B4FE" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="ChartBar" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Avg per Record" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding ConsolidatedAvgAmount, StringFormat='₱{0:N2}'}"
                                            Foreground="White" FontSize="22" FontWeight="Bold"/>
                             </StackPanel>
@@ -214,10 +214,10 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Transaction type pie -->
-                        <Border Grid.Column="0" Background="White" CornerRadius="12"
+                        <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="12"
                                 Margin="0,0,8,0" Padding="20">
                             <Border.Effect>
-                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
                             </Border.Effect>
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -225,7 +225,7 @@
                                     <RowDefinition Height="280"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="By Transaction Type"
-                                           FontSize="16" FontWeight="SemiBold" Foreground="#1E293B"
+                                           FontSize="16" FontWeight="SemiBold" Foreground="#000000"
                                            Margin="0,0,0,12"/>
                                 <lvc:PieChart Grid.Row="1"
                                               Series="{Binding ConsolidatedTypeSeries}"
@@ -234,10 +234,10 @@
                         </Border>
 
                         <!-- Monthly trend bar chart -->
-                        <Border Grid.Column="1" Background="White" CornerRadius="12"
+                        <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="12"
                                 Margin="8,0,0,0" Padding="20">
                             <Border.Effect>
-                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
                             </Border.Effect>
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -245,7 +245,7 @@
                                     <RowDefinition Height="280"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Monthly Trend"
-                                           FontSize="16" FontWeight="SemiBold" Foreground="#1E293B"
+                                           FontSize="16" FontWeight="SemiBold" Foreground="#000000"
                                            Margin="0,0,0,12"/>
                                 <lvc:CartesianChart Grid.Row="1"
                                                     Series="{Binding ConsolidatedMonthlySeries}">
@@ -268,28 +268,28 @@
 
                     <!-- KPI cards -->
                     <UniformGrid Columns="3" Rows="1" Margin="0,0,0,16">
-                        <Border Background="#0F172A" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#60A5FA" Width="28" Height="28"/>
-                                <TextBlock Text="Total Beneficiaries" Foreground="#60A5FA" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#8DB355" Width="28" Height="28"/>
+                                <TextBlock Text="Total Beneficiaries" Foreground="#8DB355" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding CrsTotalCount}"
                                            Foreground="White" FontSize="28" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#7C2D12" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
+                        <Border Background="#D90000" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="Wheelchair" Foreground="#FED7AA" Width="28" Height="28"/>
-                                <TextBlock Text="PWD" Foreground="#FED7AA" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="Wheelchair" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="PWD" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding CrsPwdCount}"
                                            Foreground="White" FontSize="28" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#1E3A5F" CornerRadius="12" Margin="8,0,0,0" Padding="20,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="8,0,0,0" Padding="20,16">
                             <StackPanel>
-                                <materialDesign:PackIcon Kind="HumanCane" Foreground="#93C5FD" Width="28" Height="28"/>
-                                <TextBlock Text="Senior Citizens" Foreground="#93C5FD" FontSize="13" Margin="0,8,0,4"/>
+                                <materialDesign:PackIcon Kind="HumanCane" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Senior Citizens" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
                                 <TextBlock Text="{Binding CrsSeniorCount}"
                                            Foreground="White" FontSize="28" FontWeight="Bold"/>
                             </StackPanel>
@@ -304,10 +304,10 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Gender pie -->
-                        <Border Grid.Column="0" Background="White" CornerRadius="12"
+                        <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="12"
                                 Margin="0,0,8,0" Padding="20">
                             <Border.Effect>
-                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
                             </Border.Effect>
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -315,7 +315,7 @@
                                     <RowDefinition Height="280"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Gender Distribution"
-                                           FontSize="16" FontWeight="SemiBold" Foreground="#1E293B"
+                                           FontSize="16" FontWeight="SemiBold" Foreground="#000000"
                                            Margin="0,0,0,12"/>
                                 <lvc:PieChart Grid.Row="1"
                                               Series="{Binding CrsGenderSeries}"
@@ -324,10 +324,10 @@
                         </Border>
 
                         <!-- Age group histogram -->
-                        <Border Grid.Column="1" Background="White" CornerRadius="12"
+                        <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="12"
                                 Margin="8,0,0,0" Padding="20">
                             <Border.Effect>
-                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/>
+                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
                             </Border.Effect>
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -335,7 +335,7 @@
                                     <RowDefinition Height="280"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Age Group Distribution"
-                                           FontSize="16" FontWeight="SemiBold" Foreground="#1E293B"
+                                           FontSize="16" FontWeight="SemiBold" Foreground="#000000"
                                            Margin="0,0,0,12"/>
                                 <lvc:CartesianChart Grid.Row="1"
                                                     Series="{Binding CrsAgeGroupSeries}">
@@ -354,9 +354,9 @@
                 <!-- ┌─────────────────────────────────────────────────────────┐ -->
                 <!-- │  4–9. EXISTING TABULAR REPORTS                          │ -->
                 <!-- └─────────────────────────────────────────────────────────┘ -->
-                <Border Background="White" CornerRadius="12" Padding="16"
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="16"
                         Visibility="{Binding IsUserActivityLogVisible, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect><DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/></Border.Effect>
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
                     <DataGrid ItemsSource="{Binding UserActivityLogs}" AutoGenerateColumns="False" IsReadOnly="True"
                               GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
                         <DataGrid.Columns>
@@ -368,9 +368,9 @@
                     </DataGrid>
                 </Border>
 
-                <Border Background="White" CornerRadius="12" Padding="16"
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="16"
                         Visibility="{Binding IsBudgetSummaryVisible, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect><DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/></Border.Effect>
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
                     <DataGrid ItemsSource="{Binding BudgetSummaries}" AutoGenerateColumns="False" IsReadOnly="True"
                               GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
                         <DataGrid.Columns>
@@ -382,9 +382,9 @@
                     </DataGrid>
                 </Border>
 
-                <Border Background="White" CornerRadius="12" Padding="16"
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="16"
                         Visibility="{Binding IsTransactionHistoryVisible, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect><DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/></Border.Effect>
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
                     <DataGrid ItemsSource="{Binding TransactionHistory}" AutoGenerateColumns="False" IsReadOnly="True"
                               GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
                         <DataGrid.Columns>
@@ -397,9 +397,9 @@
                     </DataGrid>
                 </Border>
 
-                <Border Background="White" CornerRadius="12" Padding="16"
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="16"
                         Visibility="{Binding IsParametersListVisible, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect><DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/></Border.Effect>
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
                     <DataGrid ItemsSource="{Binding ParametersList}" AutoGenerateColumns="False" IsReadOnly="True"
                               GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
                         <DataGrid.Columns>
@@ -410,9 +410,9 @@
                     </DataGrid>
                 </Border>
 
-                <Border Background="White" CornerRadius="12" Padding="16"
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="16"
                         Visibility="{Binding IsDepartmentalBudgetVisible, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect><DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/></Border.Effect>
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
                     <DataGrid ItemsSource="{Binding DepartmentalBudgets}" AutoGenerateColumns="False" IsReadOnly="True"
                               GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
                         <DataGrid.Columns>
@@ -423,9 +423,9 @@
                     </DataGrid>
                 </Border>
 
-                <Border Background="White" CornerRadius="12" Padding="16"
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="16"
                         Visibility="{Binding IsSystemOverviewVisible, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect><DropShadowEffect Color="#CBD5E1" BlurRadius="8" ShadowDepth="1" Opacity="0.3"/></Border.Effect>
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
                     <DataGrid ItemsSource="{Binding SystemOverview}" AutoGenerateColumns="False" IsReadOnly="True"
                               GridLinesVisibility="Horizontal" RowHeight="42" HeadersVisibility="Column">
                         <DataGrid.Columns>
@@ -435,7 +435,451 @@
                     </DataGrid>
                 </Border>
 
+
+                <!-- ┌─────────────────────────────────────────────────────────┐ -->
+                <!-- │  10. BENEFICIARIES PER PROJECT                          │ -->
+                <!-- └─────────────────────────────────────────────────────────┘ -->
+                <StackPanel Visibility="{Binding IsBeneficiariesPerProjectVisible, Converter={StaticResource BoolToVis}}">
+
+                    <!-- Bar chart -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="260"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Beneficiaries per Project" FontSize="16" FontWeight="SemiBold" Foreground="#000000" Margin="0,0,0,12"/>
+                            <lvc:CartesianChart Grid.Row="1" Series="{Binding BppBarSeries}">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Labels="{Binding BppBarLabels}" Title="Project"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Beneficiaries"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </Grid>
+                    </Border>
+
+                    <!-- Table -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <DataGrid ItemsSource="{Binding BeneficiariesPerProject}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Project Name"     Binding="{Binding ProjectName}"                                  Width="*"/>
+                                <DataGridTextColumn Header="Project Code"     Binding="{Binding ProjectCode}"                                  Width="140"/>
+                                <DataGridTextColumn Header="Beneficiaries"    Binding="{Binding BeneficiaryCount}"                             Width="120"/>
+                                <DataGridTextColumn Header="Transactions"     Binding="{Binding TransactionCount}"                             Width="110"/>
+                                <DataGridTextColumn Header="Total Amount"     Binding="{Binding TotalAmount, StringFormat={}{0:C}}"            Width="140"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ┌─────────────────────────────────────────────────────────┐ -->
+                <!-- │  11. INDIVIDUAL BENEFICIARIES SERVICES RECEIVED         │ -->
+                <!-- └─────────────────────────────────────────────────────────┘ -->
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="16"
+                        Visibility="{Binding IsIndividualBeneficiariesVisible, Converter={StaticResource BoolToVis}}">
+                    <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Individual Beneficiaries — Services Received"
+                                   FontSize="16" FontWeight="SemiBold" Foreground="#000000" Margin="0,0,0,12"/>
+                        <DataGrid ItemsSource="{Binding IndividualBeneficiaries}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Beneficiary ID"    Binding="{Binding BeneficiaryId}"                                Width="140"/>
+                                <DataGridTextColumn Header="Full Name"         Binding="{Binding FullName}"                                     Width="*"/>
+                                <DataGridTextColumn Header="Service Types"     Binding="{Binding ServicesReceived}"                             Width="110"/>
+                                <DataGridTextColumn Header="Transactions"      Binding="{Binding TotalTransactions}"                            Width="110"/>
+                                <DataGridTextColumn Header="Total Amount"      Binding="{Binding TotalAmount, StringFormat={}{0:C}}"            Width="140"/>
+                                <DataGridTextColumn Header="Last Service"      Binding="{Binding LastServiceDate, StringFormat={}{0:d}}"        Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ┌─────────────────────────────────────────────────────────┐ -->
+                <!-- │  12. BUDGET UTILIZATION REPORT                          │ -->
+                <!-- └─────────────────────────────────────────────────────────┘ -->
+                <StackPanel Visibility="{Binding IsBudgetUtilizationVisible, Converter={StaticResource BoolToVis}}">
+
+                    <!-- Stacked bar chart -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="280"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Budget vs Spent per Project" FontSize="16" FontWeight="SemiBold" Foreground="#000000" Margin="0,0,0,12"/>
+                            <lvc:CartesianChart Grid.Row="1" Series="{Binding BudgetUtilSeries}">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Labels="{Binding BudgetUtilLabels}" Title="Project"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis LabelFormatter="{Binding CurrencyFormatter}" Title="Amount"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </Grid>
+                    </Border>
+
+                    <!-- Table -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <DataGrid ItemsSource="{Binding BudgetUtilization}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Project Name"     Binding="{Binding ProjectName}"                                  Width="*"/>
+                                <DataGridTextColumn Header="Project Code"     Binding="{Binding ProjectCode}"                                  Width="140"/>
+                                <DataGridTextColumn Header="Budget"           Binding="{Binding Budget,    StringFormat={}{0:C}}"              Width="130"/>
+                                <DataGridTextColumn Header="Spent"            Binding="{Binding Spent,     StringFormat={}{0:C}}"              Width="130"/>
+                                <DataGridTextColumn Header="Remaining"        Binding="{Binding Remaining, StringFormat={}{0:C}}"              Width="130"/>
+                                <DataGridTextColumn Header="Utilization %"    Binding="{Binding UtilizationPct, StringFormat={}{0:F1}%}"      Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ┌─────────────────────────────────────────────────────────┐ -->
+                <!-- │  13. PROJECT IMPLEMENTATION STATUS REPORT               │ -->
+                <!-- └─────────────────────────────────────────────────────────┘ -->
+                <StackPanel Visibility="{Binding IsProjectStatusVisible, Converter={StaticResource BoolToVis}}">
+
+                    <!-- KPI + pie -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,16,0">
+                            <Border Background="#000000" CornerRadius="12" Padding="24,16" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <materialDesign:PackIcon Kind="CheckCircleOutline" Foreground="#8DB355" Width="28" Height="28"/>
+                                    <TextBlock Text="Active Projects" Foreground="#8DB355" FontSize="13" Margin="0,8,0,4"/>
+                                    <TextBlock Text="{Binding ActiveProjectCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#D90000" CornerRadius="12" Padding="24,16">
+                                <StackPanel>
+                                    <materialDesign:PackIcon Kind="ArchiveOutline" Foreground="White" Width="28" Height="28"/>
+                                    <TextBlock Text="Closed Projects" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
+                                    <TextBlock Text="{Binding ClosedProjectCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="12" Padding="20" Height="200">
+                            <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                            <lvc:PieChart Series="{Binding ProjectStatusSeries}" LegendLocation="Right" Hoverable="True"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Table -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <DataGrid ItemsSource="{Binding ProjectStatusRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Project Name"    Binding="{Binding ProjectName}"                                  Width="*"/>
+                                <DataGridTextColumn Header="Office"          Binding="{Binding Office}"                                       Width="120"/>
+                                <DataGridTextColumn Header="Status"          Binding="{Binding Status}"                                       Width="90"/>
+                                <DataGridTextColumn Header="Budget"          Binding="{Binding Budget,    StringFormat={}{0:C}}"              Width="130"/>
+                                <DataGridTextColumn Header="Spent"           Binding="{Binding Spent,     StringFormat={}{0:C}}"              Width="130"/>
+                                <DataGridTextColumn Header="Remaining"       Binding="{Binding Remaining, StringFormat={}{0:C}}"              Width="130"/>
+                                <DataGridTextColumn Header="Utilization %"   Binding="{Binding UtilizationPct, StringFormat={}{0:F1}%}"      Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ┌─────────────────────────────────────────────────────────┐ -->
+                <!-- │  14. PUBLIC SERVICE DELIVERY REPORT                     │ -->
+                <!-- └─────────────────────────────────────────────────────────┘ -->
+                <StackPanel Visibility="{Binding IsPublicServiceDeliveryVisible, Converter={StaticResource BoolToVis}}">
+
+                    <!-- Bar chart -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="260"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Beneficiaries Served per Office" FontSize="16" FontWeight="SemiBold" Foreground="#000000" Margin="0,0,0,12"/>
+                            <lvc:CartesianChart Grid.Row="1" Series="{Binding PublicServiceSeries}">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Labels="{Binding PublicServiceLabels}" Title="Office"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Beneficiaries Served"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </Grid>
+                    </Border>
+
+                    <!-- Table -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <DataGrid ItemsSource="{Binding PublicServiceRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Office Name"        Binding="{Binding OfficeName}"                                Width="*"/>
+                                <DataGridTextColumn Header="Beneficiaries"      Binding="{Binding BeneficiaryCount}"                         Width="120"/>
+                                <DataGridTextColumn Header="Transactions"       Binding="{Binding TransactionCount}"                         Width="110"/>
+                                <DataGridTextColumn Header="Total Amount"       Binding="{Binding TotalAmount, StringFormat={}{0:C}}"        Width="140"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ┌─────────────────────────────────────────────────────────┐ -->
+                <!-- │  15. CITIZEN FEEDBACK SUMMARY REPORT                    │ -->
+                <!-- └─────────────────────────────────────────────────────────┘ -->
+                <StackPanel Visibility="{Binding IsCitizenFeedbackVisible, Converter={StaticResource BoolToVis}}">
+
+                    <!-- KPI cards -->
+                    <UniformGrid Columns="2" Rows="1" Margin="0,0,0,16">
+                        <Border Background="#000000" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="StarOutline" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Total Evaluations" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding TotalFeedbackCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#000000" CornerRadius="12" Margin="8,0,0,0" Padding="20,16">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="ChartLine" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Average Score" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding AvgFeedbackScore, StringFormat={}{0:F1} / 100}" Foreground="White" FontSize="22" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Score distribution bar chart -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="240"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Score Distribution" FontSize="16" FontWeight="SemiBold" Foreground="#000000" Margin="0,0,0,12"/>
+                            <lvc:CartesianChart Grid.Row="1" Series="{Binding FeedbackScoreSeries}">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Labels="{Binding FeedbackScoreLabels}" Title="Rating Band"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Count"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </Grid>
+                    </Border>
+
+                    <!-- Table -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <DataGrid ItemsSource="{Binding CitizenFeedbackRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date"       Binding="{Binding Date}"      Width="120"/>
+                                <DataGridTextColumn Header="Evaluator"  Binding="{Binding Evaluator}" Width="160"/>
+                                <DataGridTextColumn Header="File"       Binding="{Binding File}"      Width="180"/>
+                                <DataGridTextColumn Header="Score"      Binding="{Binding Score}"     Width="70"/>
+                                <DataGridTextColumn Header="Rating"     Binding="{Binding Rating}"    Width="90"/>
+                                <DataGridTextColumn Header="Comments"   Binding="{Binding Comments}"  Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ┌─────────────────────────────────────────────────────────┐ -->
+                <!-- │  16. BENEFICIARY MASTER LIST                            │ -->
+                <!-- └─────────────────────────────────────────────────────────┘ -->
+                <StackPanel Visibility="{Binding IsBeneficiaryMasterListVisible, Converter={StaticResource BoolToVis}}">
+
+                    <!-- KPI row -->
+                    <UniformGrid Columns="4" Rows="1" Margin="0,0,0,16">
+                        <!-- Total Beneficiaries -->
+                        <Border Background="#000000" CornerRadius="12" Margin="0,0,8,0" Padding="20,16">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="AccountGroupOutline" Foreground="#8DB355" Width="28" Height="28"/>
+                                <TextBlock Text="Total Beneficiaries" Foreground="#8DB355" FontSize="13" Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding BmlTotalBeneficiaries}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Total Amount Received -->
+                        <Border Background="#000000" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="CashMultiple" Foreground="#8DB355" Width="28" Height="28"/>
+                                <TextBlock Text="Total Amount Received" Foreground="#8DB355" FontSize="13" Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding BmlTotalAmount, StringFormat='₱{0:N2}'}" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- PWD Count -->
+                        <Border Background="#000000" CornerRadius="12" Margin="4,0,4,0" Padding="20,16">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="Wheelchair" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="PWD Beneficiaries" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding BmlPwdCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Senior Count -->
+                        <Border Background="#D90000" CornerRadius="12" Margin="4,0,0,0" Padding="20,16">
+                            <StackPanel>
+                                <materialDesign:PackIcon Kind="HumanCane" Foreground="White" Width="28" Height="28"/>
+                                <TextBlock Text="Senior Citizens" Foreground="White" FontSize="13" Margin="0,8,0,4"/>
+                                <TextBlock Text="{Binding BmlSeniorCount}" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Chart row 1: Gender Pie | Classification Pie -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Gender Pie -->
+                        <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="12" Padding="20">
+                            <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="260"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="GenderMaleFemale" Foreground="#D90000" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Gender Distribution" FontSize="16" FontWeight="SemiBold" Foreground="#000000" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <lvc:PieChart Grid.Row="1"
+                                              Series="{Binding BmlGenderSeries}"
+                                              LegendLocation="Right"
+                                              DataTooltip="{x:Null}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Classification Pie -->
+                        <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="12" Padding="20">
+                            <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="260"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="TagMultipleOutline" Foreground="#8DB355" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Classification Breakdown" FontSize="16" FontWeight="SemiBold" Foreground="#000000" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <lvc:PieChart Grid.Row="1"
+                                              Series="{Binding BmlClassificationSeries}"
+                                              LegendLocation="Right"
+                                              DataTooltip="{x:Null}"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Chart row 2: Top 10 Bar | Monthly Trend -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Top 10 Beneficiaries by Amount -->
+                        <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="12" Padding="20">
+                            <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="260"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="TrophyOutline" Foreground="#8DB355" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Top 10 Beneficiaries by Amount Received" FontSize="16" FontWeight="SemiBold" Foreground="#000000" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <lvc:CartesianChart Grid.Row="1" Series="{Binding BmlTopBeneficiarySeries}">
+                                    <lvc:CartesianChart.AxisX>
+                                        <lvc:Axis Labels="{Binding BmlTopBeneficiaryLabels}" Title="Beneficiary">
+                                            <lvc:Axis.Separator><lvc:Separator StrokeThickness="0"/></lvc:Axis.Separator>
+                                        </lvc:Axis>
+                                    </lvc:CartesianChart.AxisX>
+                                    <lvc:CartesianChart.AxisY>
+                                        <lvc:Axis Title="Total Amount (₱)" LabelFormatter="{Binding CurrencyFormatter}"/>
+                                    </lvc:CartesianChart.AxisY>
+                                </lvc:CartesianChart>
+                            </Grid>
+                        </Border>
+
+                        <!-- Monthly Trend -->
+                        <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="12" Padding="20">
+                            <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="260"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="ChartTimelineVariant" Foreground="#D90000" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Monthly Transaction Trend" FontSize="16" FontWeight="SemiBold" Foreground="#000000" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <lvc:CartesianChart Grid.Row="1" Series="{Binding BmlMonthlyTrendSeries}">
+                                    <lvc:CartesianChart.AxisX>
+                                        <lvc:Axis Labels="{Binding BmlMonthlyTrendLabels}" Title="Month">
+                                            <lvc:Axis.Separator><lvc:Separator StrokeThickness="0"/></lvc:Axis.Separator>
+                                        </lvc:Axis>
+                                    </lvc:CartesianChart.AxisX>
+                                    <lvc:CartesianChart.AxisY>
+                                        <lvc:Axis Title="Transactions"/>
+                                    </lvc:CartesianChart.AxisY>
+                                </lvc:CartesianChart>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Master Detail Table -->
+                    <Border Background="#FFFFFF" CornerRadius="12" Padding="16">
+                        <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.1"/></Border.Effect>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <materialDesign:PackIcon Kind="TableLarge" Foreground="#8DB355" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Beneficiary Master List" FontSize="16" FontWeight="SemiBold" Foreground="#000000" VerticalAlignment="Center"/>
+                                <TextBlock Text=" — enriched with CRS personal data" FontSize="12" Foreground="#8DB355" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <DataGrid ItemsSource="{Binding BeneficiaryMasterList}"
+                                      AutoGenerateColumns="False" IsReadOnly="True"
+                                      GridLinesVisibility="Horizontal" RowHeight="38" HeadersVisibility="Column"
+                                      MaxHeight="500">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Beneficiary ID"    Binding="{Binding BeneficiaryId}"                                    Width="130"/>
+                                    <DataGridTextColumn Header="Full Name"         Binding="{Binding FullName}"                                         Width="180"/>
+                                    <DataGridTextColumn Header="Sex"               Binding="{Binding Sex}"                                              Width="60"/>
+                                    <DataGridTextColumn Header="Age"               Binding="{Binding Age}"                                              Width="50"/>
+                                    <DataGridTextColumn Header="Marital Status"    Binding="{Binding MaritalStatus}"                                    Width="110"/>
+                                    <DataGridTextColumn Header="Barangay"          Binding="{Binding Barangay}"                                         Width="110"/>
+                                    <DataGridTextColumn Header="Address"           Binding="{Binding Address}"                                          Width="*"/>
+                                    <DataGridTextColumn Header="PWD"               Binding="{Binding IsPwd}"                                            Width="55"/>
+                                    <DataGridTextColumn Header="Senior"            Binding="{Binding IsSenior}"                                         Width="60"/>
+                                    <DataGridTextColumn Header="Services"          Binding="{Binding ServicesReceived}"                                 Width="70"/>
+                                    <DataGridTextColumn Header="Transactions"      Binding="{Binding TotalTransactions}"                                Width="95"/>
+                                    <DataGridTextColumn Header="Total Amount"      Binding="{Binding TotalAmount, StringFormat={}{0:C}}"                Width="120"/>
+                                    <DataGridTextColumn Header="Last Service"      Binding="{Binding LastServiceDate}"                                  Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
             </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>
+

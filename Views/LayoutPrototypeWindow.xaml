@@ -12,7 +12,7 @@
         <!-- Nav Button Style -->
         <Style x:Key="NavButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="Foreground" Value="#8DB355"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Height" Value="56"/>
             <Setter Property="Margin" Value="16,4,16,4"/>
@@ -25,11 +25,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1E293B"/>
+                                <Setter TargetName="border" Property="Background" Value="#000000"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#334155"/>
+                                <Setter TargetName="border" Property="Background" Value="#000000"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -108,7 +108,7 @@
         </Grid.RowDefinitions>
 
         <!-- Sidebar: Col 0, RowSpan 3 -->
-        <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="LightYellow" BorderBrush="LightYellow" BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -118,11 +118,11 @@
 
                 <!-- Top: Logo and System Name -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="24,32,24,24">
-                    <Border Background="White" CornerRadius="8" Width="40" Height="40">
+                    <Border Background="#FFFFFF" CornerRadius="8" Width="40" Height="40">
                         <!-- Placeholder for logo Image -->
-                        <materialDesign:PackIcon Kind="Domain" Foreground="#0F172A" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="Domain" Foreground="#000000" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="System Name" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <TextBlock Text="System Name" Foreground="Black" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="12,0,0,0"/>
                 </StackPanel>
 
                 <!-- Middle: Nav Buttons -->
@@ -137,8 +137,8 @@
                                     <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                    <materialDesign:PackIcon Kind="ViewDashboard" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                    <materialDesign:PackIcon Kind="ViewDashboard" Foreground="white" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock Grid.Column="2" Text="Dashboard" VerticalAlignment="Center" FontSize="14"/>
                             </Grid>
@@ -151,8 +151,8 @@
                                     <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                    <materialDesign:PackIcon Kind="ChartBar" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                    <materialDesign:PackIcon Kind="ChartBar" Foreground="white" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock Grid.Column="2" Text="Analytics" VerticalAlignment="Center" FontSize="14"/>
                             </Grid>
@@ -167,8 +167,8 @@
                                     <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                    <materialDesign:PackIcon Kind="AccountGroup" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                    <materialDesign:PackIcon Kind="AccountGroup" Foreground="white" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock Grid.Column="2" Text="Users" VerticalAlignment="Center" FontSize="14"/>
                             </Grid>
@@ -181,8 +181,8 @@
                                     <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                    <materialDesign:PackIcon Kind="FileDocumentMultiple" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                    <materialDesign:PackIcon Kind="FileDocumentMultiple" Foreground="white" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock Grid.Column="2" Text="Reports" VerticalAlignment="Center" FontSize="14"/>
                             </Grid>
@@ -195,8 +195,8 @@
                                     <ColumnDefinition Width="12"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                    <materialDesign:PackIcon Kind="FormatListBulleted" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                    <materialDesign:PackIcon Kind="FormatListBulleted" Foreground="white" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock Grid.Column="2" Text="Audit Log" VerticalAlignment="Center" FontSize="14"/>
                             </Grid>
@@ -206,7 +206,7 @@
 
                 <!-- Bottom: Divider, Settings, Logout -->
                 <StackPanel Grid.Row="2" Margin="0,0,0,16">
-                    <Border Height="1" Background="#273449" Margin="0,8,0,16"/>
+                    <Border Height="1" Background="#000000" Margin="0,8,0,16"/>
                     
                     <Button Style="{StaticResource NavButtonStyle}">
                         <Grid>
@@ -215,8 +215,8 @@
                                 <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                <materialDesign:PackIcon Kind="Cog" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                <materialDesign:PackIcon Kind="Cog" Foreground="white" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="2" Text="Settings" VerticalAlignment="Center" FontSize="14"/>
                         </Grid>
@@ -229,8 +229,8 @@
                                 <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                <materialDesign:PackIcon Kind="Logout" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                <materialDesign:PackIcon Kind="Logout" Foreground="white" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="2" Text="Logout" VerticalAlignment="Center" FontSize="14"/>
                         </Grid>
@@ -240,7 +240,7 @@
         </Border>
 
         <!-- Top Header Bar — Column 1, Row 0 -->
-        <Border Grid.Column="1" Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="24,16">
+        <Border Grid.Column="1" Grid.Row="0" Background="LightYellow" BorderBrush="LightYellow" BorderThickness="0,0,0,1" Padding="24,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -249,21 +249,21 @@
                 
                 <!-- Left: Org name + Subtitle -->
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="Organization Name" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Organization Name" FontSize="20" FontWeight="Bold" Foreground="Black"/>
                     <TextBlock Text="Governance Management System" FontSize="13" Foreground="#000000" Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <!-- Right: Username + Role + Avatar -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                        <TextBlock Text="Admin User" Foreground="White" FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"/>
+                        <TextBlock Text="Admin User" Foreground="Black" FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"/>
                         <TextBlock Text="System Administrator" Foreground="#000000" FontSize="12" HorizontalAlignment="Right"/>
                     </StackPanel>
                     
                     <Button Width="40" Height="40" BorderThickness="0" Background="Transparent" Padding="0">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border Background="#3B82F6" CornerRadius="20">
+                                <Border Background="#D90000" CornerRadius="20">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                             </ControlTemplate>
@@ -290,7 +290,7 @@
             </Grid.RowDefinitions>
 
             <!-- Row 0: 4 Colored Tiles -->
-            <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#3B82F6">
+            <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#D90000">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="ScaleBalance" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="BUDGET" FontSize="18" FontWeight="Bold"/>
@@ -298,7 +298,7 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#06B6D4">
+            <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#8DB355">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="Domain" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="DEPARTMENTS" FontSize="18" FontWeight="Bold"/>
@@ -306,7 +306,7 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#F59E0B">
+            <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#8DB355">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="AccountGroup" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="CITIZENS" FontSize="18" FontWeight="Bold"/>
@@ -314,7 +314,7 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="0" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#8B5CF6">
+            <Button Grid.Row="0" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#8DB355">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="FileChart" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="REPORTS" FontSize="18" FontWeight="Bold"/>
@@ -322,39 +322,50 @@
                 </StackPanel>
             </Button>
 
-            <!-- Column 4, Rows 0-1: Branding Panel -->
-            <Border Grid.Row="0" Grid.Column="4" Grid.RowSpan="2" Background="White" CornerRadius="12" Margin="8">
+            <!-- Column 4, Row 0: Branding Panel -->
+            <Border Grid.Row="0" Grid.Column="4" Background="#FFFFFF" CornerRadius="12" Margin="8">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <!-- Placeholder for branding Image -->
-                    <Border Background="#F1F5F9" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16">
+                    <Border Background="#F3F5F7" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16">
                         <materialDesign:PackIcon Kind="ShieldCheck" Foreground="#000000" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="GGS PLATFORM" FontSize="20" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center"/>
+                    <TextBlock Text="GGS PLATFORM" FontSize="20" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center"/>
                     <TextBlock Text="Version 2.0" FontSize="14" Foreground="#000000" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
+            <!-- Column 4, Row 1: Proof of Copyright (hidden until image configured in Settings) -->
+            <Border Grid.Row="1" Grid.Column="4" Background="#FFFFFF" CornerRadius="12" Margin="8" Visibility="Collapsed">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Border Background="#F3F5F7" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16">
+                        <materialDesign:PackIcon Kind="Copyright" Foreground="#000000" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="PROOF OF COPYRIGHT" FontSize="20" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center"/>
+                    <TextBlock Text="All Rights Reserved" FontSize="14" Foreground="#000000" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
             <!-- Row 1, Columns 0-1: Dark Date/Time & Label -->
-            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#0F172A" CornerRadius="12" Margin="8" Padding="24">
+            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#000000" CornerRadius="12" Margin="8" Padding="24">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <Border Grid.Row="0" Background="#064E3B" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
-                        <TextBlock Text="SYSTEM READY" Foreground="#34D399" FontSize="12" FontWeight="Bold"/>
+                    <Border Grid.Row="0" Background="#000000" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                        <TextBlock Text="SYSTEM READY" Foreground="#8DB355" FontSize="12" FontWeight="Bold"/>
                     </Border>
-                    
+
                     <StackPanel Grid.Row="1" VerticalAlignment="Center">
                         <TextBlock Text="11:19 AM" FontSize="48" FontWeight="Light" Foreground="White"/>
-                        <TextBlock Text="Friday, April 24, 2026" FontSize="16" Foreground="#000000"/>
+                        <TextBlock Text="Friday, April 24, 2026" FontSize="16" Foreground="White" Opacity="0.7"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Row 1, Column 2: Users Tile -->
-            <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#6366F1">
+            <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#D90000">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="AccountGroup" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="USERS" FontSize="18" FontWeight="Bold"/>
@@ -363,7 +374,7 @@
             </Button>
 
             <!-- Row 2: 4 Colored Tiles -->
-            <Button Grid.Row="2" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#EC4899">
+            <Button Grid.Row="2" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#8DB355">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="FileDocumentEdit" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="EVALUATION" FontSize="18" FontWeight="Bold"/>
@@ -371,7 +382,7 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EAB308">
+            <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#8DB355">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="Finance" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="BUDGET TRANSACTIONS" FontSize="16" FontWeight="Bold" TextWrapping="Wrap"/>
@@ -379,7 +390,7 @@
                 </StackPanel>
             </Button>
             
-            <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#64748B">
+            <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#8DB355">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="CogBox" Width="36" Height="36" Margin="0,0,0,12"/>
                     <TextBlock Text="PARAMETERS" FontSize="18" FontWeight="Bold"/>
@@ -394,7 +405,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 
-                <Button Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#475569" Margin="8,8,4,8">
+                <Button Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#8DB355" Margin="8,8,4,8">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="Cog" Width="36" Height="36" Margin="0,0,0,12"/>
                         <TextBlock Text="SETTINGS" FontSize="16" FontWeight="Bold"/>
@@ -402,7 +413,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EF4444" Margin="4,8,8,8">
+                <Button Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#D90000" Margin="4,8,8,8">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="Power" Width="36" Height="36" Margin="0,0,0,12"/>
                         <TextBlock Text="EXIT" FontSize="16" FontWeight="Bold"/>
@@ -413,12 +424,12 @@
         </Grid>
 
         <!-- Status Footer — Column 1, Row 2 -->
-        <Border Grid.Column="1" Grid.Row="2" Background="#111827" Padding="16,8">
+        <Border Grid.Column="1" Grid.Row="2" Background="LightYellow" Padding="16,8">
             <Grid>
                 <!-- Left: System Ready -->
-                <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Foreground="#34D399" Padding="0">
+                <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Foreground="#8DB355" Padding="0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="CheckCircleOutline" Width="16" Height="16" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="CheckCircleOutline" Foreground="#8DB355" Width="16" Height="16" Margin="0,0,8,0"/>
                         <TextBlock Text="SYSTEM READY" FontSize="12" FontWeight="Bold"/>
                     </StackPanel>
                 </Button>
@@ -426,21 +437,22 @@
                 <!-- Center-right / Right: Status and Time -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBlock Text="DATABASE STATUS:" Foreground="#000000" FontSize="12" Margin="0,0,4,0"/>
-                    <TextBlock Text="ONLINE" Foreground="#34D399" FontSize="12" FontWeight="Bold" Margin="0,0,24,0"/>
+                    <TextBlock Text="ONLINE" Foreground="#8DB355" FontSize="12" FontWeight="Bold" Margin="0,0,24,0"/>
 
                     <Button Command="{Binding NavigateTileCommand}" CommandParameter="Profile"
-                            Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,24,0"
-                            Foreground="#000000" Cursor="Hand">
+                            Background="Black" BorderThickness="0" Padding="0" Margin="0,0,24,0"
+                            Foreground="#8DB355" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="AccountEditOutline" Width="16" Height="16" Margin="0,0,6,0"/>
+                            <materialDesign:PackIcon Kind="AccountEditOutline" Foreground="#8DB355" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="MY PROFILE" FontSize="12" FontWeight="Bold"/>
                         </StackPanel>
                     </Button>
 
-                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#000000" Width="16" Height="16" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TxtCurrentTime" Text="11:19 AM" Foreground="#000000" FontSize="12"/>
+                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#8DB355" Width="16" Height="16" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtCurrentTime" Text="11:19 AM" Foreground="#8DB355" FontSize="12"/>
                 </StackPanel>
             </Grid>
         </Border>
     </Grid>
 </Window>
+

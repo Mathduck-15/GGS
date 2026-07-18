@@ -21,6 +21,15 @@ public class MasterBudget
     [Column("description")]
     public string? Description { get; set; }
 
+    [Column("allocated_budget")]
+    public decimal AllocatedBudget { get; set; } = 0.00m;
+
+    [Column("remaining_budget")]
+    public decimal RemainingBudget { get; set; } = 0.00m;
+
+    [Column("status")]
+    public string Status { get; set; } = "active";
+
     [Column("created_by")]
     public long? CreatedById { get; set; }
 

@@ -13,7 +13,7 @@ namespace GoodGovernanceApp.ViewModels;
 
 public class AddProjectViewModel : ViewModelBase
 {
-    private readonly DatabaseHelper _db;
+    private DatabaseHelper _db = null!;
 
     // ── Backing fields ──────────────────────────────────────────────────────────
     private string _projectId       = string.Empty;
@@ -93,7 +93,15 @@ public class AddProjectViewModel : ViewModelBase
     // ── Constructor ──────────────────────────────────────────────────────────────
     public AddProjectViewModel()
     {
-        _db = App.AppHost!.Services.GetRequiredService<DatabaseHelper>();
+        // Design-time safety check for Visual Studio XAML Designer
+        if (App.AppHost == null)
+        {
+            SaveCommand   = new RelayCommand(_ => { }, _ => false);
+            CancelCommand = new RelayCommand(_ => { });
+            return;
+        }
+
+        _db = App.AppHost.Services.GetRequiredService<DatabaseHelper>();
 
         SaveCommand   = new RelayCommand(async _ => await SaveAsync(), _ => CanSave());
         CancelCommand = new RelayCommand(_ => { });
@@ -192,10 +200,10 @@ public class AddProjectViewModel : ViewModelBase
         }
     }
 
-    // ── Load distinct years from YearlyBudgets ───────────────────────────────────
+    // ── Load distinct years from MasterBudgets ───────────────────────────────────
     private async Task LoadYearsAsync()
     {
-        const string sql = "SELECT DISTINCT Year FROM yearlybudgets ORDER BY Year DESC;"; // lowercase: Linux MySQL is case-sensitive
+        const string sql = "SELECT DISTINCT budget_year FROM master_budget ORDER BY budget_year DESC;"; 
         try
         {
             var dt = await _db.ExecuteQueryAsync(sql);
@@ -217,11 +225,12 @@ public class AddProjectViewModel : ViewModelBase
         if (_selectedYear == null) return;
 
         const string sql = @"
-            SELECT oa.office_code
-            FROM officeallocations oa
-            INNER JOIN yearlybudgets yb ON oa.YearlyBudgetId = yb.Id
-            WHERE yb.Year = @year
-            ORDER BY oa.office_code;";
+            SELECT o.office_code
+            FROM budget_allocations oa
+            INNER JOIN tbl_offices o ON oa.office_id = o.id
+            INNER JOIN master_budget yb ON oa.master_budget_id = yb.id
+            WHERE yb.budget_year = @year
+            ORDER BY o.office_code;";
 
         try
         {
@@ -247,10 +256,11 @@ public class AddProjectViewModel : ViewModelBase
         _ = Task.Run(async () =>
         {
             const string sql = @"
-                SELECT oa.YearlyBudgetId
-                FROM officeallocations oa
-                INNER JOIN yearlybudgets yb ON oa.YearlyBudgetId = yb.Id
-                WHERE yb.Year = @year AND oa.office_code = @code
+                SELECT oa.master_budget_id
+                FROM budget_allocations oa
+                INNER JOIN tbl_offices o ON oa.office_id = o.id
+                INNER JOIN master_budget yb ON oa.master_budget_id = yb.id
+                WHERE yb.budget_year = @year AND o.office_code = @code
                 LIMIT 1;";
 
             try
@@ -299,10 +309,11 @@ public class AddProjectViewModel : ViewModelBase
         if (_resolvedYearlyBudgetId == null && _selectedYear.HasValue && !string.IsNullOrEmpty(_selectedOfficeCode))
         {
             const string resolveSql = @"
-            SELECT oa.YearlyBudgetId
-            FROM officeallocations oa
-            INNER JOIN yearlybudgets yb ON oa.YearlyBudgetId = yb.Id
-            WHERE yb.Year = @year AND oa.office_code = @code
+            SELECT oa.master_budget_id
+            FROM budget_allocations oa
+            INNER JOIN tbl_offices o ON oa.office_id = o.id
+            INNER JOIN master_budget yb ON oa.master_budget_id = yb.id
+            WHERE yb.budget_year = @year AND o.office_code = @code
             LIMIT 1;";
             var res = await _db.ExecuteScalarAsync(resolveSql,
                 new SqliteParameter("@year", _selectedYear!.Value),

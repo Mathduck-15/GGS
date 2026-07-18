@@ -37,10 +37,8 @@ public class AppDbContext : DbContext
     public DbSet<Parameter> Parameters { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Budget> Budgets { get; set; } = null!;
-    public DbSet<Transaction> Transactions { get; set; } = null!;
+
     public DbSet<SystemLog> SystemLogs { get; set; } = null!;
-    public DbSet<YearlyBudget> YearlyBudgets { get; set; } = null!;
-    public DbSet<OfficeAllocation> OfficeAllocations { get; set; } = null!;
     public DbSet<ProjectDetail> ProjectDetails { get; set; } = null!;
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
@@ -61,19 +59,7 @@ public class AppDbContext : DbContext
 
         // ── Transaction ───────────────────────────────────────────────────────
         // Explicitly map only the 5 physical columns that exist in the DB.
-        // This prevents EF from injecting shadow properties (e.g. CategoryId)
-        // from any accidental navigation property on related entities.
-        modelBuilder.Entity<Transaction>(entity =>
-        {
-            entity.ToTable("transactions");
-            entity.HasKey(t => t.Id);
-            entity.Property(t => t.Id).HasColumnName("Id");
-            entity.Property(t => t.ProjectCode).HasColumnName("project_code").HasMaxLength(45);
-            entity.Property(t => t.Amount).HasColumnName("Amount");
-            entity.Property(t => t.VoucherCode).HasColumnName("voucher_code").HasMaxLength(10);
-            entity.Property(t => t.TransactionType).HasColumnName("transaction_type").HasMaxLength(45);
-            entity.Property(t => t.Date).HasColumnName("date");
-        });
+
 
         // ── ValidateUsers ─────────────────────────────────────────────────────
         modelBuilder.Entity<ValidateUser>(entity =>
@@ -153,7 +139,6 @@ public class AppDbContext : DbContext
         // ── Legacy Retained Relations ─────────────────────────────────────────
         modelBuilder.Entity<Parameter>().ToTable("parameters");
         modelBuilder.Entity<Category>().ToTable("categories");
-        modelBuilder.Entity<YearlyBudget>().ToTable("yearlybudgets");
         modelBuilder.Entity<Budget>().HasOne(b => b.Category).WithMany(c => c.Budgets).HasForeignKey(b => b.CategoryId);
         modelBuilder.Entity<Budget>().HasOne(b => b.Office).WithMany().HasForeignKey(b => b.OfficeId).OnDelete(DeleteBehavior.SetNull);
      
@@ -163,8 +148,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<UploadedFile>().HasOne(f => f.Office).WithMany().HasForeignKey(f => f.OfficeId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<UploadedFile>().HasOne(f => f.Parameter).WithMany().HasForeignKey(f => f.ParameterId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Parameter>().HasOne(p => p.Category).WithMany().HasForeignKey(p => p.CategoryId).OnDelete(DeleteBehavior.SetNull);
-        modelBuilder.Entity<OfficeAllocation>().HasOne(da => da.YearlyBudget).WithMany(yb => yb.Allocations).HasForeignKey(da => da.YearlyBudgetId).OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<OfficeAllocation>().HasOne(da => da.Office).WithMany().HasForeignKey(da => da.OfficeId).OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<Evaluation>().HasOne(e => e.UploadedFile).WithMany().HasForeignKey(e => e.UploadedFileId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Evaluation>().HasOne(e => e.Evaluator).WithMany().HasForeignKey(e => e.EvaluatorId).OnDelete(DeleteBehavior.Cascade);
     }

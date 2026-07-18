@@ -22,6 +22,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
@@ -51,8 +52,28 @@
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- Department Management -->
+            <!-- Proof of Copyright -->
             <materialDesign:Card Grid.Row="2" Margin="0 0 0 16" Padding="24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
+                        <materialDesign:PackIcon Kind="Copyright" Width="22" Height="22" 
+                                                 VerticalAlignment="Center" Margin="0 0 8 0"
+                                                 Foreground="#000000"/>
+                        <TextBlock Text="Proof of Copyright" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"  Foreground="#000000"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Upload and manage the proof of copyright image displayed on the main dashboard." 
+                               FontSize="13" Foreground="#000000" Margin="0 0 0 16"/>
+
+                    <Button Content="©️ CONFIGURE COPYRIGHT IMAGE" 
+                            Command="{Binding OpenCopyrightProfileCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}" 
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- Department Management -->
+            <materialDesign:Card Grid.Row="3" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="OfficeBuilding" Width="22" Height="22" 
@@ -72,7 +93,7 @@
             </materialDesign:Card>
 
             <!-- GGMS Database Connection -->
-            <materialDesign:Card Grid.Row="3" Margin="0 0 0 16" Padding="24">
+            <materialDesign:Card Grid.Row="4" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="Database" Width="22" Height="22" 
@@ -163,12 +184,12 @@
             </materialDesign:Card>
 
             <!-- CRS Database Connection -->
-            <materialDesign:Card Grid.Row="4" Margin="0 0 0 16" Padding="24">
+            <materialDesign:Card Grid.Row="5" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="DatabaseSearch" Width="22" Height="22" 
                                                  VerticalAlignment="Center" Margin="0 0 8 0"
-                                                 Foreground="DarkOrange"/>
+                                                 Foreground="#D90000"/>
                         <TextBlock  Foreground="#000000" Text="CRS Database Connection (Read Only)" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
 
@@ -219,7 +240,7 @@
             </materialDesign:Card>
 
             <!-- Test + Save -->
-            <materialDesign:Card Grid.Row="5" Margin="0 0 0 16" Padding="24">
+            <materialDesign:Card Grid.Row="6" Margin="0 0 0 16" Padding="24">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 0 0 16">
                         <materialDesign:PackIcon Kind="CheckNetwork" Width="22" Height="22" 
@@ -248,14 +269,14 @@
                             Style="{StaticResource MaterialDesignRaisedButton}"/>
 
                     <TextBlock Text="{Binding StatusMessage}" FontSize="13" FontWeight="Medium"
-                               Foreground="Green" Margin="0 12 0 0"/>
+                               Foreground="#8DB355" Margin="0 12 0 0"/>
                 </StackPanel>
             </materialDesign:Card>
 
             <!-- ═══════════════════════════════════════════════════════════════ -->
         <!-- Backup Configuration                                           -->
         <!-- ═══════════════════════════════════════════════════════════════ -->
-        <materialDesign:Card Grid.Row="6" Margin="0 0 0 16" Padding="24">
+        <materialDesign:Card Grid.Row="7" Margin="0 0 0 16" Padding="24">
             <StackPanel>
 
                 <!-- Header -->
@@ -406,7 +427,7 @@
 
                 <!-- Status / Next run -->
                 <TextBlock Text="{Binding BackupStatusMessage}" FontSize="13" FontWeight="Medium"
-                           Foreground="Green" Margin="0 0 0 20" TextWrapping="Wrap"/>
+                           Foreground="#8DB355" Margin="0 0 0 20" TextWrapping="Wrap"/>
 
                 <!-- ── Row 6 : Manual trigger buttons ─────────────────── -->
                 <Separator Margin="0 0 0 16"/>

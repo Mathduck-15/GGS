@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
@@ -43,7 +44,6 @@ public class SyncService
             var localDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var cloudDb = scope.ServiceProvider.GetRequiredService<CloudDbContext>();
 
-            // Verify cloud connection is live before attempting sync
             bool canReach = await cloudDb.Database.CanConnectAsync();
             if (!canReach)
             {
@@ -51,9 +51,17 @@ public class SyncService
                 return;
             }
 
-            // ── Step 0: Ensure cloud tables have SyncId + UpdatedAt columns ──
             OnSyncProgress?.Invoke("Preparing cloud schema...");
             await MigrateCloudTablesAsync(cloudDb);
+
+            // ── Disable Foreign Key checks globally during sync ──
+            var localConn = localDb.Database.GetDbConnection();
+            if (localConn.State != System.Data.ConnectionState.Open) await localConn.OpenAsync();
+            using (var cmd = localConn.CreateCommand()) { cmd.CommandText = "PRAGMA foreign_keys = OFF;"; await cmd.ExecuteNonQueryAsync(); }
+
+            var cloudConn = cloudDb.Database.GetDbConnection();
+            if (cloudConn.State != System.Data.ConnectionState.Open) await cloudConn.OpenAsync();
+            using (var cmd = cloudConn.CreateCommand()) { cmd.CommandText = "SET FOREIGN_KEY_CHECKS = 0;"; await cmd.ExecuteNonQueryAsync(); }
 
             // ── Align Superadmin SyncId to prevent duplicate PK errors ──
             var localAdmin = await localDb.Users.FirstOrDefaultAsync(u => u.Name == "superadmin");
@@ -83,23 +91,18 @@ public class SyncService
             await SyncTableAsync(localDb, cloudDb, localDb.TblServices, cloudDb.TblServices);
 
             OnSyncProgress?.Invoke("Syncing yearly budgets...");
-            await SyncTableAsync(localDb, cloudDb, localDb.YearlyBudgets, cloudDb.YearlyBudgets);
+            await SyncTableAsync(localDb, cloudDb, localDb.MasterBudgets, cloudDb.MasterBudgets);
 
-            OnSyncProgress?.Invoke("Syncing office allocations...");
-            await SyncTableAsync(localDb, cloudDb, localDb.OfficeAllocations, cloudDb.OfficeAllocations);
 
             OnSyncProgress?.Invoke("Syncing project details...");
             await SyncTableAsync(localDb, cloudDb, localDb.ProjectDetails, cloudDb.ProjectDetails);
 
-            OnSyncProgress?.Invoke("Syncing transactions...");
-            await SyncTableAsync(localDb, cloudDb, localDb.Transactions, cloudDb.Transactions);
 
             OnSyncProgress?.Invoke("Syncing office transactions...");
             await SyncTableAsync(localDb, cloudDb, localDb.TblTransactions, cloudDb.TblTransactions);
 
             OnSyncProgress?.Invoke("Syncing consolidated transactions...");
             await SyncTableAsync(localDb, cloudDb, localDb.ConsolidatedTransactions, cloudDb.ConsolidatedTransactions);
-
 
             OnSyncProgress?.Invoke("✔ Synced successfully");
         }
@@ -113,20 +116,12 @@ public class SyncService
         {
             _isSyncing = false;
             OnSyncStatusChanged?.Invoke(false);
-
-            // Clear status message after 15 seconds so user has time to read it
             _ = Task.Delay(15000).ContinueWith(_ => OnSyncProgress?.Invoke("Idle"));
         }
     }
 
-    /// <summary>
-    /// Ensures the cloud (Hostinger) MySQL tables have the SyncId and UpdatedAt
-    /// columns required for bidirectional sync. Safe to run repeatedly —
-    /// MySQL ALTER TABLE ... ADD COLUMN errors are silently ignored.
-    /// </summary>
     private static async Task MigrateCloudTablesAsync(CloudDbContext cloudDb)
     {
-        // List of tables and the columns they need
         var migrations = new[]
         {
             ("users",                     "SyncId",    "CHAR(36) NOT NULL DEFAULT (UUID())"),
@@ -151,11 +146,8 @@ public class SyncService
             ("tbl_transaction",           "transaction_date",  "DATETIME NULL"),
             ("consolidated_transactions", "SyncId",    "CHAR(36) NOT NULL DEFAULT (UUID())"),
             ("consolidated_transactions", "updated_at","DATETIME NULL"),
-            ("yearlybudgets",             "SyncId",    "CHAR(36) NOT NULL DEFAULT (UUID())"),
-            ("yearlybudgets",             "updated_at","DATETIME NULL"),
-            ("officeallocations",         "SyncId",    "CHAR(36) NOT NULL DEFAULT (UUID())"),
-            ("officeallocations",         "updated_at","DATETIME NULL"),
-            ("officeallocations",         "office_id", "BIGINT NULL"),
+            ("master_budget",             "SyncId",    "CHAR(36) NOT NULL DEFAULT (UUID())"),
+            ("master_budget",             "updated_at","DATETIME NULL"),
             ("project_details",           "voucher_code", "VARCHAR(45) NULL"),
             ("transactions",              "voucher_code", "VARCHAR(45) NULL"),
             ("tbl_transaction",           "voucher_code", "VARCHAR(45) NULL"),
@@ -173,149 +165,269 @@ public class SyncService
             try
             {
                 using var cmd = conn.CreateCommand();
-                // MySQL: ADD COLUMN only if it doesn't exist
-                cmd.CommandText = $@"
-                    ALTER TABLE `{table}`
-                    ADD COLUMN `{column}` {definition};";
+                cmd.CommandText = $"ALTER TABLE `{table}` ADD COLUMN `{column}` {definition};";
                 await cmd.ExecuteNonQueryAsync();
-                System.Diagnostics.Debug.WriteLine($"[SyncMigrate] Added {table}.{column}");
             }
             catch
             {
-                // Column already exists — ignore. MySQL throws 1060 for duplicate column.
+                // Column already exists — MySQL 1060. Safe to ignore.
+            }
+
+            if (column == "SyncId")
+            {
+                try
+                {
+                    using var updateCmd = conn.CreateCommand();
+                    updateCmd.CommandText = $"UPDATE `{table}` SET `SyncId` = UUID() WHERE `SyncId` IS NULL OR `SyncId` = '';";
+                    await updateCmd.ExecuteNonQueryAsync();
+                }
+                catch { }
             }
         }
     }
 
     /// <summary>
-    /// Bidirectional sync: push local → cloud, then pull cloud → local.
-    /// Uses SyncId (GUID) as the shared key and UpdatedAt for conflict resolution (last-write-wins).
+    /// Bidirectional sync using SyncId as the shared key, UpdatedAt for last-write-wins.
+    ///
+    /// UPDATE path uses raw SQL to completely bypass EF Core's change tracker,
+    /// which prevents the "cannot change principal of an entity with an identifying
+    /// foreign key" error caused by EF misinterpreting FK changes on Attach/SetValues.
+    ///
+    /// Duplicate SyncIds are collapsed via GroupBy before building lookup dictionaries,
+    /// preventing the "An item with the same key has already been added" crash.
     /// </summary>
     private static async Task SyncTableAsync<T>(
-        AppDbContext localDb,
+        AppDbContext  localDb,
         CloudDbContext cloudDb,
-        DbSet<T> localSet,
-        DbSet<T> cloudSet) where T : class
+        DbSet<T>      localSet,
+        DbSet<T>      cloudSet) where T : class
     {
         var syncIdProp  = typeof(T).GetProperty("SyncId");
         var updatedProp = typeof(T).GetProperty("UpdatedAt");
 
-        // Skip tables that don't have SyncId — they are local-only (e.g. CrsBeneficiaryCache)
         if (syncIdProp == null || updatedProp == null) return;
 
+        // ── Ensure Local SyncIds are not NULL (SQLite backfill) ──────────────
+        try
+        {
+            var meta  = localDb.Model.FindEntityType(typeof(T))!;
+            var tblName = meta.GetTableName()!;
+            const string uuidExpr = "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab', abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))";
+            var conn = localDb.Database.GetDbConnection();
+            if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"UPDATE \"{tblName}\" SET \"SyncId\" = ({uuidExpr}) WHERE \"SyncId\" IS NULL OR \"SyncId\" = '';";
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch { }
+
+        // ── Load all records without tracking ────────────────────────────────
         var localRecords = await localSet.AsNoTracking().ToListAsync();
         var cloudRecords = await cloudSet.AsNoTracking().ToListAsync();
 
-        // Build lookup dictionaries by SyncId for fast matching
-        // Guard: skip rows where SyncId is empty (startup patch may not have reached them yet)
+        // GroupBy collapses duplicate SyncIds so ToDictionary never throws
         var localById = localRecords
             .Where(r => (Guid)syncIdProp.GetValue(r)! != Guid.Empty)
-            .ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
+            .GroupBy(r => (Guid)syncIdProp.GetValue(r)!)
+            .ToDictionary(g => g.Key, g => g.First());
+
         var cloudById = cloudRecords
             .Where(r => (Guid)syncIdProp.GetValue(r)! != Guid.Empty)
-            .ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
+            .GroupBy(r => (Guid)syncIdProp.GetValue(r)!)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        // ── Gather EF metadata (scalar props & PK info) ──────────────────────
+        var localMeta  = localDb.Model.FindEntityType(typeof(T))!;
+        var cloudMeta  = cloudDb.Model.FindEntityType(typeof(T))!;
+
+        var localScalars   = localMeta.GetProperties().Where(p => !p.IsShadowProperty()).ToList();
+        var cloudScalars   = cloudMeta.GetProperties().Where(p => !p.IsShadowProperty()).ToList();
+        var localPkNames   = localMeta.FindPrimaryKey()!.Properties.Select(p => p.Name).ToHashSet();
+        var cloudPkNames   = cloudMeta.FindPrimaryKey()!.Properties.Select(p => p.Name).ToHashSet();
+        var localTableName = localMeta.GetTableName()!;
+        var cloudTableName = cloudMeta.GetTableName()!;
+
+        // ── Open raw connections ──────────────────────────────────────────────
+        var cloudConn = cloudDb.Database.GetDbConnection();
+        if (cloudConn.State != System.Data.ConnectionState.Open)
+            await cloudConn.OpenAsync();
+
+        var localConn = localDb.Database.GetDbConnection();
+        if (localConn.State != System.Data.ConnectionState.Open)
+            await localConn.OpenAsync();
 
         // ── Push local → cloud ────────────────────────────────────────────────
-        var cloudToAdd    = new List<T>();
-        var cloudToUpdate = new List<(T existing, T incoming)>();
-
         foreach (var local in localRecords)
         {
-            var syncId   = (Guid)syncIdProp.GetValue(local)!;
-            var localAt  = (DateTime?)updatedProp.GetValue(local);
+            var syncId  = (Guid)syncIdProp.GetValue(local)!;
+            if (syncId == Guid.Empty) continue;
+
+            var localAt = (DateTime?)updatedProp.GetValue(local);
 
             if (!cloudById.TryGetValue(syncId, out var cloudMatch))
             {
-                // Not in cloud → insert
-                cloudToAdd.Add(local);
+                // INSERT via raw SQL to preserve explicit integer PKs
+                try
+                {
+                    await RawSqlInsertAsync(cloudConn, cloudTableName, cloudScalars, local, isMySql: true);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[SyncService] Cloud insert failed ({typeof(T).Name}): {ex.Message}");
+                }
             }
             else
             {
+                // UPDATE via raw SQL — never touches EF change tracker
                 var cloudAt = (DateTime?)updatedProp.GetValue(cloudMatch);
                 if (localAt > cloudAt)
-                    cloudToUpdate.Add((cloudMatch, local));
+                    await RawSqlUpdateAsync(cloudConn, cloudTableName, cloudScalars, cloudPkNames, incoming: local, existing: cloudMatch, isMySql: true);
             }
         }
-
-        // Detach & add new records to cloud
-        foreach (var item in cloudToAdd)
-        {
-            // Create a fresh entry so there's no tracking conflict
-            var entry = cloudDb.Entry(item);
-            if (entry.State != EntityState.Detached)
-                entry.State = EntityState.Detached;
-            cloudSet.Add(item);
-        }
-
-        // Update existing cloud records
-        foreach (var (existing, incoming) in cloudToUpdate)
-        {
-            var tracked = cloudDb.Set<T>().Local.FirstOrDefault(e =>
-                (Guid)syncIdProp.GetValue(e)! == (Guid)syncIdProp.GetValue(existing)!);
-            if (tracked != null)
-                cloudDb.Entry(tracked).CurrentValues.SetValues(incoming);
-            else
-            {
-                cloudDb.Attach(existing);
-                cloudDb.Entry(existing).CurrentValues.SetValues(incoming);
-            }
-        }
-
-        await cloudDb.SaveChangesAsync();
-        // Detach everything so cloud context is clean for pull phase
-        foreach (var entry in cloudDb.ChangeTracker.Entries().ToList())
-            entry.State = EntityState.Detached;
 
         // ── Pull cloud → local ────────────────────────────────────────────────
-        var localToAdd    = new List<T>();
-        var localToUpdate = new List<(T existing, T incoming)>();
-
-        // Reload cloud records (may have been just inserted)
+        // Reload cloud in case push inserted new rows
         cloudRecords = await cloudSet.AsNoTracking().ToListAsync();
-        cloudById    = cloudRecords
+        cloudById = cloudRecords
             .Where(r => (Guid)syncIdProp.GetValue(r)! != Guid.Empty)
-            .ToDictionary(r => (Guid)syncIdProp.GetValue(r)!);
+            .GroupBy(r => (Guid)syncIdProp.GetValue(r)!)
+            .ToDictionary(g => g.Key, g => g.First());
 
         foreach (var cloud in cloudRecords)
         {
             var syncId  = (Guid)syncIdProp.GetValue(cloud)!;
+            if (syncId == Guid.Empty) continue;
+
             var cloudAt = (DateTime?)updatedProp.GetValue(cloud);
 
             if (!localById.TryGetValue(syncId, out var localMatch))
             {
-                localToAdd.Add(cloud);
+                // INSERT via raw SQL to preserve explicit integer PKs
+                try
+                {
+                    await RawSqlInsertAsync(localConn, localTableName, localScalars, cloud, isMySql: false);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[SyncService] Local insert failed ({typeof(T).Name}): {ex.Message}");
+                    System.IO.File.AppendAllText("sync_error.txt", $"[SyncService] Local insert failed ({typeof(T).Name}): {ex.ToString()}\n");
+                }
             }
             else
             {
+                // UPDATE via raw SQL — never touches EF change tracker
                 var localAt = (DateTime?)updatedProp.GetValue(localMatch);
                 if (cloudAt > localAt)
-                    localToUpdate.Add((localMatch, cloud));
+                    await RawSqlUpdateAsync(localConn, localTableName, localScalars, localPkNames, incoming: cloud, existing: localMatch, isMySql: false);
             }
         }
+    }
 
-        foreach (var item in localToAdd)
+    /// <summary>
+    /// Fires a raw SQL UPDATE for a single record without involving EF Core's change tracker.
+    ///
+    /// - <paramref name="incoming"/> supplies the NEW column values to write.
+    /// - <paramref name="existing"/> supplies the PK of the ROW to update in the target DB.
+    /// - The PK column itself is never written (only used in the WHERE clause).
+    /// - isMySql=true uses backtick quoting; false uses double-quote quoting (SQLite).
+    /// </summary>
+    private static async Task RawSqlUpdateAsync<T>(
+        System.Data.Common.DbConnection conn,
+        string tableName,
+        IEnumerable<IProperty> scalarProps,
+        HashSet<string> pkPropNames,
+        T incoming,
+        T existing,
+        bool isMySql) where T : class
+    {
+        string Q(string n) => isMySql ? $"`{n}`" : $"\"{n}\"";
+
+        using var cmd = conn.CreateCommand();
+        var setClauses = new List<string>();
+        int idx = 0;
+
+        foreach (var prop in scalarProps)
         {
-            var entry = localDb.Entry(item);
-            if (entry.State != EntityState.Detached)
-                entry.State = EntityState.Detached;
-            localSet.Add(item);
+            if (pkPropNames.Contains(prop.Name)) continue; // never overwrite PK
+
+            var clrProp = typeof(T).GetProperty(prop.Name);
+            if (clrProp == null) continue;
+
+            var value = clrProp.GetValue(incoming) ?? DBNull.Value;
+            var p = cmd.CreateParameter();
+            p.ParameterName = $"@p{idx}";
+            p.Value = value;
+            cmd.Parameters.Add(p);
+            setClauses.Add($"{Q(prop.GetColumnName())} = @p{idx}");
+            idx++;
         }
 
-        foreach (var (existing, incoming) in localToUpdate)
+        if (!setClauses.Any()) return;
+
+        // WHERE uses the PK of the EXISTING row in the target DB
+        var pkName   = pkPropNames.First();
+        var pkClrProp = typeof(T).GetProperty(pkName)!;
+        var pkColName = scalarProps.First(p => p.Name == pkName).GetColumnName();
+        var pkValue  = pkClrProp.GetValue(existing) ?? DBNull.Value;
+
+        var pkParam = cmd.CreateParameter();
+        pkParam.ParameterName = "@pkVal";
+        pkParam.Value = pkValue;
+        cmd.Parameters.Add(pkParam);
+
+        cmd.CommandText = $"UPDATE {Q(tableName)} SET {string.Join(", ", setClauses)} WHERE {Q(pkColName)} = @pkVal";
+
+        try
         {
-            var tracked = localDb.Set<T>().Local.FirstOrDefault(e =>
-                (Guid)syncIdProp.GetValue(e)! == (Guid)syncIdProp.GetValue(existing)!);
-            if (tracked != null)
-                localDb.Entry(tracked).CurrentValues.SetValues(incoming);
-            else
-            {
-                localDb.Attach(existing);
-                localDb.Entry(existing).CurrentValues.SetValues(incoming);
-            }
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SyncService] RawSqlUpdate failed on {tableName}: {ex.Message}");
+        }
+    }
+
+    private static async Task RawSqlInsertAsync<T>(
+        System.Data.Common.DbConnection conn,
+        string tableName,
+        IEnumerable<IProperty> scalarProps,
+        T incoming,
+        bool isMySql) where T : class
+    {
+        string Q(string n) => isMySql ? $"`{n}`" : $"\"{n}\"";
+
+        using var cmd = conn.CreateCommand();
+        var cols = new List<string>();
+        var vals = new List<string>();
+        int idx = 0;
+
+        foreach (var prop in scalarProps)
+        {
+            var clrProp = typeof(T).GetProperty(prop.Name);
+            if (clrProp == null) continue;
+
+            var value = clrProp.GetValue(incoming) ?? DBNull.Value;
+            var p = cmd.CreateParameter();
+            p.ParameterName = $"@p{idx}";
+            p.Value = value;
+            cmd.Parameters.Add(p);
+            
+            cols.Add(Q(prop.GetColumnName()));
+            vals.Add($"@p{idx}");
+            idx++;
         }
 
-        await localDb.SaveChangesAsync();
-        foreach (var entry in localDb.ChangeTracker.Entries().ToList())
-            entry.State = EntityState.Detached;
+        string insertVerb = isMySql ? "INSERT IGNORE" : "INSERT OR REPLACE";
+        cmd.CommandText = $"{insertVerb} INTO {Q(tableName)} ({string.Join(", ", cols)}) VALUES ({string.Join(", ", vals)})";
+
+        try
+        {
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SyncService] RawSqlInsert failed on {tableName}: {ex.Message}");
+            throw;
+        }
     }
 }

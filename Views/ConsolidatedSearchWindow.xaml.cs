@@ -29,9 +29,29 @@ public partial class ConsolidatedSearchWindow : Window
     private List<string> _allBarangays = new();
     private List<string> _allHouseholdNos = new();
 
+    // Recent-items collections — swapped into RecentItemsListBox per mode
+    private List<string> _recentProjectCodes = new();
+    private List<string> _recentOfficeCodes  = new();
+    private List<string> _recentBarangays    = new();
+
+    // Debounce timer — fires ApplyFilter() 300 ms after the user stops typing
+    private readonly System.Windows.Threading.DispatcherTimer _debounceTimer;
+    private bool _suppressTextChanged = false;
+
     public ConsolidatedSearchWindow()
     {
         InitializeComponent();
+
+        // Set up debounce timer (300 ms) — stops and restarts on every keystroke
+        _debounceTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = System.TimeSpan.FromMilliseconds(300)
+        };
+        _debounceTimer.Tick += DebounceTimer_Tick;
+
+        // Stop timer when window closes to prevent any orphaned Tick callbacks
+        this.Closing += (s, e) => _debounceTimer.Stop();
+
         this.Loaded += ConsolidatedSearchWindow_Loaded;
     }
 
@@ -58,13 +78,13 @@ public partial class ConsolidatedSearchWindow : Window
                         
                     _allProjectCodes = dbContext.ConsolidatedTransactions
                         .Where(t => !string.IsNullOrEmpty(t.ProjectCode))
-                        .Select(t => t.ProjectCode)
+                        .Select(t => t.ProjectCode + " - " + t.ProjectName)
                         .Distinct()
                         .ToList()!;
                         
                     _allOfficeCodes = dbContext.ConsolidatedTransactions
                         .Where(t => !string.IsNullOrEmpty(t.OfficeId))
-                        .Select(t => t.OfficeId)
+                        .Select(t => t.OfficeId + " - " + t.OfficeName)
                         .Distinct()
                         .ToList()!;
 
@@ -83,23 +103,36 @@ public partial class ConsolidatedSearchWindow : Window
                     var recentProjects = dbContext.ConsolidatedTransactions
                         .Where(t => !string.IsNullOrEmpty(t.ProjectCode))
                         .OrderByDescending(t => t.CreatedAt)
-                        .Select(t => t.ProjectCode)
+                        .Select(t => t.ProjectCode + " - " + t.ProjectName)
                         .Distinct()
                         .Take(10)
                         .ToList()!;
-                        
+
                     var recentOffices = dbContext.ConsolidatedTransactions
                         .Where(t => !string.IsNullOrEmpty(t.OfficeId))
                         .OrderByDescending(t => t.CreatedAt)
-                        .Select(t => t.OfficeId)
+                        .Select(t => t.OfficeId + " - " + t.OfficeName)
                         .Distinct()
                         .Take(10)
                         .ToList()!;
-                        
-                    Dispatcher.Invoke(() => 
+
+                    var recentBarangays = dbContext.ConsolidatedTransactions
+                        .Where(t => !string.IsNullOrEmpty(t.Barangay))
+                        .OrderByDescending(t => t.CreatedAt)
+                        .Select(t => t.Barangay)
+                        .Distinct()
+                        .Take(10)
+                        .ToList()!;
+
+                    Dispatcher.Invoke(() =>
                     {
-                        RecentProjectsListBox.ItemsSource = recentProjects;
-                        RecentOfficeCodesListBox.ItemsSource = recentOffices;
+                        _recentProjectCodes = recentProjects;
+                        _recentOfficeCodes  = recentOffices;
+                        _recentBarangays    = recentBarangays;
+
+                        // If the active mode already has a recent-items panel visible,
+                        // re-run SearchMode_Changed so the list reflects the just-loaded data.
+                        SearchMode_Changed(this, new RoutedEventArgs());
                     });
                 });
             }
@@ -115,98 +148,92 @@ public partial class ConsolidatedSearchWindow : Window
 
     private void SearchMode_Changed(object sender, RoutedEventArgs e)
     {
-        if (RadioBeneficiaryId == null || RadioFullName == null || RadioProjectCode == null || RadioOfficeCode == null || RadioBarangay == null || RadioHouseholdNo == null || SearchInputPanel == null)
+        if (RadioBeneficiaryId == null || RadioFullName == null ||
+            RadioProjectCode == null || RadioOfficeCode == null ||
+            RadioBarangay == null || RadioHouseholdNo == null ||
+            SearchInputPanel == null)
             return;
+
+        // ── Helper: set focus asynchronously after layout ──────────────────
+        void FocusSearchBox()
+        {
+            SearchTextBox.Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.Loaded,
+                new System.Action(() =>
+                {
+                    SearchTextBox.IsEnabled = true;
+                    SearchTextBox.Focus();
+                    Keyboard.Focus(SearchTextBox);
+                }));
+        }
+
+        // ── Helper: show/configure the recent-items right panel ────────────
+        void ShowRecentPanel(string header, List<string> items)
+        {
+            RecentItemsHeader.Text      = header;
+            RecentItemsListBox.ItemsSource = items;
+            RecentItemsListBox.SelectedItem = null;  // clear prior selection
+            RecentItemsCard.Visibility  = items.Count > 0
+                                          ? Visibility.Visible
+                                          : Visibility.Collapsed;
+        }
+
+        void HideRecentPanel()
+        {
+            RecentItemsCard.Visibility = Visibility.Collapsed;
+            RecentItemsListBox.ItemsSource = null;
+        }
+
+        // ── Per-mode logic ─────────────────────────────────────────────────
+        SearchTextBox.Text  = string.Empty;
+        SearchTextBox.IsEnabled = true;
 
         if (RadioBeneficiaryId.IsChecked == true)
         {
             SearchLabel.Text = "Enter Beneficiary ID:";
-            SearchTextBox.Text = string.Empty;
-            SearchTextBox.IsEnabled = true;
             SearchInputPanel.Visibility = Visibility.Visible;
-            // Give keyboard focus after layout updates
-            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-                new System.Action(() =>
-                {
-                    SearchTextBox.IsEnabled = true;
-                    SearchTextBox.Focus();
-                    Keyboard.Focus(SearchTextBox);
-                }));
+            HideRecentPanel();
+            FocusSearchBox();
         }
         else if (RadioFullName.IsChecked == true)
         {
             SearchLabel.Text = "Enter Full Name:";
-            SearchTextBox.Text = string.Empty;
-            SearchTextBox.IsEnabled = true;
             SearchInputPanel.Visibility = Visibility.Visible;
-            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-                new System.Action(() =>
-                {
-                    SearchTextBox.IsEnabled = true;
-                    SearchTextBox.Focus();
-                    Keyboard.Focus(SearchTextBox);
-                }));
+            HideRecentPanel();
+            FocusSearchBox();
         }
         else if (RadioProjectCode.IsChecked == true)
         {
-            SearchLabel.Text = "Enter Project Code:";
-            SearchTextBox.Text = string.Empty;
-            SearchTextBox.IsEnabled = true;
+            SearchLabel.Text = "Enter Project (Name/Code):";
             SearchInputPanel.Visibility = Visibility.Visible;
-            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-                new System.Action(() =>
-                {
-                    SearchTextBox.IsEnabled = true;
-                    SearchTextBox.Focus();
-                    Keyboard.Focus(SearchTextBox);
-                }));
+            ShowRecentPanel("Recent Projects", _recentProjectCodes);
+            FocusSearchBox();
         }
         else if (RadioOfficeCode.IsChecked == true)
         {
-            SearchLabel.Text = "Enter Office Code:";
-            SearchTextBox.Text = string.Empty;
-            SearchTextBox.IsEnabled = true;
+            SearchLabel.Text = "Enter Office (Name/Code):";
             SearchInputPanel.Visibility = Visibility.Visible;
-            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-                new System.Action(() =>
-                {
-                    SearchTextBox.IsEnabled = true;
-                    SearchTextBox.Focus();
-                    Keyboard.Focus(SearchTextBox);
-                }));
+            ShowRecentPanel("Recent Offices", _recentOfficeCodes);
+            FocusSearchBox();
         }
         else if (RadioBarangay.IsChecked == true)
         {
             SearchLabel.Text = "Enter Barangay:";
-            SearchTextBox.Text = string.Empty;
-            SearchTextBox.IsEnabled = true;
             SearchInputPanel.Visibility = Visibility.Visible;
-            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-                new System.Action(() =>
-                {
-                    SearchTextBox.IsEnabled = true;
-                    SearchTextBox.Focus();
-                    Keyboard.Focus(SearchTextBox);
-                }));
+            ShowRecentPanel("Recent Barangays", _recentBarangays);
+            FocusSearchBox();
         }
         else if (RadioHouseholdNo.IsChecked == true)
         {
             SearchLabel.Text = "Enter Household No:";
-            SearchTextBox.Text = string.Empty;
-            SearchTextBox.IsEnabled = true;
             SearchInputPanel.Visibility = Visibility.Visible;
-            SearchTextBox.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-                new System.Action(() =>
-                {
-                    SearchTextBox.IsEnabled = true;
-                    SearchTextBox.Focus();
-                    Keyboard.Focus(SearchTextBox);
-                }));
+            HideRecentPanel();
+            FocusSearchBox();
         }
         else // View All
         {
             SearchInputPanel.Visibility = Visibility.Collapsed;
-            SearchTextBox.Text = string.Empty;
+            HideRecentPanel();
         }
     }
 
@@ -244,23 +271,33 @@ public partial class ConsolidatedSearchWindow : Window
         {
             if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
             {
-                MessageBox.Show("Please enter a Project Code.", "Missing Input",
+                MessageBox.Show("Please enter a Project.", "Missing Input",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             SearchMode = "ProjectCode";
-            SearchValue = SearchTextBox.Text.Trim();
+            var text = SearchTextBox.Text.Trim();
+            var index = text.IndexOf(" - ");
+            if (index >= 0) {
+                text = text.Substring(0, index);
+            }
+            SearchValue = text;
         }
         else if (RadioOfficeCode.IsChecked == true)
         {
             if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
             {
-                MessageBox.Show("Please enter an Office Code.", "Missing Input",
+                MessageBox.Show("Please enter an Office.", "Missing Input",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             SearchMode = "OfficeCode";
-            SearchValue = SearchTextBox.Text.Trim();
+            var text = SearchTextBox.Text.Trim();
+            var index = text.IndexOf(" - ");
+            if (index >= 0) {
+                text = text.Substring(0, index);
+            }
+            SearchValue = text;
         }
         else if (RadioBarangay.IsChecked == true)
         {
@@ -296,7 +333,52 @@ public partial class ConsolidatedSearchWindow : Window
 
     private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (RadioFullName.IsChecked != true && RadioBeneficiaryId.IsChecked != true && RadioProjectCode.IsChecked != true && RadioOfficeCode.IsChecked != true && RadioBarangay.IsChecked != true && RadioHouseholdNo.IsChecked != true)
+        // If we're setting text programmatically (e.g. from a suggestion), skip debounce
+        if (_suppressTextChanged) return;
+
+        // Reset and restart the debounce timer on each keystroke
+        _debounceTimer.Stop();
+
+        string query = SearchTextBox.Text.Trim();
+        if (string.IsNullOrEmpty(query))
+        {
+            SuggestionsPopup.IsOpen = false;
+            return;
+        }
+
+        _debounceTimer.Start();
+    }
+
+    /// <summary>
+    /// Fired by the debounce timer ~300 ms after the user stops typing.
+    /// Runs the filter and updates the suggestion popup.
+    /// </summary>
+    private void DebounceTimer_Tick(object sender, System.EventArgs e)
+    {
+        _debounceTimer.Stop();
+        ApplyFilter();
+    }
+
+    /// <summary>
+    /// Filters the appropriate list against the current TextBox text and
+    /// shows/hides the suggestion popup (including a "No matches found" state).
+    /// </summary>
+    private void ApplyFilter()
+    {
+        // Guard: only run when a searchable radio is checked
+        if (RadioFullName == null || RadioBeneficiaryId == null ||
+            RadioProjectCode == null || RadioOfficeCode == null ||
+            RadioBarangay == null || RadioHouseholdNo == null)
+            return;
+
+        bool anySearchMode = RadioFullName.IsChecked == true
+                          || RadioBeneficiaryId.IsChecked == true
+                          || RadioProjectCode.IsChecked == true
+                          || RadioOfficeCode.IsChecked == true
+                          || RadioBarangay.IsChecked == true
+                          || RadioHouseholdNo.IsChecked == true;
+
+        if (!anySearchMode)
         {
             SuggestionsPopup.IsOpen = false;
             return;
@@ -310,93 +392,115 @@ public partial class ConsolidatedSearchWindow : Window
         }
 
         List<string> matches;
-        
+
         if (RadioFullName.IsChecked == true)
-        {
             matches = _allNames
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10)
-                .ToList();
-        }
+                .Take(10).ToList();
         else if (RadioBeneficiaryId.IsChecked == true)
-        {
             matches = _allBeneficiaryIds
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10)
-                .ToList();
-        }
+                .Take(10).ToList();
         else if (RadioProjectCode.IsChecked == true)
-        {
             matches = _allProjectCodes
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10)
-                .ToList();
-        }
+                .Take(10).ToList();
         else if (RadioOfficeCode.IsChecked == true)
-        {
             matches = _allOfficeCodes
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10)
-                .ToList();
-        }
+                .Take(10).ToList();
         else if (RadioBarangay.IsChecked == true)
-        {
             matches = _allBarangays
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10)
-                .ToList();
-        }
-        else // RadioHouseholdNo is checked
-        {
+                .Take(10).ToList();
+        else // RadioHouseholdNo
             matches = _allHouseholdNos
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10)
-                .ToList();
-        }
+                .Take(10).ToList();
 
-        if (matches.Any())
+        if (matches.Count > 0)
         {
             SuggestionsListBox.ItemsSource = matches;
-            SuggestionsPopup.IsOpen = true;
+            SuggestionsListBox.Visibility = Visibility.Visible;
+            NoMatchesText.Visibility = Visibility.Collapsed;
         }
         else
         {
-            SuggestionsPopup.IsOpen = false;
+            SuggestionsListBox.ItemsSource = null;
+            SuggestionsListBox.Visibility = Visibility.Collapsed;
+            NoMatchesText.Visibility = Visibility.Visible;
         }
+
+        SuggestionsPopup.IsOpen = true;
     }
 
     private void SuggestionsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (SuggestionsListBox.SelectedItem is string selectedName)
+        if (SuggestionsListBox.SelectedItem is string selected)
         {
-            // Set text without triggering TextChanged event over and over if possible,
-            // but it's fine since query will match exactly and then we close popup
-            SearchTextBox.Text = selectedName;
-            SearchTextBox.CaretIndex = SearchTextBox.Text.Length;
+            // Populate the TextBox without re-triggering the debounce timer
+            _suppressTextChanged = true;
+            SearchTextBox.Text = selected;
+            SearchTextBox.CaretIndex = selected.Length;
+            _suppressTextChanged = false;
+
             SuggestionsPopup.IsOpen = false;
-            
-            // Move focus back to text box
-            SearchTextBox.Focus();
+            _debounceTimer.Stop();
+
+            // Auto-submit: run the same logic as clicking Proceed
+            ProceedButton_Click(this, new RoutedEventArgs());
+        }
+    }
+
+    /// <summary>
+    /// Allows pressing Enter in the search TextBox to trigger the search,
+    /// and Escape to dismiss the suggestion popup.
+    /// </summary>
+    private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            // Close popup and stop any pending debounce, then run search
+            SuggestionsPopup.IsOpen = false;
+            _debounceTimer.Stop();
+            ProceedButton_Click(sender, new RoutedEventArgs());
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            SuggestionsPopup.IsOpen = false;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Down && SuggestionsPopup.IsOpen
+                 && SuggestionsListBox.Items.Count > 0)
+        {
+            // Allow keyboard navigation into the suggestion list
+            SuggestionsListBox.Focus();
+            SuggestionsListBox.SelectedIndex = 0;
+            e.Handled = true;
         }
     }
     
-    private void RecentProjectsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    /// <summary>
+    /// Unified handler for the single RecentItemsListBox.
+    /// Fills SearchTextBox with the clicked value and immediately triggers
+    /// the search (same as pressing Enter / Proceed).
+    /// </summary>
+    private void RecentItemsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (RecentProjectsListBox.SelectedItem is string selectedProject)
-        {
-            RadioProjectCode.IsChecked = true;
-            SearchTextBox.Text = selectedProject;
-            SearchTextBox.Focus();
-        }
-    }
-    
-    private void RecentOfficeCodesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (RecentOfficeCodesListBox.SelectedItem is string selectedOffice)
-        {
-            RadioOfficeCode.IsChecked = true;
-            SearchTextBox.Text = selectedOffice;
-            SearchTextBox.Focus();
-        }
+        if (RecentItemsListBox.SelectedItem is not string selected)
+            return;
+
+        // Suppress the TextChanged debounce so the popup doesn't flicker open
+        _suppressTextChanged = true;
+        SearchTextBox.Text = selected;
+        SearchTextBox.CaretIndex = selected.Length;
+        _suppressTextChanged = false;
+
+        SuggestionsPopup.IsOpen = false;
+        _debounceTimer.Stop();
+
+        // Auto-submit — same logic as clicking Proceed
+        ProceedButton_Click(this, new RoutedEventArgs());
     }
 }

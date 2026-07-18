@@ -18,6 +18,17 @@ public partial class App : Application
 
     public App()
     {
+        this.DispatcherUnhandledException += (s, e) =>
+        {
+            MessageBox.Show($"UI EXCEPTION:\n\n{e.Exception.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Handled = true;
+        };
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            if (e.ExceptionObject is Exception ex)
+                MessageBox.Show($"FATAL EXCEPTION:\n\n{ex.Message}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
+
         var culture = new CultureInfo("en-PH");
         Thread.CurrentThread.CurrentCulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
@@ -26,24 +37,32 @@ public partial class App : Application
             typeof(FrameworkElement),
             new FrameworkPropertyMetadata(System.Windows.Markup.XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
 
-        string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GoodGovernanceApp");
-        Directory.CreateDirectory(appDataFolder);
-        string appDataSettingsPath = Path.Combine(appDataFolder, "appsettings.json");
-
-        if (!File.Exists(appDataSettingsPath))
+        try
         {
-            string baseSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-            if (File.Exists(baseSettingsPath))
-                File.Copy(baseSettingsPath, appDataSettingsPath);
-        }
+            string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GoodGovernanceApp");
+            Directory.CreateDirectory(appDataFolder);
+            string appDataSettingsPath = Path.Combine(appDataFolder, "appsettings.json");
 
-        AppHost = Host.CreateDefaultBuilder()
-            .ConfigureAppConfiguration((context, config) =>
+            if (!File.Exists(appDataSettingsPath))
             {
-                config.Sources.Clear();
-                config.SetBasePath(appDataFolder);
-                config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-            })
+                // When using PublishSingleFile, BaseDirectory is a temp folder. We need the actual .exe path.
+                string exeDir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string exeSettingsPath = Path.Combine(exeDir, "appsettings.json");
+                string baseSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+
+                if (File.Exists(exeSettingsPath))
+                    File.Copy(exeSettingsPath, appDataSettingsPath);
+                else if (File.Exists(baseSettingsPath))
+                    File.Copy(baseSettingsPath, appDataSettingsPath);
+            }
+
+            AppHost = Host.CreateDefaultBuilder()
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    config.Sources.Clear();
+                    config.SetBasePath(appDataFolder);
+                    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                })
             .ConfigureServices((context, services) =>
             {
                 services.AddDbContext<AppDbContext>(options =>
@@ -78,7 +97,13 @@ public partial class App : Application
             })
             .Build();
 
-        Config = AppHost.Services.GetRequiredService<IConfiguration>();
+            Config = AppHost.Services.GetRequiredService<IConfiguration>();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"CRITICAL STARTUP ERROR:\n\n{ex.Message}\n\nThe application will now close.", "Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Environment.Exit(1);
+        }
     }
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -206,23 +231,89 @@ public partial class App : Application
                     AddSyncCols("budget_allocations");
                     AddSyncCols("tbl_program_provision");
                     AddSyncCols("tbl_services");
-                    AddSyncCols("transactions");
                     AddSyncCols("tbl_transaction");
+
                     AddSyncCols("consolidated_transactions");
-                    AddSyncCols("yearlybudgets");
-                    AddSyncCols("officeallocations");
+                    AddSyncCols("master_budget");
+
 
                     // Extra columns added later by schema evolution
                     AddCol("project_details",        "voucher_code", "TEXT NULL");
-                    AddCol("transactions",            "voucher_code", "TEXT NULL");
                     AddCol("tbl_transaction",         "voucher_code", "TEXT NULL");
                     AddCol("tbl_offices",             "office_code",  "TEXT NULL");
-                    AddCol("officeallocations",       "office_id",    "INTEGER NULL");
+
                     AddCol("consolidated_transactions", "barangay",   "TEXT NULL");
                     AddCol("consolidated_transactions", "household_no", "TEXT NULL");
                     AddCol("project_details",         "status",       "TEXT NOT NULL DEFAULT 'active'");
                     AddCol("project_details",         "system_name",  "TEXT NULL");
                     AddCol("consolidated_transactions", "project_details_id", "TEXT NULL");
+
+                    // Seed sqlite sequences with seconds since 2026 to guarantee monotonically increasing 
+                    // IDs across database wipes, completely avoiding Cloud vs Local ID collisions!
+                    int epochOffset = (int)(DateTime.UtcNow - new DateTime(2026, 1, 1)).TotalSeconds;
+                    // Ensure a minimum offset just in case the system clock is wrong
+                    if (epochOffset < 1000000) epochOffset = 1000000;
+
+                    void SeedSequence(string table)
+                    {
+                        using var cmd = conn.CreateCommand();
+                        cmd.CommandText = $"INSERT OR IGNORE INTO sqlite_sequence (name, seq) VALUES ('{table}', {epochOffset});";
+                        try { cmd.ExecuteNonQuery(); } catch { }
+                    }
+
+                    SeedSequence("project_details");
+                    SeedSequence("users");
+                    SeedSequence("tbl_offices");
+                    SeedSequence("master_budget");
+                    SeedSequence("budget_allocations");
+                    SeedSequence("tbl_program_provision");
+                    SeedSequence("tbl_services");
+                    SeedSequence("tbl_transaction");
+                    SeedSequence("consolidated_transactions");
+
+                    // Ensure master_budget table and columns exist in local SQLite
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"
+                            CREATE TABLE IF NOT EXISTS ""master_budget"" (
+                                ""id"" INTEGER PRIMARY KEY AUTOINCREMENT,
+                                ""budget_year"" TEXT,
+                                ""total_budget"" TEXT,
+                                ""description"" TEXT,
+                                ""SyncId"" TEXT,
+                                ""updated_at"" TEXT
+                            );";
+                        try { cmd.ExecuteNonQuery(); } catch { }
+                    }
+                    AddCol("master_budget", "budget_year", "TEXT NULL");
+                    AddCol("master_budget", "total_budget", "TEXT NULL");
+                    AddCol("master_budget", "allocated_budget", "TEXT NULL");
+                    AddCol("master_budget", "remaining_budget", "TEXT NULL");
+                    AddCol("master_budget", "status", "TEXT NULL");
+                    AddCol("master_budget", "description", "TEXT NULL");
+                    AddCol("master_budget", "created_by", "INTEGER NULL");
+                    AddCol("master_budget", "created_at", "TEXT NULL");
+
+                    // Migrate data from the old yearlybudgets table to the new master_budget table locally
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"
+                            INSERT INTO ""master_budget"" (""budget_year"", ""total_budget"", ""description"", ""SyncId"")
+                            SELECT CAST(""Year"" AS TEXT), ""TotalAmount"", ""Description"", ""SyncId""
+                            FROM ""yearlybudgets""
+                            WHERE CAST(""Year"" AS TEXT) NOT IN (SELECT ""budget_year"" FROM ""master_budget"");
+                        ";
+                        try { cmd.ExecuteNonQuery(); } catch { }
+
+                        // Fix DBNull errors for EF Core by setting defaults on non-nullable fields
+                        cmd.CommandText = @"
+                            UPDATE ""master_budget"" SET ""allocated_budget"" = '0.00' WHERE ""allocated_budget"" IS NULL;
+                            UPDATE ""master_budget"" SET ""remaining_budget"" = ""total_budget"" WHERE ""remaining_budget"" IS NULL;
+                            UPDATE ""master_budget"" SET ""status"" = 'active' WHERE ""status"" IS NULL;
+                            UPDATE ""master_budget"" SET ""created_by"" = 1 WHERE ""created_by"" IS NULL;
+                        ";
+                        try { cmd.ExecuteNonQuery(); } catch { }
+                    }
                 });
 
                 // ── Step 4b: MySQL-only schema patches ───────────────────────────
@@ -234,26 +325,7 @@ public partial class App : Application
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ADD COLUMN office_code VARCHAR(30) NULL AFTER name;"); } catch { }
                         try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE tbl_offices ALTER COLUMN active SET DEFAULT 1;"); } catch { }
 
-                        try
-                        {
-                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 0;");
-                            dbContext.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS officeallocations;");
-                            dbContext.Database.ExecuteSqlRaw(@"
-                                CREATE TABLE officeallocations (
-                                    Id INT AUTO_INCREMENT PRIMARY KEY,
-                                    YearlyBudgetId INT NOT NULL,
-                                    office_code VARCHAR(30) NOT NULL,
-                                    AllocatedAmount DECIMAL(65,30) NOT NULL,
-                                    CONSTRAINT FK_officeallocations_YearlyBudgets FOREIGN KEY (YearlyBudgetId) REFERENCES YearlyBudgets (Id) ON DELETE CASCADE,
-                                    CONSTRAINT FK_officeallocations_tbl_offices FOREIGN KEY (office_code) REFERENCES tbl_offices (office_code) ON DELETE CASCADE
-                                ) CHARACTER SET=utf8mb4;
-                            ");
-                            dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;");
-                        }
-                        catch
-                        {
-                            try { dbContext.Database.ExecuteSqlRaw("SET FOREIGN_KEY_CHECKS = 1;"); } catch { }
-                        }
+
                     });
                 }
 

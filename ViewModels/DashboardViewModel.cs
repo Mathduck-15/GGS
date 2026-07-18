@@ -105,13 +105,15 @@ public class DashboardViewModel : ViewModelBase
 
         try
         {
-            TotalBudget = await _context.YearlyBudgets.SumAsync(b => b.TotalAmount);
+            TotalBudget = await _context.MasterBudgets.SumAsync(b => b.TotalAmount);
             
-            TotalIncome = await _context.Transactions
-                                        .SumAsync(t => t.Amount ?? 0);
+            TotalIncome = await _context.TblTransactions
+                                        .Where(t => t.TransactionType == "Income")
+                                        .SumAsync(t => t.Amount);
 
-            TotalExpense = await _context.Transactions
-                                         .SumAsync(t => t.Amount ?? 0);
+            TotalExpense = await _context.TblTransactions
+                                         .Where(t => t.TransactionType == "Expense" || t.TransactionType == "disbursement")
+                                         .SumAsync(t => t.Amount);
 
             ActiveUsersCount = await _context.Users
                                              .CountAsync(u => u.Status == "active");
@@ -121,11 +123,11 @@ public class DashboardViewModel : ViewModelBase
 
             var projectData = await _context.ProjectDetails
                 .Where(p => p.Status == "active")
-                .Join(_context.YearlyBudgets,
-                    p => p.YearlyBudgetId,
+                .Join(_context.MasterBudgets,
+                    p => p.MasterBudgetId,
                     y => y.Id,
                     (p, y) => new { p, y })
-                .Where(x => x.y.Year == currentYear)
+                .Where(x => x.y.FiscalYear == currentYear.ToString())
                 .GroupBy(x => x.p.Name)
                 .Select(g => new DeptAllocationData
                 {
@@ -148,7 +150,7 @@ public class DashboardViewModel : ViewModelBase
             DeptProjectPieSeries = seriesproject;
 
 
-            var officeData = await _context.OfficeAllocations
+            var officeData = await _context.BudgetAllocations
             .Include(a => a.Office)
             .GroupBy(a => a.Office!.Name)
             .Select(g => new DeptAllocationData { Name = g.Key, Amount = (double)g.Sum(a => a.AllocatedAmount) })

@@ -55,6 +55,7 @@ namespace GoodGovernanceApp.ViewModels
             BrowseBackupFolderCommand = new RelayCommand(_ => BrowseBackupFolder());
             BrowseMySqlDumpCommand = new RelayCommand(_ => BrowseMySqlDump());
             OpenSystemsProfileCommand = new RelayCommand(_ => new SystemsApplicationProfile().ShowDialog());
+            OpenCopyrightProfileCommand = new RelayCommand(_ => new CopyrightProfileWindow().ShowDialog());
             OpenDepartmentsCommand = new RelayCommand(_ =>
             {
                 var window = new Window
@@ -300,6 +301,7 @@ namespace GoodGovernanceApp.ViewModels
         public ICommand BrowseBackupFolderCommand { get; }
         public ICommand BrowseMySqlDumpCommand { get; }
         public ICommand OpenSystemsProfileCommand { get; }
+        public ICommand OpenCopyrightProfileCommand { get; }
         public ICommand OpenDepartmentsCommand { get; }
 
         // ── Preset Logic ─────────────────────────────────────────────────────

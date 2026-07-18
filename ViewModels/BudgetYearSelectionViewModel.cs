@@ -18,9 +18,9 @@ public class BudgetYearSelectionViewModel : ViewModelBase
     private int _newBudgetYear = DateTime.Now.Year;
     private decimal _newBudgetAmount;
     private string _newBudgetDescription = string.Empty;
-    private YearlyBudget? _selectedYearlyBudget;
+    private MasterBudget? _selectedMasterBudget;
 
-    public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
+    public ObservableCollection<MasterBudget> MasterBudgets { get; } = new();
 
     public int NewBudgetYear
     {
@@ -40,54 +40,61 @@ public class BudgetYearSelectionViewModel : ViewModelBase
         set { _newBudgetDescription = value; OnPropertyChanged(); }
     }
 
-    public YearlyBudget? SelectedYearlyBudget
+    public MasterBudget? SelectedMasterBudget
     {
-        get => _selectedYearlyBudget;
-        set { _selectedYearlyBudget = value; OnPropertyChanged(); }
+        get => _selectedMasterBudget;
+        set { _selectedMasterBudget = value; OnPropertyChanged(); }
     }
 
-    public ICommand AddYearlyBudgetCommand { get; }
+    public ICommand AddMasterBudgetCommand { get; }
 
     public BudgetYearSelectionViewModel()
     {
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
 
-        AddYearlyBudgetCommand = new RelayCommand(async _ => await AddYearlyBudgetAsync());
+        AddMasterBudgetCommand = new RelayCommand(async _ => await AddMasterBudgetAsync());
 
         _ = LoadInitialDataAsync();
     }
 
     private async Task LoadInitialDataAsync()
     {
-        var budgets = await _context.YearlyBudgets.OrderByDescending(b => b.Year).ToListAsync();
-        YearlyBudgets.Clear();
-        foreach (var b in budgets) YearlyBudgets.Add(b);
-        if (YearlyBudgets.Any()) SelectedYearlyBudget = YearlyBudgets[0];
+        var budgets = await _context.MasterBudgets.OrderByDescending(b => b.FiscalYear).ToListAsync();
+        MasterBudgets.Clear();
+        foreach (var b in budgets) MasterBudgets.Add(b);
+        if (MasterBudgets.Any()) SelectedMasterBudget = MasterBudgets[0];
     }
 
-    private async Task AddYearlyBudgetAsync()
+    private async Task AddMasterBudgetAsync()
     {
         if (NewBudgetAmount <= 0) return;
 
-        var existing = await _context.YearlyBudgets.FirstOrDefaultAsync(b => b.Year == NewBudgetYear);
+        var yearStr = NewBudgetYear.ToString();
+        var existing = await _context.MasterBudgets.FirstOrDefaultAsync(b => b.FiscalYear == yearStr);
         if (existing != null)
         {
             MessageBox.Show($"Budget for {NewBudgetYear} already exists.");
             return;
         }
 
-        var budget = new YearlyBudget
+        var budget = new MasterBudget
         {
-            Year = NewBudgetYear,
-            TotalAmount = NewBudgetAmount,
-            Description = NewBudgetDescription
+            FiscalYear = yearStr,
+            TotalAmount = Math.Round(NewBudgetAmount, 2),
+            Description = NewBudgetDescription,
+            CreatedById = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Services.SessionService>().CurrentUser?.Id ?? 1,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
+            AllocatedBudget = 0.00m,
+            RemainingBudget = Math.Round(NewBudgetAmount, 2),
+            Status = "active"
         };
 
-        _context.YearlyBudgets.Add(budget);
+        _context.MasterBudgets.Add(budget);
         await _context.SaveChangesAsync();
 
-        YearlyBudgets.Insert(0, budget);
-        SelectedYearlyBudget = budget;
+        MasterBudgets.Insert(0, budget);
+        SelectedMasterBudget = budget;
         NewBudgetAmount = 0;
         NewBudgetDescription = string.Empty;
     }

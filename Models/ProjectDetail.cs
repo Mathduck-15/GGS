@@ -33,7 +33,7 @@ public class ProjectDetail
     public string? ContactPerson { get; set; }
 
     [Column("yearly_budget_id")]
-    public int? YearlyBudgetId { get; set; }
+    public long? MasterBudgetId { get; set; }
 
     [Column("create_at")]
     public DateTime? CreatedAt { get; set; }

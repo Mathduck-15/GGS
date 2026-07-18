@@ -141,7 +141,7 @@ public class DepartmentManagementViewModel : ViewModelBase
 
             if (projectCodes.Any())
             {
-                spentByProject = await _context.Transactions
+                spentByProject = await _context.ConsolidatedTransactions
                     .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
                     .GroupBy(t => t.ProjectCode)
                     .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
@@ -242,7 +242,7 @@ public class DepartmentManagementViewModel : ViewModelBase
         if (SelectedDepartment == null) return;
 
         // Check if office has allocations
-        var hasAllocations = await _context.OfficeAllocations
+        var hasAllocations = await _context.BudgetAllocations
             .AnyAsync(a => a.Office!.OfficeCode == SelectedDepartment.OfficeCode);
 
         if (hasAllocations)
@@ -256,10 +256,10 @@ public class DepartmentManagementViewModel : ViewModelBase
             if (confirm != MessageBoxResult.Yes) return;
 
             // Delete allocations first
-            var allocations = await _context.OfficeAllocations
+            var allocations = await _context.BudgetAllocations
                 .Where(a => a.Office!.OfficeCode == SelectedDepartment.OfficeCode)
                 .ToListAsync();
-            _context.OfficeAllocations.RemoveRange(allocations);
+            _context.BudgetAllocations.RemoveRange(allocations);
         }
 
         // Then delete the office

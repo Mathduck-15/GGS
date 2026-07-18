@@ -34,10 +34,8 @@ public class CloudDbContext : DbContext
     public DbSet<Parameter> Parameters { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Budget> Budgets { get; set; } = null!;
-    public DbSet<Transaction> Transactions { get; set; } = null!;
+
     public DbSet<SystemLog> SystemLogs { get; set; } = null!;
-    public DbSet<YearlyBudget> YearlyBudgets { get; set; } = null!;
-    public DbSet<OfficeAllocation> OfficeAllocations { get; set; } = null!;
     public DbSet<ProjectDetail> ProjectDetails { get; set; } = null!;
 
     public CloudDbContext(DbContextOptions<CloudDbContext> options) : base(options) { }
@@ -54,17 +52,7 @@ public class CloudDbContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
         });
 
-        modelBuilder.Entity<Transaction>(entity =>
-        {
-            entity.ToTable("transactions");
-            entity.HasKey(t => t.Id);
-            entity.Property(t => t.Id).HasColumnName("Id");
-            entity.Property(t => t.ProjectCode).HasColumnName("project_code").HasMaxLength(45);
-            entity.Property(t => t.Amount).HasColumnName("Amount");
-            entity.Property(t => t.VoucherCode).HasColumnName("voucher_code").HasMaxLength(10);
-            entity.Property(t => t.TransactionType).HasColumnName("transaction_type").HasMaxLength(45);
-            entity.Property(t => t.Date).HasColumnName("date");
-        });
+
 
         modelBuilder.Entity<ValidateUser>(entity =>
         {
@@ -84,6 +72,5 @@ public class CloudDbContext : DbContext
         modelBuilder.Entity<ProjectDetail>().ToTable("project_details").HasKey(p => p.Id);
         modelBuilder.Entity<Parameter>().ToTable("parameters");
         modelBuilder.Entity<Category>().ToTable("categories");
-        modelBuilder.Entity<YearlyBudget>().ToTable("yearlybudgets");
     }
 }

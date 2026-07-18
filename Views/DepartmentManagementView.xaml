@@ -59,8 +59,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0"
                                      Text="{Binding NewOfficeCode, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Office Code (auto-generated)"
-                                     IsReadOnly="True"
+                                     materialDesign:HintAssist.Hint="Office Code (editable)"
                                      FontFamily="Consolas"
                                      Foreground="#000000"
                                      FontWeight="Bold"/>

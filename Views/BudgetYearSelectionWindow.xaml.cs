@@ -17,7 +17,7 @@ public partial class BudgetYearSelectionWindow : Window
 
     private void ProceedButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is ViewModels.BudgetYearSelectionViewModel vm && vm.SelectedYearlyBudget != null)
+        if (DataContext is ViewModels.BudgetYearSelectionViewModel vm && vm.SelectedMasterBudget != null)
         {
             DialogResult = true;
             Close();

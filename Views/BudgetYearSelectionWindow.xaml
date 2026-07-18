@@ -35,7 +35,7 @@
             <!-- New Yearly Budget Form (Left Side) -->
             <materialDesign:Card Grid.Column="0" Padding="16" Margin="0 0 8 16" VerticalAlignment="Top">
                 <StackPanel>
-                    <TextBlock Text="New Yearly Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14" Foreground="#000000"/>
+                    <TextBlock Text="New Master Budget" FontSize="16" FontWeight="Bold" Margin="0 0 0 14" Foreground="#000000"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -51,7 +51,7 @@
                     <TextBox materialDesign:HintAssist.Hint="Description"
                              Foreground="#000000"
                              Text="{Binding NewBudgetDescription}" Margin="0 0 0 14"/>
-                    <Button Content="Set Yearly Budget" Command="{Binding AddYearlyBudgetCommand}"
+                    <Button Content="Set Master Budget" Command="{Binding AddMasterBudgetCommand}"
                             Style="{StaticResource MaterialDesignRaisedButton}"/>
                 </StackPanel>
             </materialDesign:Card>
@@ -60,15 +60,15 @@
             <materialDesign:Card Grid.Column="1" Padding="16" Margin="8 0 0 16">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Available Budgets" FontSize="16" FontWeight="Bold" Margin="0 0 0 10" Foreground="#000000"/>
-                    <DataGrid ItemsSource="{Binding YearlyBudgets}" 
-                              SelectedItem="{Binding SelectedYearlyBudget}" 
+                    <DataGrid ItemsSource="{Binding MasterBudgets}" 
+                              SelectedItem="{Binding SelectedMasterBudget}" 
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
                               IsReadOnly="True"
                               SelectionMode="Single"
                               MinHeight="100">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Year" Binding="{Binding Year}" Width="*" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Year" Binding="{Binding FiscalYear}" Width="*" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount, StringFormat=₱{0:N2}}" Width="*" Foreground="#000000"/>
                         </DataGrid.Columns>
                     </DataGrid>

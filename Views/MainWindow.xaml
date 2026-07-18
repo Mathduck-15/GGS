@@ -5,6 +5,7 @@
         xmlns:viewmodels="clr-namespace:GoodGovernanceApp.ViewModels"
         xmlns:converters="clr-namespace:GoodGovernanceApp.Converters"
         Title="Good Governance Management System"
+        Icon="/Assets/Images/ggms.ico"
         Height="780" Width="1280"
         MinHeight="640" MinWidth="960"
         WindowStartupLocation="CenterScreen"
@@ -26,7 +27,7 @@
             <!-- Nav Button Style -->
             <Style x:Key="NavButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Foreground" Value="#94A3B8"/>
+                <Setter Property="Foreground" Value="#8DB355"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Height" Value="56"/>
                 <Setter Property="Margin" Value="16,4,16,4"/>
@@ -39,11 +40,11 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="#1E293B"/>
+                                    <Setter TargetName="border" Property="Background" Value="#000000"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="#334155"/>
+                                    <Setter TargetName="border" Property="Background" Value="#000000"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -118,7 +119,7 @@
                  Premium Notification Panel
             ══════════════════════════════════════════════ -->
             <Border Width="520" MaxHeight="640" CornerRadius="20"
-                    Background="White"
+                    Background="#FFFFFF"
                     Effect="{DynamicResource MaterialDesignShadowDepth5}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -131,9 +132,9 @@
                     <Border Grid.Row="0" CornerRadius="20,20,0,0" Padding="24,20,20,20">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#0F172A" Offset="0"/>
-                                <GradientStop Color="#1E3A5F" Offset="0.6"/>
-                                <GradientStop Color="#1D4ED8" Offset="1"/>
+                                <GradientStop Color="#000000" Offset="0"/>
+                                <GradientStop Color="#000000" Offset="0.6"/>
+                                <GradientStop Color="#D90000" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                         <Grid>
@@ -147,9 +148,9 @@
                             <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23"
                                     Margin="0,0,14,0" VerticalAlignment="Center">
                                 <Border.Background>
-                                    <SolidColorBrush Color="#2563EB" Opacity="0.35"/>
+                                    <SolidColorBrush Color="#D90000" Opacity="0.35"/>
                                 </Border.Background>
-                                <materialDesign:PackIcon Kind="BellRing" Foreground="White"
+                                <materialDesign:PackIcon Kind="BellRing" Foreground="Black"
                                                          Width="24" Height="24"
                                                          HorizontalAlignment="Center"
                                                          VerticalAlignment="Center"/>
@@ -158,9 +159,9 @@
                             <!-- Title block -->
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Notifications" FontSize="20" FontWeight="Bold"
-                                           Foreground="White"/>
+                                           Foreground="Black"/>
                                 <TextBlock Text="Recent system activity" FontSize="12"
-                                           Foreground="#93C5FD" Margin="0,2,0,0"/>
+                                           Foreground="Black" Margin="0,2,0,0"/>
                             </StackPanel>
 
                             <!-- Close button -->
@@ -169,8 +170,8 @@
                                     Width="34" Height="34" Padding="0"
                                     Background="Transparent" BorderThickness="0"
                                     Cursor="Hand" VerticalAlignment="Center">
-                                <Border Width="34" Height="34" CornerRadius="17" Background="#1E3A5F">
-                                    <materialDesign:PackIcon Kind="Close" Foreground="#93C5FD"
+                                <Border Width="34" Height="34" CornerRadius="17" Background="#000000">
+                                    <materialDesign:PackIcon Kind="Close" Foreground="Black"
                                                              Width="16" Height="16"
                                                              HorizontalAlignment="Center"
                                                              VerticalAlignment="Center"/>
@@ -190,11 +191,11 @@
                                     <DataTemplate>
                                         <!-- Card with colored left accent strip -->
                                         <Border Margin="0,0,0,10" CornerRadius="12"
-                                                Background="#F8FAFC"
+                                                Background="#FFFFFF"
                                                 BorderThickness="0">
                                             <Border.Effect>
-                                                <DropShadowEffect Color="#CBD5E1" BlurRadius="8"
-                                                                  ShadowDepth="2" Opacity="0.4"/>
+                                                <DropShadowEffect Color="#000000" BlurRadius="8"
+                                                                  ShadowDepth="2" Opacity="0.1"/>
                                             </Border.Effect>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -219,7 +220,7 @@
                                                             CornerRadius="22" Margin="0,0,12,0"
                                                             VerticalAlignment="Top">
                                                         <Border.Background>
-                                                            <SolidColorBrush Color="#EFF6FF"/>
+                                                            <SolidColorBrush Color="#F3F5F7"/>
                                                         </Border.Background>
                                                         <materialDesign:PackIcon
                                                             Kind="{Binding Icon}"
@@ -233,23 +234,23 @@
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Title}"
                                                                    FontWeight="SemiBold" FontSize="14"
-                                                                   Foreground="#0F172A"/>
+                                                                   Foreground="#000000"/>
                                                         <TextBlock Text="{Binding Message}"
-                                                                   FontSize="12" Foreground="#64748B"
+                                                                   FontSize="12" Foreground="#8DB355"
                                                                    TextWrapping="Wrap"
                                                                    Margin="0,3,0,5"
                                                                    MaxWidth="230"/>
                                                         <!-- Date pill -->
-                                                        <Border Background="#F1F5F9" CornerRadius="4"
+                                                        <Border Background="#F3F5F7" CornerRadius="4"
                                                                 Padding="6,2" HorizontalAlignment="Left">
                                                             <StackPanel Orientation="Horizontal">
                                                                 <materialDesign:PackIcon Kind="ClockOutline"
                                                                     Width="11" Height="11"
-                                                                    Foreground="#94A3B8"
+                                                                    Foreground="#8DB355"
                                                                     VerticalAlignment="Center"
                                                                     Margin="0,0,4,0"/>
                                                                 <TextBlock Text="{Binding FormattedDate}"
-                                                                           FontSize="11" Foreground="#94A3B8"
+                                                                           FontSize="11" Foreground="#8DB355"
                                                                            VerticalAlignment="Center"/>
                                                             </StackPanel>
                                                         </Border>
@@ -274,10 +275,10 @@
                                                                         <TextBlock Text="View"
                                                                                    FontSize="12"
                                                                                    FontWeight="SemiBold"
-                                                                                   Foreground="White"/>
+                                                                                   Foreground="Black"/>
                                                                         <materialDesign:PackIcon Kind="ArrowRight"
                                                                             Width="13" Height="13"
-                                                                            Foreground="White"
+                                                                            Foreground="Black"
                                                                             VerticalAlignment="Center"
                                                                             Margin="4,0,0,0"/>
                                                                     </StackPanel>
@@ -304,18 +305,18 @@
                             <StackPanel HorizontalAlignment="Center" Margin="0,32,0,32"
                                         Visibility="{Binding HasNewNotifications, Converter={StaticResource InvBoolToVis}}">
                                 <Border Width="80" Height="80" CornerRadius="40"
-                                        Background="#F1F5F9" HorizontalAlignment="Center">
+                                        Background="#F3F5F7" HorizontalAlignment="Center">
                                     <materialDesign:PackIcon Kind="BellOffOutline"
                                                              Width="36" Height="36"
-                                                             Foreground="#CBD5E1"
+                                                             Foreground="Black"
                                                              HorizontalAlignment="Center"
                                                              VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock Text="All caught up!" FontSize="16" FontWeight="SemiBold"
-                                           Foreground="#334155" HorizontalAlignment="Center"
+                                           Foreground="#000000" HorizontalAlignment="Center"
                                            Margin="0,16,0,4"/>
                                 <TextBlock Text="No recent system activity to show."
-                                           FontSize="13" Foreground="#94A3B8"
+                                           FontSize="13" Foreground="#8DB355"
                                            HorizontalAlignment="Center"/>
                             </StackPanel>
                         </StackPanel>
@@ -323,31 +324,31 @@
 
                     <!-- ── Footer ─────────────────────────────────── -->
                     <Border Grid.Row="2" CornerRadius="0,0,20,20"
-                            Background="#F8FAFC" Padding="20,12"
-                            BorderThickness="0,1,0,0" BorderBrush="#E2E8F0">
+                            Background="#FFFFFF" Padding="20,12"
+                            BorderThickness="0,1,0,0" BorderBrush="#F3F5F7">
                         <Grid>
-                            <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="#94A3B8">
+                            <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="#8DB355">
                                 <Run Text="Showing latest"/>
-                                <Run Text="{Binding Notifications.Count, Mode=OneWay}" FontWeight="SemiBold" Foreground="#3B82F6"/>
+                                <Run Text="{Binding Notifications.Count, Mode=OneWay}" FontWeight="SemiBold" Foreground="#D90000"/>
                                 <Run Text="notifications"/>
                             </TextBlock>
                             <Button HorizontalAlignment="Right"
                                     Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
-                                    Padding="16,6" BorderThickness="1" BorderBrush="#E2E8F0"
-                                    Background="White" Foreground="#475569"
+                                    Padding="16,6" BorderThickness="1" BorderBrush="#E0E0E0"
+                                    Background="#F3F5F7" Foreground="#8DB355"
                                     FontSize="13" FontWeight="SemiBold"
                                     Cursor="Hand">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="Bd" CornerRadius="8" Padding="16,7"
-                                                Background="White" BorderThickness="1"
-                                                BorderBrush="#E2E8F0">
+                                                Background="#F3F5F7" BorderThickness="1"
+                                                BorderBrush="#E0E0E0">
                                             <TextBlock Text="Dismiss All" FontSize="13"
-                                                       FontWeight="SemiBold" Foreground="#475569"/>
+                                                       FontWeight="SemiBold" Foreground="#8DB355"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#F1F5F9"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="#E0E0E0"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -383,7 +384,7 @@
         </Grid.RowDefinitions>
 
         <!-- Sidebar: Col 0, RowSpan 3 -->
-        <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="LightYellow" BorderBrush="LightYellow" BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -396,22 +397,22 @@
                     <Button Command="{Binding OpenAppProfileCommand}"
                             ToolTip="Application Profile"
                             Background="Transparent" BorderThickness="0" Padding="0">
-                        <Border Background="White" CornerRadius="8" Width="40" Height="40">
+                        <Border Background="#FFFFFF" CornerRadius="8" Width="40" Height="40">
                             <!-- Binding the logo to SystemPhotoSource or fallback to icon -->
                             <Grid>
-                                <materialDesign:PackIcon Kind="BankOutline" Foreground="#0F172A" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SystemPhotoSource, Converter={StaticResource InvBoolToVis}}"/>
+                                <materialDesign:PackIcon Kind="BankOutline" Foreground="#000000" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SystemPhotoSource, Converter={StaticResource InvBoolToVis}}"/>
                                 <Image Source="{Binding GovPhotoSource}" Stretch="Uniform" Margin="4" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}"/>
                             </Grid>
                         </Border>
                     </Button>
-                    <TextBlock Text="GGS" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <TextBlock Text="GGS" Foreground="Black" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="12,0,0,0"/>
                 </StackPanel>
 
                 <!-- Middle: Nav Buttons -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="Transparent" BorderThickness="0">
                     <StackPanel>
                         <!-- For the items control, group by "Group" property or just flat list -->
-                        <TextBlock Text="MODULES" Foreground="white" FontSize="12" FontWeight="SemiBold" Margin="24,16,24,8"/>
+                        <TextBlock Text="MODULES" Foreground="Black" FontSize="12" FontWeight="SemiBold" Margin="24,16,24,8"/>
                         
                         <ItemsControl ItemsSource="{Binding NavigationItems}">
                             <ItemsControl.ItemTemplate>
@@ -425,8 +426,8 @@
                                                 <ColumnDefinition Width="12"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                                <materialDesign:PackIcon Kind="{Binding Icon}" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                                <materialDesign:PackIcon Kind="{Binding Icon}" Foreground="Black" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" FontSize="14" TextWrapping="Wrap"/>
                                         </Grid>
@@ -439,7 +440,7 @@
 
                 <!-- Bottom: Divider, Settings, Logout -->
                 <StackPanel Grid.Row="2" Margin="0,0,0,16">
-                    <Border Height="1" Background="#273449" Margin="0,8,0,16"/>
+                    <Border Height="1" Background="#000000" Margin="0,8,0,16"/>
                     
                     <Button Style="{StaticResource NavButtonStyle}"
                             Command="{Binding OpenSystemsProfileCommand}">
@@ -449,8 +450,8 @@
                                 <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                <materialDesign:PackIcon Kind="DatabaseSettings" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                <materialDesign:PackIcon Kind="DatabaseSettings" Foreground="Black" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="2" Text="System Profile" VerticalAlignment="Center" FontSize="14"/>
                         </Grid>
@@ -465,8 +466,8 @@
                                 <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="#1F2937" Width="38" Height="38" CornerRadius="10">
-                                <materialDesign:PackIcon Kind="Logout" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                                <materialDesign:PackIcon Kind="Logout" Foreground="Black" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="2" Text="Logout" VerticalAlignment="Center" FontSize="14"/>
                         </Grid>
@@ -476,7 +477,7 @@
         </Border>
 
         <!-- Top Header Bar — Column 1, Row 0 -->
-        <Border Grid.Column="1" Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,0,1" Padding="24,16">
+        <Border Grid.Column="1" Grid.Row="0" Background="LightYellow" BorderBrush="LightYellow" BorderThickness="0,0,0,1" Padding="24,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -487,15 +488,15 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Command="{Binding ToggleSidebarCommand}"
                             Background="Transparent" BorderThickness="0"
-                            Foreground="White"
+                            Foreground="Black"
                             Margin="0,0,16,0"
                             Padding="0"
                             Width="40" Height="40">
                         <materialDesign:PackIcon Kind="Menu" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding GovernanceName}" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                        <TextBlock Text="Governance Management System" FontSize="13" Foreground="white" Margin="0,2,0,0"/>
+                        <TextBlock Text="{Binding GovernanceName}" FontSize="20" FontWeight="Bold" Foreground="Black"/>
+                        <TextBlock Text="Governance Management System" FontSize="13" Foreground="Black" Margin="0,2,0,0"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -518,12 +519,12 @@
                                     <Grid>
                                         <!-- Bell icon -->
                                         <materialDesign:PackIcon Kind="BellOutline"
-                                                                 Foreground="White"
+                                                                 Foreground="Black"
                                                                  Width="22" Height="22"
                                                                  HorizontalAlignment="Center"
                                                                  VerticalAlignment="Center"/>
                                         <!-- Red dot badge -->
-                                        <Border Background="#EF4444"
+                                        <Border Background="#D90000"
                                                 Width="10" Height="10"
                                                 CornerRadius="5"
                                                 HorizontalAlignment="Right"
@@ -535,10 +536,10 @@
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                                        <Setter TargetName="Bd" Property="Background" Value="#E0E0E0"/>
                                     </Trigger>
                                     <Trigger Property="IsPressed" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF"/>
+                                        <Setter TargetName="Bd" Property="Background" Value="#E0E0E0"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -549,17 +550,17 @@
                     <!-- Removed popup as it is now a DialogHost at the root -->
 
                     <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                        <TextBlock Text="{Binding CurrentUserName}" Foreground="White" FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding CurrentUserName}" Foreground="Black" FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding CurrentUserRole}" Foreground="#000000" FontSize="12" HorizontalAlignment="Right"/>
                     </StackPanel>
                     
                     <Button Width="40" Height="40" BorderThickness="0" Background="Transparent" Padding="0" Command="{Binding NavigateTileCommand}" CommandParameter="Profile">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border Background="#3B82F6" CornerRadius="20" ClipToBounds="True">
+                                <Border Background="#D90000" CornerRadius="20" ClipToBounds="True">
                                     <Grid>
                                         <Image Source="{Binding ProfilePhotoSource}" Stretch="UniformToFill"/>
-                                        <materialDesign:PackIcon Kind="Account" Foreground="White" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding ProfilePhotoSource, Converter={StaticResource InvBoolToVis}}"/>
+                                        <materialDesign:PackIcon Kind="Account" Foreground="Black" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding ProfilePhotoSource, Converter={StaticResource InvBoolToVis}}"/>
                                     </Grid>
                                 </Border>
                             </ControlTemplate>
@@ -588,7 +589,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Row 0: 4 Colored Tiles -->
-                <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#3B82F6"
+                <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#D90000"
                         Command="{Binding NavigateTileCommand}" CommandParameter="BudgetAllocation">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="ScaleBalance" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -599,7 +600,7 @@
                 
 
                 
-                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#F59E0B"
+                <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#8DB355"
                         Command="{Binding NavigateTileCommand}" CommandParameter="CrsBeneficiary">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="AccountGroup" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -608,7 +609,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="0" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#8B5CF6"
+                <Button Grid.Row="0" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#8DB355"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Reports">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="FileChart" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -617,31 +618,43 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Column 4, Rows 0-1: Branding Panel -->
-                <Border Grid.Row="0" Grid.Column="4" Grid.RowSpan="2" Background="White" CornerRadius="12" Margin="8">
+                <!-- Column 4, Row 0: Branding Panel -->
+                <Border Grid.Row="0" Grid.Column="4" Background="#FFFFFF" CornerRadius="12" Margin="8">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <!-- Binding the logo to SystemPhotoSource or fallback to icon -->
-                        <Border Background="#F1F5F9" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16" ClipToBounds="True">
+                        <Border Background="#F3F5F7" CornerRadius="60" Width="120" Height="120" Margin="0,0,0,16" ClipToBounds="True">
                             <Grid>
                                 <materialDesign:PackIcon Kind="ShieldCheck" Foreground="#000000" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding SystemPhotoSource, Converter={StaticResource InvBoolToVis}}"/>
                                 <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" Margin="8" Visibility="{Binding SystemPhotoSource, Converter={StaticResource NullToVis}}"/>
                             </Grid>
                         </Border>
-                        <TextBlock Text="GGS PLATFORM" FontSize="20" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center"/>
+                        <TextBlock Text="GGS PLATFORM" FontSize="20" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center"/>
                         <TextBlock Text="Version 2.0" FontSize="14" Foreground="#000000" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
+                <!-- Column 4, Row 1: Proof of Copyright (only visible when image exists) -->
+                <Border Grid.Row="1" Grid.Column="4" Background="#FFFFFF" CornerRadius="12" Margin="8"
+                        Visibility="{Binding CopyrightPhotoSource, Converter={StaticResource NullToVis}}">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Border Background="#F3F5F7" CornerRadius="8" Width="160" Height="160" Margin="0,0,0,12" ClipToBounds="True">
+                            <Image Source="{Binding CopyrightPhotoSource}" Stretch="Uniform" Margin="8"/>
+                        </Border>
+                        <TextBlock Text="PROOF OF COPYRIGHT" FontSize="16" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center"/>
+                        <TextBlock Text="All Rights Reserved" FontSize="12" Foreground="#8DB355" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Row 1, Columns 0-1: Dark Date/Time & Label -->
-                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#0F172A" CornerRadius="12" Margin="8" Padding="24">
+                <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#000000" CornerRadius="12" Margin="8" Padding="24">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         
-                        <Border Grid.Row="0" Background="#064E3B" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" Margin="0,0,0,16">
-                            <TextBlock Text="SYSTEM READY" Foreground="#34D399" FontSize="12" FontWeight="Bold"/>
+                        <Border Grid.Row="0" Background="#000000" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" Margin="0,0,0,16">
+                            <TextBlock Text="SYSTEM READY" Foreground="#8DB355" FontSize="12" FontWeight="Bold"/>
                         </Border>
                         
                         <StackPanel Grid.Row="1" VerticalAlignment="Center">
@@ -651,7 +664,7 @@
                 </Border>
 
                 <!-- Row 1, Column 2: Users Tile -->
-                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#6366F1"
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource TileButtonStyle}" Background="#D90000"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Users">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="AccountGroup" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -661,7 +674,7 @@
                 </Button>
 
                 <!-- Row 1, Column 3: Consolidated Tile -->
-                <Button Grid.Row="1" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#5E35B1"
+                <Button Grid.Row="1" Grid.Column="3" Style="{StaticResource TileButtonStyle}" Background="#D90000"
                         Command="{Binding NavigateTileCommand}" CommandParameter="ConsolidatedTransactions">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="TableMultiple" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -671,7 +684,7 @@
                 </Button>
 
                 <!-- Row 2: 4 Colored Tiles -->
-                <Button Grid.Row="2" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#EC4899"
+                <Button Grid.Row="2" Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#8DB355"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Evaluation">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="FileDocumentEdit" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -680,7 +693,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EAB308"
+                <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#8DB355"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Transactions">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="Finance" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -689,7 +702,7 @@
                     </StackPanel>
                 </Button>
                 
-                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#64748B"
+                <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#8DB355"
                         Command="{Binding NavigateTileCommand}" CommandParameter="Parameters">
                     <StackPanel>
                         <materialDesign:PackIcon Kind="CogBox" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -705,7 +718,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     
-                    <Button Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#475569" Margin="8,8,4,8"
+                    <Button Grid.Column="0" Style="{StaticResource TileButtonStyle}" Background="#8DB355" Margin="8,8,4,8"
                             Command="{Binding NavigateTileCommand}" CommandParameter="Settings">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Cog" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -714,7 +727,7 @@
                         </StackPanel>
                     </Button>
                     
-                    <Button Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#EF4444" Margin="4,8,8,8"
+                    <Button Grid.Column="1" Style="{StaticResource TileButtonStyle}" Background="#D90000" Margin="4,8,8,8"
                             Command="{Binding LogoutCommand}" CommandParameter="{Binding ElementName=MainWin}">
                         <StackPanel>
                             <materialDesign:PackIcon Kind="Power" Width="36" Height="36" Margin="0,0,0,12"/>
@@ -743,11 +756,11 @@
                         </StackPanel>
                     </Button>
                     <TextBlock Text="›" Foreground="#000000" FontSize="18" VerticalAlignment="Center" Margin="0 0 12 0"/>
-                    <TextBlock Text="{Binding CurrentSectionTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding CurrentSectionTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#000000" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Frame / ContentControl -->
-                <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="8">
+                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="12" Padding="8">
                     <ContentControl Content="{Binding CurrentView}" Margin="0,2,0,0">
                         <ContentControl.Template>
                             <ControlTemplate TargetType="ContentControl">
@@ -772,10 +785,10 @@
         </Grid>
 
         <!-- Status Footer — Column 1, Row 2 -->
-        <Border Grid.Column="1" Grid.Row="2" Background="#111827" Padding="16,8">
+        <Border Grid.Column="1" Grid.Row="2" Background="LightYellow" Padding="16,8">
             <Grid>
                 <!-- Left: System Ready -->
-                <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Foreground="#34D399" Padding="0">
+                <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Foreground="#8DB355" Padding="0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="CheckCircleOutline" Width="16" Height="16" Margin="0,0,8,0"/>
                         <TextBlock Text="SYSTEM READY" FontSize="12" FontWeight="Bold"/>
@@ -784,14 +797,14 @@
 
                 <!-- Center-right / Right: Status and Time -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="CLOUD SYNC:" Foreground="white" FontSize="12" Margin="0,0,4,0"/>
-                    <TextBlock Text="ONLINE" Foreground="#34D399" FontSize="12" FontWeight="Bold" Margin="0,0,8,0" Visibility="{Binding IsOnline, Converter={StaticResource BoolToVis}}"/>
-                    <TextBlock Text="OFFLINE" Foreground="#EF4444" FontSize="12" FontWeight="Bold" Margin="0,0,8,0" Visibility="{Binding IsOnline, Converter={StaticResource InvBoolToVis}}"/>
-                    <TextBlock Text="{Binding SyncStatus}" Foreground="#94A3B8" FontSize="12" Margin="0,0,8,0"/>
+                    <TextBlock Text="CLOUD SYNC:" Foreground="White" FontSize="12" Margin="0,0,4,0"/>
+                    <TextBlock Text="ONLINE" Foreground="#8DB355" FontSize="12" FontWeight="Bold" Margin="0,0,8,0" Visibility="{Binding IsOnline, Converter={StaticResource BoolToVis}}"/>
+                    <TextBlock Text="OFFLINE" Foreground="#D90000" FontSize="12" FontWeight="Bold" Margin="0,0,8,0" Visibility="{Binding IsOnline, Converter={StaticResource InvBoolToVis}}"/>
+                    <TextBlock Text="{Binding SyncStatus}" Foreground="#8DB355" FontSize="12" Margin="0,0,8,0"/>
 
                     <Button Command="{Binding SyncNowCommand}"
-                            Background="#1E293B" BorderThickness="0" Padding="8,4" Margin="0,0,24,0"
-                            Foreground="white" Cursor="Hand">
+                            Background="#000000" BorderThickness="0" Padding="8,4" Margin="0,0,24,0"
+                            Foreground="White" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="CloudSync" Width="14" Height="14" Margin="0,0,4,0"/>
                             <TextBlock Text="SYNC NOW" FontSize="10" FontWeight="Bold"/>
@@ -800,7 +813,7 @@
 
                     <Button Command="{Binding NavigateTileCommand}" CommandParameter="Profile"
                             Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,24,0"
-                            Foreground="white" Cursor="Hand">
+                            Foreground="White" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="AccountEdit" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="MY PROFILE" FontSize="12" FontWeight="Bold"/>
@@ -815,3 +828,6 @@
     </Grid>
     </materialDesign:DialogHost>
 </Window>
+
+
+

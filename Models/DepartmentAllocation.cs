@@ -9,10 +9,11 @@ public class DepartmentAllocation
     public int Id { get; set; }
 
     [Required]
-    public int YearlyBudgetId { get; set; }
+    [Column("YearlyBudgetId")]
+    public long MasterBudgetId { get; set; }
 
-    [ForeignKey("YearlyBudgetId")]
-    public virtual YearlyBudget? YearlyBudget { get; set; }
+    [ForeignKey("MasterBudgetId")]
+    public virtual MasterBudget? MasterBudget { get; set; }
 
     [Required]
     public int DepartmentId { get; set; }

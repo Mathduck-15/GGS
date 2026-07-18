@@ -31,7 +31,7 @@
                   IsReadOnly="True"
                   Margin="0 0 0 16">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Project Code" Binding="{Binding ProjectDetailsID}" Width="120" FontFamily="Consolas"/>
+                <DataGridTextColumn Header="Project Code" Binding="{Binding ProjectDetailsID}" Width="180" FontFamily="Consolas"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
                 <DataGridTextColumn Header="Spent (₱)" Binding="{Binding Spent, StringFormat=₱{0:N2}}" Width="120"/>
             </DataGrid.Columns>

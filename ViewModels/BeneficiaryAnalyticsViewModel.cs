@@ -1,5 +1,6 @@
 using GoodGovernanceApp.Data;
 using GoodGovernanceApp.Models;
+using GoodGovernanceApp.Services;
 using LiveCharts;
 using LiveCharts.Wpf;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,90 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
     {
         get => _fullName;
         set { _fullName = value; OnPropertyChanged(); }
+    }
+
+    // ── CRS Demographic Profile ────────────────────────────────────────────────
+
+    /// <summary>
+    /// True when <see cref="BeneficiaryId"/> exists in transaction data but
+    /// has no matching record in the CRS database (online) or cache (offline).
+    /// Bound to a "No CRS record" placeholder in the view.
+    /// </summary>
+    private bool _crsProfileNotFound;
+    public bool CrsProfileNotFound
+    {
+        get => _crsProfileNotFound;
+        set { _crsProfileNotFound = value; OnPropertyChanged(); }
+    }
+
+    private string _sex = string.Empty;
+    public string Sex
+    {
+        get => _sex;
+        set { _sex = value; OnPropertyChanged(); }
+    }
+
+    private string _displayDateOfBirth = "N/A";
+    public string DisplayDateOfBirth
+    {
+        get => _displayDateOfBirth;
+        set { _displayDateOfBirth = value; OnPropertyChanged(); }
+    }
+
+    private string _displayAge = "N/A";
+    public string DisplayAge
+    {
+        get => _displayAge;
+        set { _displayAge = value; OnPropertyChanged(); }
+    }
+
+    private string _maritalStatus = string.Empty;
+    public string MaritalStatus
+    {
+        get => _maritalStatus;
+        set { _maritalStatus = value; OnPropertyChanged(); }
+    }
+
+    private string _classifications = "None";
+    public string Classifications
+    {
+        get => _classifications;
+        set { _classifications = value; OnPropertyChanged(); }
+    }
+
+    private bool _isPwd;
+    public bool IsPwd
+    {
+        get => _isPwd;
+        set { _isPwd = value; OnPropertyChanged(); }
+    }
+
+    private string _pwdIdNo = string.Empty;
+    public string PwdIdNo
+    {
+        get => _pwdIdNo;
+        set { _pwdIdNo = value; OnPropertyChanged(); }
+    }
+
+    private bool _isSenior;
+    public bool IsSenior
+    {
+        get => _isSenior;
+        set { _isSenior = value; OnPropertyChanged(); }
+    }
+
+    private string _seniorIdNo = string.Empty;
+    public string SeniorIdNo
+    {
+        get => _seniorIdNo;
+        set { _seniorIdNo = value; OnPropertyChanged(); }
+    }
+
+    private string _address = string.Empty;
+    public string Address
+    {
+        get => _address;
+        set { _address = value; OnPropertyChanged(); }
     }
 
     private int _totalTransactions;
@@ -106,17 +191,74 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
 
     public BeneficiaryAnalyticsViewModel(AppDbContext dbContext, string beneficiaryId, string fullName)
     {
-        _dbContext = dbContext;
+        _dbContext    = dbContext;
         BeneficiaryId = beneficiaryId;
-        FullName = fullName;
-        Formatter = value => value.ToString("C");
+        FullName      = fullName;
+        Formatter     = value => value.ToString("C");
 
-        _ = LoadAnalyticsAsync();
+        _ = InitializeAsync();
     }
 
-    private async Task LoadAnalyticsAsync()
+    /// <summary>
+    /// Kicks off both data-fetches in parallel so neither waits on the other.
+    /// <see cref="IsLoading"/> stays true until both are done.
+    /// </summary>
+    private async Task InitializeAsync()
     {
         IsLoading = true;
+        try
+        {
+            await Task.WhenAll(
+                LoadCrsProfileAsync(),
+                LoadAnalyticsAsync());
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    // ── CRS profile fetch ──────────────────────────────────────────────────────
+    private async Task LoadCrsProfileAsync()
+    {
+        try
+        {
+            var b = await CrsBeneficiaryService.GetByIdAsync(BeneficiaryId);
+
+            if (b == null)
+            {
+                CrsProfileNotFound = true;
+                return;
+            }
+
+            // Prefer the CRS full name if it is richer than what was passed in
+            if (!string.IsNullOrWhiteSpace(b.DisplayName))
+                FullName = b.DisplayName;
+
+            Sex                = b.Sex ?? string.Empty;
+            DisplayDateOfBirth = b.DisplayDateOfBirth;
+            DisplayAge         = b.DisplayAge;
+            MaritalStatus      = b.MaritalStatus ?? string.Empty;
+            Classifications    = b.Classifications;
+            IsPwd              = b.IsPwd;
+            PwdIdNo            = b.PwdIdNo ?? string.Empty;
+            IsSenior           = b.IsSenior;
+            SeniorIdNo         = b.SeniorIdNo ?? string.Empty;
+            Address            = b.Address ?? string.Empty;
+            CrsProfileNotFound = false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[BeneficiaryAnalyticsViewModel] LoadCrsProfileAsync failed: {ex.Message}");
+            CrsProfileNotFound = true;
+        }
+    }
+
+    // ── Transaction analytics ──────────────────────────────────────────────────
+    private async Task LoadAnalyticsAsync()
+    {
+        // IsLoading is already set by InitializeAsync — do NOT touch it here
         try
         {
             // ── Step 1: Find all dept projects linked to this Beneficiary ID ─────
@@ -128,12 +270,11 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                 .Select(pd => pd.ProjectDetailsID!)
                 .ToList();
 
-            // ── Step 2: Load dept budget transactions (transactions table) ────────
-            var departmentTransactions = projectCodes.Any()
-                ? await _dbContext.Transactions
-                    .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
-                    .ToListAsync()
-                : new System.Collections.Generic.List<Transaction>();
+            // ── Step 2: Load dept budget transactions (tbl_transaction table) ────────
+            long.TryParse(BeneficiaryId, out long beneficiaryIdLong);
+            var departmentTransactions = await _dbContext.TblTransactions
+                .Where(t => t.ConstituentId == beneficiaryIdLong || t.RecipientName == FullName)
+                .ToListAsync();
 
             // ── Step 3: Load consolidated transactions by beneficiary_id ──────────
             var consolidatedTransactions = await _dbContext.ConsolidatedTransactions
@@ -143,16 +284,16 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
             // ── Step 4: Map dept transactions into unified view model ──────────────
             var deptList = departmentTransactions.Select(t => new ConsolidatedTransactionsViewModel
             {
-                Id              = t.Id,
+                Id              = (int)t.Id,
                 BeneficiaryId   = BeneficiaryId,
                 FullName        = FullName,
                 TransactionType = t.TransactionType ?? "Department Project",
-                Amount          = t.Amount ?? 0,
-                TransactionDate = t.Date,
-                Status          = "Completed",
+                Amount          = t.Amount,
+                TransactionDate = t.TransactionDate,
+                Status          = t.Status ?? "Completed",
                 Source          = "Department Budget",
-                CreatedAt       = t.Date ?? DateTime.MinValue,
-                OfficeId        = linkedProjects.FirstOrDefault(p => p.ProjectDetailsID == t.ProjectCode)?.OfficeCode ?? "Unknown"
+                CreatedAt       = t.CreatedAt ?? DateTime.MinValue,
+                OfficeId        = t.Office?.OfficeCode ?? "Unknown"
             }).ToList();
 
             // ── Step 5: Map consolidated transactions into unified view model ──────
@@ -277,9 +418,6 @@ public class BeneficiaryAnalyticsViewModel : ViewModelBase
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error);
         }
-        finally
-        {
-            IsLoading = false;
-        }
+        // NOTE: IsLoading is cleared by InitializeAsync, not here.
     }
 }

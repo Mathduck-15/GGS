@@ -68,10 +68,8 @@ namespace GoodGovernanceApp.ViewModels
             IsLoading = true;
             try
             {
-                // 1. Load department budget transactions (transactions table)
-                var departmentTransactions = await _dbContext.Transactions
-                    .Where(t => t.ProjectCode == ProjectCode)
-                    .ToListAsync();
+                // 1. Load department budget transactions (tbl_transaction does not map to legacy ProjectCode strings)
+                var departmentTransactions = new System.Collections.Generic.List<ConsolidatedTransactionsViewModel>();
 
                 // 2. Load consolidated transactions
                 var consolidatedTransactions = await _dbContext.ConsolidatedTransactions
@@ -81,22 +79,7 @@ namespace GoodGovernanceApp.ViewModels
                 var projectDetails = await _dbContext.ProjectDetails
                     .FirstOrDefaultAsync(p => p.ProjectDetailsID == ProjectCode);
 
-                // 3. Map dept transactions
-                var deptList = departmentTransactions.Select(t => new ConsolidatedTransactionsViewModel
-                {
-                    Id              = t.Id,
-                    ProjectCode     = t.ProjectCode ?? string.Empty,
-                    BeneficiaryId   = projectDetails?.ContactPerson ?? "Unknown",
-                    FullName        = "Department Project",
-                    TransactionType = t.TransactionType ?? "Department Project",
-                    Amount          = t.Amount ?? 0,
-                    TransactionDate = t.Date,
-                    Status          = "Completed",
-                    Source          = "Department Budget",
-                    CreatedAt       = t.Date ?? DateTime.MinValue,
-                    OfficeId        = projectDetails?.OfficeCode ?? string.Empty,
-                    OfficeName      = string.Empty
-                }).ToList();
+                var deptList = departmentTransactions;
 
                 // 4. Map consolidated transactions
                 var consolidatedList = consolidatedTransactions.Select(ct => new ConsolidatedTransactionsViewModel

@@ -186,7 +186,13 @@ public class LoginViewModel : ViewModelBase
                     $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - Login Error:\n{ex}\n\n"); 
             } catch { }
 
-            string realError = ex.InnerException?.Message ?? ex.Message;
+            string realError = ex.Message;
+            Exception? inner = ex.InnerException;
+            while (inner != null)
+            {
+                realError += $" -> {inner.Message}";
+                inner = inner.InnerException;
+            }
             ErrorMessage = $"❌ Login error: {realError}";
         }
         finally

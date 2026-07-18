@@ -60,6 +60,7 @@ public class MainViewModel : ViewModelBase
     private string         _currentSectionTitle = "Home";
     private BitmapImage?   _systemPhotoSource;
     private BitmapImage? _systemGovPhotoSource;
+    private BitmapImage?   _copyrightPhotoSource;
     private bool           _hasNewNotifications = false;
 
     // ── public properties ─────────────────────────────────────────────────────
@@ -120,6 +121,12 @@ public class MainViewModel : ViewModelBase
     {
         get => _systemGovPhotoSource;
         set { _systemGovPhotoSource = value; OnPropertyChanged(); }
+    }
+
+    public BitmapImage? CopyrightPhotoSource
+    {
+        get => _copyrightPhotoSource;
+        set { _copyrightPhotoSource = value; OnPropertyChanged(); }
     }
 
     public string GovernanceName
@@ -246,25 +253,26 @@ public class MainViewModel : ViewModelBase
         LoadProfilePhotoAsync();
         LoadSystemPhotoAsync();
         LoadGovProfileAsync();
+        LoadCopyrightPhotoAsync();
         LoadNotificationsAsync();
 
         // ── Build navigation items with Metro tile colors ──────────────────
         var allItems = new List<NavigationItem>
         {
-            new() { Name="Dashboard",        Icon="ViewDashboard",    ViewToken="Dashboard",      TileColor="#FF00796B", Group="Main"       },
-            new() { Name="My Profile",       Icon="AccountEdit",      ViewToken="Profile",        TileColor="#FF1565C0", Group="Main"       },
-            new() { Name="Users",            Icon="AccountGroup",     ViewToken="Users",          TileColor="#FF3949AB", Group="Management" },
-            new() { Name="Parameters",       Icon="CogBox",           ViewToken="Parameters",     TileColor="#FFE65100", Group="System"     },
-            new() { Name="Transactions",     Icon="Finance",          ViewToken="Transactions",   TileColor="#FF2E7D32", Group="Finance"    },
-            new() { Name="Consolidated",     Icon="TableMultiple",    ViewToken="ConsolidatedTransactions", TileColor="#FF5E35B1", Group="Finance" },
-            new() { Name="Budget Allocation",Icon="ScaleBalance",     ViewToken="BudgetAllocation",TileColor="#FF00695C",Group="Finance"   },
-            new() { Name="CRS Beneficiaries",Icon="AccountMultiple",  ViewToken="CrsBeneficiary", TileColor="#FF6A1B9A", Group="Management" },
-            new() { Name="Reports",          Icon="FileChart",        ViewToken="Reports",        TileColor="#FFC62828", Group="Reports"    },
+            new() { Name="Dashboard",        Icon="ViewDashboard",    ViewToken="Dashboard",      TileColor="#D90000", Group="Main"       },
+            new() { Name="My Profile",       Icon="AccountEdit",      ViewToken="Profile",        TileColor="#8DB355", Group="Main"       },
+            new() { Name="Users",            Icon="AccountGroup",     ViewToken="Users",          TileColor="#D90000", Group="Management" },
+            new() { Name="Parameters",       Icon="CogBox",           ViewToken="Parameters",     TileColor="#8DB355", Group="System"     },
+            new() { Name="Transactions",     Icon="Finance",          ViewToken="Transactions",   TileColor="#D90000", Group="Finance"    },
+            new() { Name="Consolidated",     Icon="TableMultiple",    ViewToken="ConsolidatedTransactions", TileColor="#8DB355", Group="Finance" },
+            new() { Name="Budget Allocation",Icon="ScaleBalance",     ViewToken="BudgetAllocation",TileColor="#D90000",Group="Finance"   },
+            new() { Name="CRS Beneficiaries",Icon="AccountMultiple",  ViewToken="CrsBeneficiary", TileColor="#8DB355", Group="Management" },
+            new() { Name="Reports",          Icon="FileChart",        ViewToken="Reports",        TileColor="#D90000", Group="Reports"    },
 
-            new() { Name="File Center",      Icon="CloudUpload",      ViewToken="FileUpload",     TileColor="#FF00838F", Group="System"     },
-            new() { Name="Evaluation Center",Icon="FileCertificate",  ViewToken="Evaluation",     TileColor="#FF827717", Group="Reports"    },
-            new() { Name="Audit Log",        Icon="FormatListBulleted",ViewToken="AuditLog",      TileColor="#FF455A64", Group="System"     },
-            new() { Name="Settings & Backups",Icon="DatabaseSettings",ViewToken="Settings",       TileColor="#FF263238", Group="System"     },
+            new() { Name="File Center",      Icon="CloudUpload",      ViewToken="FileUpload",     TileColor="#8DB355", Group="System"     },
+            new() { Name="Evaluation Center",Icon="FileCertificate",  ViewToken="Evaluation",     TileColor="#D90000", Group="Reports"    },
+            new() { Name="Audit Log",        Icon="FormatListBulleted",ViewToken="AuditLog",      TileColor="#8DB355", Group="System"     },
+            new() { Name="Settings & Backups",Icon="DatabaseSettings",ViewToken="Settings",       TileColor="#D90000", Group="System"     },
         };
 
         var role = _sessionService.CurrentUser?.Role;
@@ -299,10 +307,10 @@ public class MainViewModel : ViewModelBase
         {
             var dialog = new Views.BudgetYearSelectionWindow();
             var result = dialog.ShowDialog();
-            if (result == true && dialog.DataContext is BudgetYearSelectionViewModel vm && vm.SelectedYearlyBudget != null)
+            if (result == true && dialog.DataContext is BudgetYearSelectionViewModel vm && vm.SelectedMasterBudget != null)
             {
-                NavigateTo("BudgetAllocation", vm.SelectedYearlyBudget);
-                CurrentSectionTitle = $"Budget Allocation - {vm.SelectedYearlyBudget.Year}";
+                NavigateTo("BudgetAllocation", vm.SelectedMasterBudget);
+                CurrentSectionTitle = $"Budget Allocation - {vm.SelectedMasterBudget.FiscalYear}";
                 IsShowingDashboard = false;
             }
             return;
@@ -388,7 +396,7 @@ public class MainViewModel : ViewModelBase
                 var allocationView = new Views.BudgetAllocationView();
                 if (allocationView.DataContext is BudgetAllocationViewModel allocVm)
                 {
-                    if (parameter is Models.YearlyBudget selectedBudget)
+                    if (parameter is Models.MasterBudget selectedBudget)
                     {
                         allocVm.InitializeWithBudget(selectedBudget);
                     }
@@ -515,6 +523,47 @@ public class MainViewModel : ViewModelBase
                         bitmap.UriSource = new Uri(path, UriKind.Absolute);
                         bitmap.EndInit();
                         SystemPhotoSource = bitmap;
+                    });
+                }
+            }
+        }
+        catch { }
+    }
+
+    // ── copyright photo ──────────────────────────────────────────────────────
+    private async System.Threading.Tasks.Task LoadCopyrightPhotoAsync()
+    {
+        try
+        {
+            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
+            
+            string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS copyrightprofile (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    PhotoAddress NVARCHAR(500)
+                );";
+            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
+
+            string query = "SELECT PhotoAddress FROM copyrightprofile LIMIT 1;";
+            var dataTable = await dbHelper.ExecuteQueryAsync(query);
+
+            if (dataTable.Rows.Count > 0)
+            {
+                var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
+                
+                if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
+                    path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+
+                if (!string.IsNullOrWhiteSpace(path) && System.IO.File.Exists(path))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.UriSource = new Uri(path, UriKind.Absolute);
+                        bitmap.EndInit();
+                        CopyrightPhotoSource = bitmap;
                     });
                 }
             }

@@ -7,7 +7,9 @@
         xmlns:local="clr-namespace:GoodGovernanceApp.Views"
         xmlns:converters="clr-namespace:GoodGovernanceApp.Converters"
         mc:Ignorable="d"
-        Title="Good Governance Management - Login" Height="642" Width="965"
+        Title="Good Governance Management - Login" 
+        Icon="/Assets/Images/ggms.ico"
+        Height="642" Width="965"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -46,8 +48,8 @@
             <Rectangle>
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#CC006064" Offset="0"/>
-                        <GradientStop Color="#CC00838F" Offset="1"/>
+                        <GradientStop Color="#CCD90000" Offset="0"/>
+                        <GradientStop Color="#CC8B0000" Offset="1"/>
                     </LinearGradientBrush>
                 </Rectangle.Fill>
             </Rectangle>
@@ -82,12 +84,12 @@
 
                 <TextBlock Text="{Binding Address}"
                    FontSize="17" FontWeight="Light"
-                   Foreground="#BBDEFB"
+                   Foreground="White"
                    HorizontalAlignment="Center"
                    TextAlignment="Center"
                    TextWrapping="Wrap"/>
 
-                <Separator Margin="24 20" Background="#4DFFFFFF"/>
+                <Separator Margin="24 20" Background="#4DFFEA93"/>
 
                 <TextBlock Text="Transparency · Accountability · Integrity"
                    FontSize="20"
@@ -190,17 +192,12 @@
                         </Grid.ColumnDefinitions>
 
 
-                        <Button Grid.Column="0"
-                        Content="Cheat"
-                        Command="{Binding CheatCommand}"
-                        CommandParameter="{Binding ElementName=LoginWin}"
-                        Style="{StaticResource MaterialDesignRaisedButton}"/>
 
-                        <Button Grid.Column="1"
+                        <Button Grid.Column="0"
                                 Content="LOGIN"
                                 Command="{Binding LoginCommand}"
                                 CommandParameter="{Binding ElementName=LoginWin}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"/>
+                                Style="{StaticResource MaterialDesignRaisedButton}" Grid.ColumnSpan="3" Margin="0,0,29,0"/>
 
                         <ProgressBar Grid.Column="2"
                                      Style="{StaticResource MaterialDesignCircularProgressBar}"

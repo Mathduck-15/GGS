@@ -154,22 +154,47 @@ public class BudgetTransactionsViewModel : ViewModelBase
 
         try
         {
-            // Only columns that actually exist in the transactions table
             const string sql = @"
         SELECT
-            t.Id,
-            COALESCE(t.project_code, '')      AS ProjectCode,
-            COALESCE(pd.project, '')          AS ProjectName,
-            COALESCE(t.voucher_code, '')      AS VoucherCode,
-            COALESCE(t.transaction_type, '')  AS TransactionType,
-            t.Amount,
-            t.Date
-        FROM transactions t
-        LEFT JOIN project_details pd
-            ON t.project_code = pd.project_details_id
-        ORDER BY t.Date DESC;";
+            t.id                           AS Id,
+            COALESCE(o.office_code, '')    AS OfficeCode,
+            COALESCE(o.name, '')           AS OfficeName,
+            COALESCE(p.program, '')        AS ProgramName,
+            COALESCE(t.voucher_code, '')   AS VoucherCode,
+            COALESCE(t.transaction_type,'')AS TransactionType,
+            COALESCE(t.status, '')         AS Status,
+            COALESCE(t.description, '')    AS Description,
+            COALESCE(t.purpose, '')        AS Purpose,
+            COALESCE(t.recipient_type, '') AS RecipientType,
+            COALESCE(t.recipient_name, '') AS RecipientName,
+            COALESCE(t.priority, '')       AS Priority,
+            COALESCE(t.return_reason, '')  AS ReturnReason,
+            t.amount                       AS Amount,
+            t.transaction_date             AS TransactionDate,
+            t.date_applied_                AS DateApplied,
+            t.date_approved                AS DateApproved,
+            t.expected_completion_date     AS ExpectedCompletion,
+            t.returned_at                  AS ReturnedAt,
+            t.created_at                   AS CreatedAt,
+            t.updated_at                   AS UpdatedAt,
+            t.user_id                      AS UserId,
+            t.constituent_id               AS ConstituentId,
+            t.request_id                   AS RequestId,
+            t.registry_id                  AS RegistryId,
+            t.services_id                  AS ServicesId,
+            t.budget_allocation_id         AS BudgetAllocationId
+        FROM tbl_transaction t
+        LEFT JOIN tbl_program_provision p ON t.program_id = p.id
+        LEFT JOIN tbl_offices o ON t.office_id = o.id
+        ORDER BY COALESCE(t.transaction_date, t.created_at) DESC;";
 
             DataTable dt = await _db.ExecuteQueryAsync(sql);
+
+            DateTime? ParseDate(object val) =>
+                val == DBNull.Value || val == null ? null : Convert.ToDateTime(val);
+
+            long? ParseLong(object val) =>
+                val == DBNull.Value || val == null ? null : Convert.ToInt64(val);
 
             var rows = new ObservableCollection<TransactionRow>();
 
@@ -177,15 +202,33 @@ public class BudgetTransactionsViewModel : ViewModelBase
             {
                 rows.Add(new TransactionRow
                 {
-                    Id              = Convert.ToInt32(row["Id"]),
-                    ProjectCode     = row["ProjectCode"].ToString()     ?? string.Empty,
-                    ProjectName     = row["ProjectName"].ToString()     ?? string.Empty,
-                    VoucherCode     = row["VoucherCode"].ToString()     ?? string.Empty,
-                    TransactionType = row["TransactionType"].ToString() ?? string.Empty,
-                    Amount          = row["Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Amount"]),
-                    Date            = row["Date"] == DBNull.Value
-                        ? DateTime.MinValue
-                        : Convert.ToDateTime(row["Date"])
+                    Id                 = Convert.ToInt32(row["Id"]),
+                    OfficeCode         = row["OfficeCode"].ToString()      ?? string.Empty,
+                    OfficeName         = row["OfficeName"].ToString()      ?? string.Empty,
+                    ProgramName        = row["ProgramName"].ToString()     ?? string.Empty,
+                    VoucherCode        = row["VoucherCode"].ToString()     ?? string.Empty,
+                    TransactionType    = row["TransactionType"].ToString() ?? string.Empty,
+                    Status             = row["Status"].ToString()          ?? string.Empty,
+                    Description        = row["Description"].ToString()     ?? string.Empty,
+                    Purpose            = row["Purpose"].ToString()         ?? string.Empty,
+                    RecipientType      = row["RecipientType"].ToString()   ?? string.Empty,
+                    RecipientName      = row["RecipientName"].ToString()   ?? string.Empty,
+                    Priority           = row["Priority"].ToString()        ?? string.Empty,
+                    ReturnReason       = row["ReturnReason"].ToString()    ?? string.Empty,
+                    Amount             = row["Amount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["Amount"]),
+                    TransactionDate    = ParseDate(row["TransactionDate"]),
+                    DateApplied        = ParseDate(row["DateApplied"]),
+                    DateApproved       = ParseDate(row["DateApproved"]),
+                    ExpectedCompletion = ParseDate(row["ExpectedCompletion"]),
+                    ReturnedAt         = ParseDate(row["ReturnedAt"]),
+                    CreatedAt          = ParseDate(row["CreatedAt"]),
+                    UpdatedAt          = ParseDate(row["UpdatedAt"]),
+                    UserId             = ParseLong(row["UserId"]),
+                    ConstituentId      = ParseLong(row["ConstituentId"]),
+                    RequestId          = ParseLong(row["RequestId"]),
+                    RegistryId         = ParseLong(row["RegistryId"]),
+                    ServicesId         = ParseLong(row["ServicesId"]),
+                    BudgetAllocationId = ParseLong(row["BudgetAllocationId"]),
                 });
             }
 
@@ -196,6 +239,7 @@ public class BudgetTransactionsViewModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine(
                 $"[BudgetTransactionsViewModel] Load error: {ex.Message}"
             );
+            LogToFile($"[BudgetTransactionsViewModel] Load error: {ex.Message}");
         }
         finally
         {
@@ -232,12 +276,15 @@ public class BudgetTransactionsViewModel : ViewModelBase
         {
             string q = FilterFreeText;
             bool hit = row.OfficeCode.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.ProjectCode.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || row.ProjectName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.OfficeName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.ProgramName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.VoucherCode.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.RecipientName.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Description.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.Purpose.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Status.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || row.Priority.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Amount.ToString().Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Date.ToString("yyyy-MM-dd").Contains(q, StringComparison.OrdinalIgnoreCase);
             if (!hit) return false;

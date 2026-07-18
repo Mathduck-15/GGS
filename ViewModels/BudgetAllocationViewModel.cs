@@ -16,7 +16,7 @@ public class BudgetAllocationViewModel : ViewModelBase
     private readonly AppDbContext _context;
 
     // ── Yearly Budget Form ────────────────────────────────────────────────────
-    private YearlyBudget? _selectedYearlyBudget;
+    private MasterBudget? _selectedMasterBudget;
     private decimal _unallocatedAmount;
     private decimal _allocationPercent;
 
@@ -24,7 +24,7 @@ public class BudgetAllocationViewModel : ViewModelBase
     private OfficeAllocationItemViewModel? _selectedOffice;
     private string _transactionPanelHeader = string.Empty;
 
-    public ObservableCollection<YearlyBudget> YearlyBudgets { get; } = new();
+    public ObservableCollection<MasterBudget> MasterBudgets { get; } = new();
     public ObservableCollection<OfficeAllocationItemViewModel> DepartmentAllocations { get; } = new();
     public ObservableCollection<TblTransaction> OfficeTransactions { get; } = new();
     public ObservableCollection<ProjectDetail> OfficeProjects { get; } = new();
@@ -32,12 +32,12 @@ public class BudgetAllocationViewModel : ViewModelBase
     // ── Properties ───────────────────────────────────────────────────────────
     // Removed Year creation properties
 
-    public YearlyBudget? SelectedYearlyBudget
+    public MasterBudget? SelectedMasterBudget
     {
-        get => _selectedYearlyBudget;
+        get => _selectedMasterBudget;
         set
         {
-            _selectedYearlyBudget = value;
+            _selectedMasterBudget = value;
             OnPropertyChanged();
             _ = LoadAllocationsAsync();
         }
@@ -81,7 +81,7 @@ public class BudgetAllocationViewModel : ViewModelBase
     {
         _context = App.AppHost!.Services.GetRequiredService<AppDbContext>();
 
-        SaveAllocationsCommand = new RelayCommand(async _ => await SaveAllocationsAsync(), _ => SelectedYearlyBudget != null);
+        SaveAllocationsCommand = new RelayCommand(async _ => await SaveAllocationsAsync(), _ => SelectedMasterBudget != null);
         ViewProjectsCommand = new RelayCommand(_ => OpenProjectsPopup(), _ => SelectedOffice != null && OfficeProjects.Any());
         AddProjectCommand = new RelayCommand(_ => OpenAddProjectWindow(), _ => SelectedOffice != null);
 
@@ -90,22 +90,22 @@ public class BudgetAllocationViewModel : ViewModelBase
 
     private async Task LoadInitialDataAsync()
     {
-        var budgets = await _context.YearlyBudgets.OrderByDescending(b => b.Year).ToListAsync();
+        var budgets = await _context.MasterBudgets.OrderByDescending(b => b.FiscalYear).ToListAsync();
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            YearlyBudgets.Clear();
-            foreach (var b in budgets) YearlyBudgets.Add(b);
+            MasterBudgets.Clear();
+            foreach (var b in budgets) MasterBudgets.Add(b);
 
-            if (SelectedYearlyBudget == null && YearlyBudgets.Any())
+            if (SelectedMasterBudget == null && MasterBudgets.Any())
             {
-                SelectedYearlyBudget = YearlyBudgets.First();
+                SelectedMasterBudget = MasterBudgets.First();
             }
         });
     }
 
-    public void InitializeWithBudget(YearlyBudget budget)
+    public void InitializeWithBudget(MasterBudget budget)
     {
-        SelectedYearlyBudget = budget;
+        SelectedMasterBudget = budget;
     }
 
     public void ActivateForOffice(string officeCode)
@@ -133,7 +133,7 @@ public class BudgetAllocationViewModel : ViewModelBase
         OfficeTransactions.Clear();
         TransactionPanelHeader = string.Empty;
 
-        if (SelectedYearlyBudget == null)
+        if (SelectedMasterBudget == null)
         {
             UnallocatedAmount = 0;
             return;
@@ -141,43 +141,27 @@ public class BudgetAllocationViewModel : ViewModelBase
 
         // Load offices + existing allocations
         var offices = await _context.Offices.OrderBy(o => o.OfficeCode).ToListAsync();
-        var existingAllocations = await _context.OfficeAllocations
-            .Where(a => a.YearlyBudgetId == SelectedYearlyBudget.Id)
+        var existingAllocations = await _context.BudgetAllocations
+            .Where(a => a.MasterBudgetId == SelectedMasterBudget.Id)
             .ToListAsync();
 
         // Calculate SpentAmount per office from actual project transactions and consolidated_transactions
         var officeCodes = offices.Where(o => !string.IsNullOrEmpty(o.OfficeCode)).Select(o => o.OfficeCode).ToList();
 
-        // 1. Map project details to get office_code for each project
-        var projectDetailsList = await _context.ProjectDetails
-            .Where(p => officeCodes.Contains(p.OfficeCode))
-            .Select(p => new { p.ProjectDetailsID, p.OfficeCode })
-            .ToListAsync();
+        var officeIds = offices.Select(o => o.Id).ToList();
 
-        var projectCodes = projectDetailsList
-            .Where(p => !string.IsNullOrEmpty(p.ProjectDetailsID))
-            .Select(p => p.ProjectDetailsID!)
-            .ToList();
-
-        var txSpentByOfficeCode = new Dictionary<string, decimal>();
-
-        if (projectCodes.Any())
+        var txSpentByOfficeId = new Dictionary<long, decimal>();
+        if (officeIds.Any())
         {
-            var projectSpent = await _context.Transactions
-                .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
-                .GroupBy(t => t.ProjectCode)
-                .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
+            var projectSpent = await _context.TblTransactions
+                .Where(t => t.OfficeId != null && officeIds.Contains(t.OfficeId.Value))
+                .GroupBy(t => t.OfficeId!.Value)
+                .Select(g => new { OfficeId = g.Key, Spent = g.Sum(x => x.Amount) })
                 .ToListAsync();
 
             foreach (var item in projectSpent)
             {
-                var oCode = projectDetailsList.FirstOrDefault(p => p.ProjectDetailsID == item.ProjectCode)?.OfficeCode;
-                if (!string.IsNullOrEmpty(oCode))
-                {
-                    if (!txSpentByOfficeCode.ContainsKey(oCode))
-                        txSpentByOfficeCode[oCode] = 0;
-                    txSpentByOfficeCode[oCode] += item.Spent;
-                }
+                txSpentByOfficeId[item.OfficeId] = item.Spent;
             }
         }
 
@@ -195,7 +179,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             if (string.IsNullOrEmpty(office.OfficeCode)) continue;
 
             decimal totalSpent = 0;
-            if (txSpentByOfficeCode.TryGetValue(office.OfficeCode, out decimal ts)) totalSpent += ts;
+            if (txSpentByOfficeId.TryGetValue(office.Id, out decimal ts)) totalSpent += ts;
             if (consolidatedSpent.TryGetValue(office.OfficeCode, out decimal cs)) totalSpent += cs;
 
             spentByOffice[office.Id] = totalSpent;
@@ -205,8 +189,8 @@ public class BudgetAllocationViewModel : ViewModelBase
         {
             if (string.IsNullOrEmpty(office.OfficeCode)) continue;
 
-            var allocation = existingAllocations.FirstOrDefault(a => a.OfficeCode == office.OfficeCode)
-                             ?? new OfficeAllocation { OfficeCode = office.OfficeCode, OfficeId = office.Id, YearlyBudgetId = SelectedYearlyBudget.Id };
+            var allocation = existingAllocations.FirstOrDefault(a => a.OfficeId == office.Id)
+                             ?? new BudgetAllocation { OfficeId = office.Id, MasterBudgetId = SelectedMasterBudget.Id, OfficeType = "service", Status = "active" };
 
             decimal spent = spentByOffice.TryGetValue(office.Id, out var s) ? s : 0m;
 
@@ -254,7 +238,7 @@ public class BudgetAllocationViewModel : ViewModelBase
         
         if (projectCodes.Any())
         {
-            spentByProject = await _context.Transactions
+            spentByProject = await _context.ConsolidatedTransactions
                 .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
                 .GroupBy(t => t.ProjectCode)
                 .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
@@ -277,11 +261,11 @@ public class BudgetAllocationViewModel : ViewModelBase
 
     private void CalculateUnallocated()
     {
-        if (SelectedYearlyBudget == null) return;
+        if (SelectedMasterBudget == null) return;
         decimal totalAllocated = DepartmentAllocations.Sum(a => a.Amount);
-        UnallocatedAmount = SelectedYearlyBudget.TotalAmount - totalAllocated;
-        AllocationPercent = SelectedYearlyBudget.TotalAmount > 0
-            ? (totalAllocated / SelectedYearlyBudget.TotalAmount) * 100
+        UnallocatedAmount = SelectedMasterBudget.TotalAmount - totalAllocated;
+        AllocationPercent = SelectedMasterBudget.TotalAmount > 0
+            ? (totalAllocated / SelectedMasterBudget.TotalAmount) * 100
             : 0;
     }
 
@@ -292,7 +276,7 @@ public class BudgetAllocationViewModel : ViewModelBase
     {
         if (UnallocatedAmount < 0)
         {
-            MessageBox.Show("Total allocations cannot exceed the yearly budget.");
+            MessageBox.Show("Total allocations cannot exceed the master budget.");
             return;
         }
 
@@ -301,7 +285,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             if (vm.Model.Id == 0 && vm.Amount > 0)
             {
                 vm.Model.AllocatedAmount = vm.Amount;
-                _context.OfficeAllocations.Add(vm.Model);
+                _context.BudgetAllocations.Add(vm.Model);
             }
             else if (vm.Model.Id != 0)
             {
@@ -339,7 +323,12 @@ public class BudgetAllocationViewModel : ViewModelBase
 
         if (window.DataContext is AddProjectViewModel vm)
         {
-            vm.SetContext(SelectedYearlyBudget?.Year, SelectedOffice.OfficeCode);
+            int year = DateTime.Now.Year;
+            if (SelectedMasterBudget != null && int.TryParse(SelectedMasterBudget.FiscalYear, out int parsedYear))
+            {
+                year = parsedYear;
+            }
+            vm.SetContext(year, SelectedOffice.OfficeCode);
         }
 
         bool? result = window.ShowDialog();
@@ -354,7 +343,7 @@ public class BudgetAllocationViewModel : ViewModelBase
 // ── Office Allocation Item ViewModel ─────────────────────────────────────────
 public class OfficeAllocationItemViewModel : ViewModelBase
 {
-    public OfficeAllocation Model { get; }
+    public BudgetAllocation Model { get; }
     public string DepartmentName { get; }
     public string? OfficeCode { get; }
 
@@ -398,7 +387,7 @@ public class OfficeAllocationItemViewModel : ViewModelBase
 
     public event EventHandler? AmountChanged;
 
-    public OfficeAllocationItemViewModel(OfficeAllocation model, string officeName, string? officeCode, decimal spentAmount = 0)
+    public OfficeAllocationItemViewModel(BudgetAllocation model, string officeName, string? officeCode, decimal spentAmount = 0)
     {
         Model = model;
         DepartmentName = officeName;
@@ -411,6 +400,6 @@ public class OfficeAllocationItemViewModel : ViewModelBase
 // Keep old name as alias for XAML compatibility
 public class DepartmentAllocationViewModel : OfficeAllocationItemViewModel
 {
-    public DepartmentAllocationViewModel(OfficeAllocation model, string officeName, string? officeCode)
+    public DepartmentAllocationViewModel(BudgetAllocation model, string officeName, string? officeCode)
         : base(model, officeName, officeCode) { }
 }

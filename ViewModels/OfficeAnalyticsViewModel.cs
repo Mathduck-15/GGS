@@ -115,12 +115,12 @@ namespace GoodGovernanceApp.ViewModels
                     .Select(pd => pd.ProjectDetailsID!)
                     .ToList();
 
-                // 2. Load department budget transactions (transactions table)
-                var departmentTransactions = projectCodes.Any()
-                    ? await _dbContext.Transactions
-                        .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
-                        .ToListAsync()
-                    : new System.Collections.Generic.List<Transaction>();
+                // 2. Load department budget transactions (tbl_transaction table)
+                var departmentTransactions = await _dbContext.TblTransactions
+                    .Include(t => t.Office)
+                    .Include(t => t.Program)
+                    .Where(t => t.Office != null && t.Office.OfficeCode == OfficeCode)
+                    .ToListAsync();
 
                 // 3. Load consolidated transactions by office_id
                 var consolidatedTransactions = await _dbContext.ConsolidatedTransactions
@@ -130,16 +130,16 @@ namespace GoodGovernanceApp.ViewModels
                 // 4. Map dept transactions
                 var deptList = departmentTransactions.Select(t => new ConsolidatedTransactionsViewModel
                 {
-                    Id              = t.Id,
-                    ProjectCode     = t.ProjectCode ?? string.Empty,
-                    BeneficiaryId   = linkedProjects.FirstOrDefault(p => p.ProjectDetailsID == t.ProjectCode)?.ContactPerson ?? "Unknown",
-                    FullName        = "Department Project",
+                    Id              = (int)t.Id,
+                    ProjectCode     = t.Program?.Name ?? string.Empty,
+                    BeneficiaryId   = t.ConstituentId?.ToString() ?? "Unknown",
+                    FullName        = t.RecipientName ?? "Department Project",
                     TransactionType = t.TransactionType ?? "Department Project",
-                    Amount          = t.Amount ?? 0,
-                    TransactionDate = t.Date,
-                    Status          = "Completed",
+                    Amount          = t.Amount,
+                    TransactionDate = t.TransactionDate,
+                    Status          = t.Status ?? "Completed",
                     Source          = "Department Budget",
-                    CreatedAt       = t.Date ?? DateTime.MinValue,
+                    CreatedAt       = t.CreatedAt ?? DateTime.MinValue,
                     OfficeId        = OfficeCode,
                     OfficeName      = OfficeName
                 }).ToList();

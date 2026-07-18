@@ -26,6 +26,21 @@ public class BudgetAllocation
     [Column("amount")]
     public decimal AllocatedAmount { get; set; }
 
+    [Column("office_type")]
+    public string OfficeType { get; set; } = "service";
+
+    [Column("program")]
+    public string? Program { get; set; }
+
+    [Column("remaining_amount")]
+    public decimal? RemainingAmount { get; set; }
+
+    [Column("used_amount")]
+    public decimal UsedAmount { get; set; } = 0;
+
+    [Column("status")]
+    public string? Status { get; set; } = "active";
+
 
 
     [Column("allocated_by")]
