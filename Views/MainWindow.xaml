@@ -150,7 +150,7 @@
                                 <Border.Background>
                                     <SolidColorBrush Color="#D90000" Opacity="0.35"/>
                                 </Border.Background>
-                                <materialDesign:PackIcon Kind="BellRing" Foreground="Black"
+                                <materialDesign:PackIcon Kind="BellRing" Foreground="white"
                                                          Width="24" Height="24"
                                                          HorizontalAlignment="Center"
                                                          VerticalAlignment="Center"/>
@@ -170,7 +170,7 @@
                                     Width="34" Height="34" Padding="0"
                                     Background="Transparent" BorderThickness="0"
                                     Cursor="Hand" VerticalAlignment="Center">
-                                <Border Width="34" Height="34" CornerRadius="17" Background="#000000">
+                                <Border Width="34" Height="34" CornerRadius="17" Background="white">
                                     <materialDesign:PackIcon Kind="Close" Foreground="Black"
                                                              Width="16" Height="16"
                                                              HorizontalAlignment="Center"
@@ -426,8 +426,8 @@
                                                 <ColumnDefinition Width="12"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
-                                                <materialDesign:PackIcon Kind="{Binding Icon}" Foreground="Black" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="0" Background="white" Width="38" Height="38" CornerRadius="10">
+                                                <materialDesign:PackIcon Kind="{Binding Icon}" Foreground="black" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" FontSize="14" TextWrapping="Wrap"/>
                                         </Grid>
@@ -450,7 +450,7 @@
                                 <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Background="#000000" Width="38" Height="38" CornerRadius="10">
+                            <Border Grid.Column="0" Background="white" Width="38" Height="38" CornerRadius="10">
                                 <materialDesign:PackIcon Kind="DatabaseSettings" Foreground="Black" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Grid.Column="2" Text="System Profile" VerticalAlignment="Center" FontSize="14"/>
@@ -803,8 +803,8 @@
                     <TextBlock Text="{Binding SyncStatus}" Foreground="#8DB355" FontSize="12" Margin="0,0,8,0"/>
 
                     <Button Command="{Binding SyncNowCommand}"
-                            Background="#000000" BorderThickness="0" Padding="8,4" Margin="0,0,24,0"
-                            Foreground="White" Cursor="Hand">
+                            Background="white" BorderThickness="0" Padding="8,4" Margin="0,0,24,0"
+                            Foreground="black" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="CloudSync" Width="14" Height="14" Margin="0,0,4,0"/>
                             <TextBlock Text="SYNC NOW" FontSize="10" FontWeight="Bold"/>
@@ -813,15 +813,15 @@
 
                     <Button Command="{Binding NavigateTileCommand}" CommandParameter="Profile"
                             Background="Transparent" BorderThickness="0" Padding="0" Margin="0,0,24,0"
-                            Foreground="White" Cursor="Hand">
+                            Foreground="black" Cursor="Hand">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="AccountEdit" Width="16" Height="16" Margin="0,0,6,0"/>
                             <TextBlock Text="MY PROFILE" FontSize="12" FontWeight="Bold"/>
                         </StackPanel>
                     </Button>
 
-                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="White" Width="16" Height="16" Margin="0,0,8,0"/>
-                    <TextBlock Text="{Binding CurrentDate}" Foreground="White" FontSize="12"/>
+                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="black" Width="16" Height="16" Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding CurrentDate}" Foreground="black" FontSize="12"/>
                 </StackPanel>
             </Grid>
         </Border>

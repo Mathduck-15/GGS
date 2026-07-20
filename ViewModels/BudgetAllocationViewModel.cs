@@ -28,6 +28,22 @@ public class BudgetAllocationViewModel : ViewModelBase
     public ObservableCollection<OfficeAllocationItemViewModel> DepartmentAllocations { get; } = new();
     public ObservableCollection<TblTransaction> OfficeTransactions { get; } = new();
     public ObservableCollection<ProjectDetail> OfficeProjects { get; } = new();
+    
+    public ObservableCollection<LocalProjectSpendViewModel> UnmappedIdentifiedProjects { get; } = new();
+
+    private int _unidentifiedCount;
+    public int UnidentifiedCount
+    {
+        get => _unidentifiedCount;
+        set { _unidentifiedCount = value; OnPropertyChanged(); }
+    }
+
+    private decimal _unidentifiedAmount;
+    public decimal UnidentifiedAmount
+    {
+        get => _unidentifiedAmount;
+        set { _unidentifiedAmount = value; OnPropertyChanged(); }
+    }
 
     // ── Properties ───────────────────────────────────────────────────────────
     // Removed Year creation properties
@@ -189,8 +205,8 @@ public class BudgetAllocationViewModel : ViewModelBase
         {
             if (string.IsNullOrEmpty(office.OfficeCode)) continue;
 
-            var allocation = existingAllocations.FirstOrDefault(a => a.OfficeId == office.Id)
-                             ?? new BudgetAllocation { OfficeId = office.Id, MasterBudgetId = SelectedMasterBudget.Id, OfficeType = "service", Status = "active" };
+            var allocation = existingAllocations.FirstOrDefault(a => a.OfficeId == office.Id || (a.OfficeCode != null && a.OfficeCode == office.OfficeCode))
+                             ?? new BudgetAllocation { OfficeId = office.Id, OfficeCode = office.OfficeCode, MasterBudgetId = SelectedMasterBudget.Id };
 
             decimal spent = spentByOffice.TryGetValue(office.Id, out var s) ? s : 0m;
 
@@ -223,39 +239,73 @@ public class BudgetAllocationViewModel : ViewModelBase
 
         foreach (var t in txns) OfficeTransactions.Add(t);
 
-        // Load project breakdown
+        // ── Fetch all released transactions for this office to process in memory ──
+        var allOfficeSpend = await _context.ConsolidatedTransactions
+            .Where(t => t.OfficeId == SelectedOffice.OfficeCode && t.Status == "Released")
+            .ToListAsync();
+
+        // ── Tier 1: Matched Project Spend (With Name Fallback) ──────────────────
         OfficeProjects.Clear();
         var filteredProjects = await _context.ProjectDetails
             .Where(p => p.OfficeCode == SelectedOffice.OfficeCode)
             .ToListAsync();
 
-        var projectCodes = filteredProjects
-            .Where(p => !string.IsNullOrEmpty(p.ProjectDetailsID))
-            .Select(p => p.ProjectDetailsID!)
-            .ToList();
-
-        var spentByProject = new Dictionary<string, decimal>();
-        
-        if (projectCodes.Any())
-        {
-            spentByProject = await _context.ConsolidatedTransactions
-                .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
-                .GroupBy(t => t.ProjectCode)
-                .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
-                .ToDictionaryAsync(x => x.ProjectCode!, x => x.Spent);
-        }
+        var mappedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var project in filteredProjects)
         {
-            if (project.ProjectDetailsID != null && spentByProject.TryGetValue(project.ProjectDetailsID, out decimal spent))
-            {
-                project.Spent = spent;
-            }
-            else
-            {
-                project.Spent = 0;
-            }
+            var matchedTransactions = allOfficeSpend
+                .Where(t => 
+                    (t.ProjectDetailsId != null && project.ProjectDetailsID != null && string.Equals(t.ProjectDetailsId.Trim(), project.ProjectDetailsID.Trim(), StringComparison.OrdinalIgnoreCase)) ||
+                    (t.ProjectDetailsId == null && t.ProjectName != null && t.ProjectName.Trim().Equals(project.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+
+            project.Spent = matchedTransactions.Sum(t => t.Amount ?? 0);
             OfficeProjects.Add(project);
+
+            // Keep track of names we mapped via fallback so we don't double-count them in Tier 2
+            if (!string.IsNullOrEmpty(project.Name))
+            {
+                mappedNames.Add(project.Name.Trim());
+            }
+        }
+
+        // ── Tier 2: Identified Local Spend (Unmapped) ───────────────────────────
+        UnmappedIdentifiedProjects.Clear();
+        var localSpendList = allOfficeSpend
+            .Where(t => t.ProjectDetailsId == null 
+                     && t.ProjectCode != null 
+                     && (t.ProjectName == null || !mappedNames.Contains(t.ProjectName.Trim())))
+            .GroupBy(t => new { t.ProjectCode, t.ProjectName })
+            .Select(g => new LocalProjectSpendViewModel
+            {
+                ProjectCode = g.Key.ProjectCode!,
+                ProjectName = g.Key.ProjectName ?? "Unknown Project",
+                SpentAmount = g.Sum(x => x.Amount ?? 0)
+            })
+            .ToList();
+
+        foreach (var spend in localSpendList)
+        {
+            UnmappedIdentifiedProjects.Add(spend);
+        }
+
+        // ── Tier 3: Truly Unidentified Spend ────────────────────────────────────
+        var unidentifiedStats = allOfficeSpend
+            .Where(t => t.ProjectDetailsId == null 
+                     && (t.ProjectCode == null || t.ProjectCode == "")
+                     && (t.ProjectName == null || !mappedNames.Contains(t.ProjectName.Trim())))
+            .ToList();
+
+        if (unidentifiedStats.Any())
+        {
+            UnidentifiedCount = unidentifiedStats.Count;
+            UnidentifiedAmount = unidentifiedStats.Sum(t => t.Amount ?? 0);
+        }
+        else
+        {
+            UnidentifiedCount = 0;
+            UnidentifiedAmount = 0;
         }
     }
 
@@ -392,7 +442,7 @@ public class OfficeAllocationItemViewModel : ViewModelBase
         Model = model;
         DepartmentName = officeName;
         OfficeCode = officeCode;
-        _amount = model.AllocatedAmount;
+        _amount = model.AllocatedAmount ?? 0m;
         _spentAmount = spentAmount;
     }
 }
@@ -402,4 +452,13 @@ public class DepartmentAllocationViewModel : OfficeAllocationItemViewModel
 {
     public DepartmentAllocationViewModel(BudgetAllocation model, string officeName, string? officeCode)
         : base(model, officeName, officeCode) { }
+}
+
+public class LocalProjectSpendViewModel : ViewModelBase
+{
+    public string ProjectCode { get; set; } = string.Empty;
+    public string ProjectName { get; set; } = string.Empty;
+    public decimal SpentAmount { get; set; }
+    
+    public string SpentDisplay => SpentAmount.ToString("N2");
 }

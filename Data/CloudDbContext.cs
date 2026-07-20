@@ -65,7 +65,7 @@ public class CloudDbContext : DbContext
         modelBuilder.Entity<AuditTrail>().ToTable("audit_trails").HasKey(a => a.Id);
         modelBuilder.Entity<Office>().ToTable("tbl_offices").HasKey(o => o.Id);
         modelBuilder.Entity<MasterBudget>().ToTable("master_budget").HasKey(m => m.Id);
-        modelBuilder.Entity<BudgetAllocation>().ToTable("budget_allocations").HasKey(b => b.Id);
+        modelBuilder.Entity<BudgetAllocation>().ToTable("officeallocations").HasKey(b => b.Id);
         modelBuilder.Entity<ProgramProvision>().ToTable("tbl_program_provision").HasKey(p => p.Id);
         modelBuilder.Entity<TblTransaction>().ToTable("tbl_transaction").HasKey(t => t.Id);
         modelBuilder.Entity<TblService>().ToTable("tbl_services").HasKey(s => s.ServicesId);

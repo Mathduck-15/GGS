@@ -97,10 +97,9 @@ public class AppDbContext : DbContext
         // ── Budget Allocations ────────────────────────────────────────────────
         modelBuilder.Entity<BudgetAllocation>(entity =>
         {
-            entity.ToTable("budget_allocations");
+            entity.ToTable("officeallocations");
             entity.HasKey(b => b.Id);
             entity.HasOne(b => b.MasterBudget).WithMany(m => m.Allocations).HasForeignKey(b => b.MasterBudgetId).OnDelete(DeleteBehavior.SetNull);
-            entity.HasOne(b => b.AllocatedBy).WithMany().HasForeignKey(b => b.AllocatedById).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(b => b.Office).WithMany().HasForeignKey(b => b.OfficeId).OnDelete(DeleteBehavior.Restrict);
         });
 

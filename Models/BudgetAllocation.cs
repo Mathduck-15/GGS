@@ -4,14 +4,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GoodGovernanceApp.Models;
 
-[Table("budget_allocations")]
+[Table("officeallocations")]
 public class BudgetAllocation
 {
     [Key]
-    [Column("id")]
+    [Column("Id")]
     public long Id { get; set; }
 
-    [Column("master_budget_id")]
+    [Column("YearlyBudgetId")]
     public long? MasterBudgetId { get; set; }
 
     [ForeignKey("MasterBudgetId")]
@@ -23,41 +23,24 @@ public class BudgetAllocation
     [ForeignKey("OfficeId")]
     public virtual Office? Office { get; set; }
 
-    [Column("amount")]
-    public decimal AllocatedAmount { get; set; }
+    [Column("office_code")]
+    public string? OfficeCode { get; set; }
 
-    [Column("office_type")]
-    public string OfficeType { get; set; } = "service";
+    [Column("AllocatedAmount")]
+    public decimal? AllocatedAmount { get; set; }
 
-    [Column("program")]
-    public string? Program { get; set; }
+    [NotMapped]
+    public decimal? RemainingAmount => (AllocatedAmount ?? 0m) - (UsedAmount ?? 0m);
 
-    [Column("remaining_amount")]
-    public decimal? RemainingAmount { get; set; }
-
-    [Column("used_amount")]
-    public decimal UsedAmount { get; set; } = 0;
-
-    [Column("status")]
-    public string? Status { get; set; } = "active";
-
-
-
-    [Column("allocated_by")]
-    public long? AllocatedById { get; set; }
-
-    [ForeignKey("AllocatedById")]
-    public virtual User? AllocatedBy { get; set; }
-
-    [Column("description")]
-    public string? Description { get; set; }
-
-    [Column("created_at")]
-    public DateTime? CreatedAt { get; set; }
+    [Column("SpentAmount")]
+    public decimal? UsedAmount { get; set; } = 0;
 
     [Column("updated_at")]
+    public DateTime? updated_at { get; set; }
+
+    [Column("UpdatedAt")]
     public DateTime? UpdatedAt { get; set; }
+
     [Column("SyncId")]
     public Guid SyncId { get; set; } = Guid.NewGuid();
-
 }

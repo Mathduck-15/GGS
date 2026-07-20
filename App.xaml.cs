@@ -228,7 +228,7 @@ public partial class App : Application
                     AddSyncCols("users");
                     AddSyncCols("tbl_offices");
                     AddSyncCols("master_budget");
-                    AddSyncCols("budget_allocations");
+                    AddSyncCols("officeallocations");
                     AddSyncCols("tbl_program_provision");
                     AddSyncCols("tbl_services");
                     AddSyncCols("tbl_transaction");
@@ -265,7 +265,7 @@ public partial class App : Application
                     SeedSequence("users");
                     SeedSequence("tbl_offices");
                     SeedSequence("master_budget");
-                    SeedSequence("budget_allocations");
+                    SeedSequence("officeallocations");
                     SeedSequence("tbl_program_provision");
                     SeedSequence("tbl_services");
                     SeedSequence("tbl_transaction");

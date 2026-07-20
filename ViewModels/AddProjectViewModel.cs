@@ -226,9 +226,9 @@ public class AddProjectViewModel : ViewModelBase
 
         const string sql = @"
             SELECT o.office_code
-            FROM budget_allocations oa
+            FROM officeallocations oa
             INNER JOIN tbl_offices o ON oa.office_id = o.id
-            INNER JOIN master_budget yb ON oa.master_budget_id = yb.id
+            INNER JOIN master_budget yb ON oa.YearlyBudgetId = yb.id
             WHERE yb.budget_year = @year
             ORDER BY o.office_code;";
 
@@ -256,10 +256,10 @@ public class AddProjectViewModel : ViewModelBase
         _ = Task.Run(async () =>
         {
             const string sql = @"
-                SELECT oa.master_budget_id
-                FROM budget_allocations oa
+                SELECT oa.YearlyBudgetId
+                FROM officeallocations oa
                 INNER JOIN tbl_offices o ON oa.office_id = o.id
-                INNER JOIN master_budget yb ON oa.master_budget_id = yb.id
+                INNER JOIN master_budget yb ON oa.YearlyBudgetId = yb.id
                 WHERE yb.budget_year = @year AND o.office_code = @code
                 LIMIT 1;";
 
@@ -309,10 +309,10 @@ public class AddProjectViewModel : ViewModelBase
         if (_resolvedYearlyBudgetId == null && _selectedYear.HasValue && !string.IsNullOrEmpty(_selectedOfficeCode))
         {
             const string resolveSql = @"
-            SELECT oa.master_budget_id
-            FROM budget_allocations oa
+            SELECT oa.YearlyBudgetId
+            FROM officeallocations oa
             INNER JOIN tbl_offices o ON oa.office_id = o.id
-            INNER JOIN master_budget yb ON oa.master_budget_id = yb.id
+            INNER JOIN master_budget yb ON oa.YearlyBudgetId = yb.id
             WHERE yb.budget_year = @year AND o.office_code = @code
             LIMIT 1;";
             var res = await _db.ExecuteScalarAsync(resolveSql,

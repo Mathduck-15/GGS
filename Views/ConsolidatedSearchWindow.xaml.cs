@@ -149,7 +149,6 @@ public partial class ConsolidatedSearchWindow : Window
     private void SearchMode_Changed(object sender, RoutedEventArgs e)
     {
         if (RadioBeneficiaryId == null || RadioFullName == null ||
-            RadioProjectCode == null || RadioOfficeCode == null ||
             RadioBarangay == null || RadioHouseholdNo == null ||
             SearchInputPanel == null)
             return;
@@ -202,20 +201,7 @@ public partial class ConsolidatedSearchWindow : Window
             HideRecentPanel();
             FocusSearchBox();
         }
-        else if (RadioProjectCode.IsChecked == true)
-        {
-            SearchLabel.Text = "Enter Project (Name/Code):";
-            SearchInputPanel.Visibility = Visibility.Visible;
-            ShowRecentPanel("Recent Projects", _recentProjectCodes);
-            FocusSearchBox();
-        }
-        else if (RadioOfficeCode.IsChecked == true)
-        {
-            SearchLabel.Text = "Enter Office (Name/Code):";
-            SearchInputPanel.Visibility = Visibility.Visible;
-            ShowRecentPanel("Recent Offices", _recentOfficeCodes);
-            FocusSearchBox();
-        }
+
         else if (RadioBarangay.IsChecked == true)
         {
             SearchLabel.Text = "Enter Barangay:";
@@ -267,38 +253,7 @@ public partial class ConsolidatedSearchWindow : Window
             SearchMode = "FullName";
             SearchValue = SearchTextBox.Text.Trim();
         }
-        else if (RadioProjectCode.IsChecked == true)
-        {
-            if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
-            {
-                MessageBox.Show("Please enter a Project.", "Missing Input",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            SearchMode = "ProjectCode";
-            var text = SearchTextBox.Text.Trim();
-            var index = text.IndexOf(" - ");
-            if (index >= 0) {
-                text = text.Substring(0, index);
-            }
-            SearchValue = text;
-        }
-        else if (RadioOfficeCode.IsChecked == true)
-        {
-            if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
-            {
-                MessageBox.Show("Please enter an Office.", "Missing Input",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            SearchMode = "OfficeCode";
-            var text = SearchTextBox.Text.Trim();
-            var index = text.IndexOf(" - ");
-            if (index >= 0) {
-                text = text.Substring(0, index);
-            }
-            SearchValue = text;
-        }
+
         else if (RadioBarangay.IsChecked == true)
         {
             if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
@@ -367,14 +322,11 @@ public partial class ConsolidatedSearchWindow : Window
     {
         // Guard: only run when a searchable radio is checked
         if (RadioFullName == null || RadioBeneficiaryId == null ||
-            RadioProjectCode == null || RadioOfficeCode == null ||
             RadioBarangay == null || RadioHouseholdNo == null)
             return;
 
         bool anySearchMode = RadioFullName.IsChecked == true
                           || RadioBeneficiaryId.IsChecked == true
-                          || RadioProjectCode.IsChecked == true
-                          || RadioOfficeCode.IsChecked == true
                           || RadioBarangay.IsChecked == true
                           || RadioHouseholdNo.IsChecked == true;
 
@@ -401,14 +353,7 @@ public partial class ConsolidatedSearchWindow : Window
             matches = _allBeneficiaryIds
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
                 .Take(10).ToList();
-        else if (RadioProjectCode.IsChecked == true)
-            matches = _allProjectCodes
-                .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10).ToList();
-        else if (RadioOfficeCode.IsChecked == true)
-            matches = _allOfficeCodes
-                .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
-                .Take(10).ToList();
+
         else if (RadioBarangay.IsChecked == true)
             matches = _allBarangays
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))

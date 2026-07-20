@@ -61,21 +61,7 @@
                                      Checked="SearchMode_Changed"
                                      Style="{StaticResource MaterialDesignRadioButton}"/>
 
-                        <RadioButton x:Name="RadioProjectCode"
-                                     Content="Search by Project (Name/Code)"
-                                     GroupName="SearchMode"
-                                     FontSize="13" Foreground="#000000"
-                                     Margin="0 0 0 6"
-                                     Checked="SearchMode_Changed"
-                                     Style="{StaticResource MaterialDesignRadioButton}"/>
 
-                        <RadioButton x:Name="RadioOfficeCode"
-                                     Content="Search by Office (Name/Code)"
-                                     GroupName="SearchMode"
-                                     FontSize="13" Foreground="#000000"
-                                     Margin="0 0 0 6"
-                                     Checked="SearchMode_Changed"
-                                     Style="{StaticResource MaterialDesignRadioButton}"/>
 
                         <RadioButton x:Name="RadioBarangay"
                                      Content="Search by Barangay"

@@ -1,6 +1,3 @@
 <Solution>
-  <Project Path="../GovernanceBeta/GovernanceSetupBeta1/GovernanceSetupBeta1.vdproj" Type="Installer">
-    <Build />
-  </Project>
   <Project Path="GoodGovernanceApp.csproj" />
 </Solution>
