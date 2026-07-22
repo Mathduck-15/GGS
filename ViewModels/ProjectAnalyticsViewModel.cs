@@ -73,7 +73,7 @@ namespace GoodGovernanceApp.ViewModels
 
                 // 2. Load consolidated transactions
                 var consolidatedTransactions = await _dbContext.ConsolidatedTransactions
-                    .Where(ct => ct.ProjectCode == ProjectCode)
+                    .Where(ct => ct.ProjectDetailsId == ProjectCode || ct.ProjectCode == ProjectCode)
                     .ToListAsync();
 
                 var projectDetails = await _dbContext.ProjectDetails

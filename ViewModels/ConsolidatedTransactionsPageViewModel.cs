@@ -128,7 +128,7 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
         {
             if (row is ConsolidatedTransactionsViewModel t && !string.IsNullOrWhiteSpace(t.ProjectDetailsId))
             {
-                var vm = new ProjectAnalyticsViewModel(_dbContext, t.ProjectDetailsId, t.ProjectDetailsId);
+                var vm = new ProjectAnalyticsViewModel(_dbContext, t.ProjectDetailsId, t.ProjectName);
                 var window = new ProjectAnalyticsWindow(vm);
                 window.ShowDialog();
             }
