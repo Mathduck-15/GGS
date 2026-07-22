@@ -35,6 +35,7 @@ public partial class ConsolidatedSearchWindow : Window
     private List<string> _recentBarangays    = new();
     private List<string> _recentBeneficiaryIds = new();
     private List<string> _recentFullNames = new();
+    private List<string> _recentHouseholdNos = new();
 
     // Debounce timer — fires ApplyFilter() 300 ms after the user stops typing
     private readonly System.Windows.Threading.DispatcherTimer _debounceTimer;
@@ -142,6 +143,14 @@ public partial class ConsolidatedSearchWindow : Window
                         .Take(10)
                         .ToList()!;
 
+                    var recentHouseholdNos = dbContext.ConsolidatedTransactions
+                        .Where(t => !string.IsNullOrEmpty(t.HouseholdNo))
+                        .OrderByDescending(t => t.CreatedAt)
+                        .Select(t => t.HouseholdNo)
+                        .Distinct()
+                        .Take(10)
+                        .ToList()!;
+
                     Dispatcher.Invoke(() =>
                     {
                         _recentProjectCodes = recentProjects;
@@ -149,6 +158,7 @@ public partial class ConsolidatedSearchWindow : Window
                         _recentBarangays    = recentBarangays;
                         _recentBeneficiaryIds = recentBeneficiaryIds;
                         _recentFullNames = recentFullNames;
+                        _recentHouseholdNos = recentHouseholdNos;
 
                         // If the active mode already has a recent-items panel visible,
                         // re-run SearchMode_Changed so the list reflects the just-loaded data.
@@ -233,7 +243,7 @@ public partial class ConsolidatedSearchWindow : Window
         {
             SearchLabel.Text = "Enter Household No:";
             SearchInputPanel.Visibility = Visibility.Visible;
-            HideRecentPanel();
+            ShowRecentPanel("Recent Household Nos", _recentHouseholdNos);
             FocusSearchBox();
         }
         else if (RadioOffice.IsChecked == true)

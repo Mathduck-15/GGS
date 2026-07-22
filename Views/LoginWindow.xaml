@@ -48,7 +48,7 @@
             <Rectangle>
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#CCD90000" Offset="0"/>
+                        <GradientStop Color="#90B800" Offset="0"/>
                         <GradientStop Color="#CC8B0000" Offset="1"/>
                     </LinearGradientBrush>
                 </Rectangle.Fill>

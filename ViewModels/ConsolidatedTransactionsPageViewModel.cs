@@ -210,8 +210,10 @@ public class ConsolidatedTransactionsPageViewModel : ViewModelBase
                     || row.HouseholdNo.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.ProjectDetailsId.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.ProjectName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (row.ProjectCode + " - " + row.ProjectName).Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.OfficeId.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.OfficeName.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (row.OfficeId + " - " + row.OfficeName).Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.TransactionType.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Status.Contains(q, StringComparison.OrdinalIgnoreCase)
                     || row.Amount.ToString().Contains(q, StringComparison.OrdinalIgnoreCase);

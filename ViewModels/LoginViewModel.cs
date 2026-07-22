@@ -241,7 +241,11 @@ public class LoginViewModel : ViewModelBase
                 var imagesDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images");
                 if (System.IO.Directory.Exists(imagesDir))
                 {
-                    var file = System.IO.Directory.EnumerateFiles(imagesDir, "*logo*.*").FirstOrDefault();
+                    var file = System.IO.Directory.EnumerateFiles(imagesDir, "*company*.*").FirstOrDefault();
+                    if (file == null)
+                    {
+                        file = System.IO.Directory.EnumerateFiles(imagesDir, "*logo*.*").FirstOrDefault();
+                    }
                     if (file == null) 
                     {
                         file = System.IO.Directory.EnumerateFiles(imagesDir, "*gov*.*").FirstOrDefault();
@@ -280,7 +284,7 @@ public class LoginViewModel : ViewModelBase
                 var imagesDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images");
                 if (System.IO.Directory.Exists(imagesDir))
                 {
-                    var file = System.IO.Directory.EnumerateFiles(imagesDir, "*profile*.*").FirstOrDefault();
+                    var file = System.IO.Directory.EnumerateFiles(imagesDir, "*system_profile*.*").FirstOrDefault();
                     if (file == null) 
                     {
                         file = System.IO.Directory.EnumerateFiles(imagesDir, "*system*.*").FirstOrDefault();
