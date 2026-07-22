@@ -57,5 +57,10 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Images\*.*" Exclude="Assets\Images\bg.jpg;Assets\Images\ggms.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>

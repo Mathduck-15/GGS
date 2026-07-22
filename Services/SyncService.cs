@@ -99,10 +99,10 @@ public class SyncService
 
 
             OnSyncProgress?.Invoke("Syncing office transactions...");
-            await SyncTableAsync(localDb, cloudDb, localDb.TblTransactions, cloudDb.TblTransactions);
+            await SyncTableAsync(localDb, cloudDb, localDb.TblTransactions, cloudDb.TblTransactions, preservePk: false);
 
             OnSyncProgress?.Invoke("Syncing consolidated transactions...");
-            await SyncTableAsync(localDb, cloudDb, localDb.ConsolidatedTransactions, cloudDb.ConsolidatedTransactions);
+            await SyncTableAsync(localDb, cloudDb, localDb.ConsolidatedTransactions, cloudDb.ConsolidatedTransactions, preservePk: false);
 
             OnSyncProgress?.Invoke("✔ Synced successfully");
         }
@@ -200,7 +200,8 @@ public class SyncService
         AppDbContext  localDb,
         CloudDbContext cloudDb,
         DbSet<T>      localSet,
-        DbSet<T>      cloudSet) where T : class
+        DbSet<T>      cloudSet,
+        bool          preservePk = true) where T : class
     {
         var syncIdProp  = typeof(T).GetProperty("SyncId");
         var updatedProp = typeof(T).GetProperty("UpdatedAt");
@@ -269,7 +270,7 @@ public class SyncService
                 // INSERT via raw SQL to preserve explicit integer PKs
                 try
                 {
-                    await RawSqlInsertAsync(cloudConn, cloudTableName, cloudScalars, local, isMySql: true);
+                    await RawSqlInsertAsync(cloudConn, cloudTableName, cloudScalars, local, isMySql: true, skipCols: preservePk ? null : cloudPkNames);
                 }
                 catch (Exception ex)
                 {
@@ -288,8 +289,16 @@ public class SyncService
         // ── Pull cloud → local ────────────────────────────────────────────────
         // Reload cloud in case push inserted new rows
         cloudRecords = await cloudSet.AsNoTracking().ToListAsync();
+        // Assign a fresh SyncId to any cloud rows that still have Guid.Empty
+        // (i.e. their SyncId column is NULL in MySQL). This ensures they are
+        // not silently dropped when building the lookup dictionary.
+        foreach (var rec in cloudRecords)
+        {
+            var sid = (Guid)syncIdProp.GetValue(rec)!;
+            if (sid == Guid.Empty)
+                syncIdProp.SetValue(rec, Guid.NewGuid());
+        }
         cloudById = cloudRecords
-            .Where(r => (Guid)syncIdProp.GetValue(r)! != Guid.Empty)
             .GroupBy(r => (Guid)syncIdProp.GetValue(r)!)
             .ToDictionary(g => g.Key, g => g.First());
 
@@ -305,7 +314,7 @@ public class SyncService
                 // INSERT via raw SQL to preserve explicit integer PKs
                 try
                 {
-                    await RawSqlInsertAsync(localConn, localTableName, localScalars, cloud, isMySql: false);
+                    await RawSqlInsertAsync(localConn, localTableName, localScalars, cloud, isMySql: false, skipCols: preservePk ? null : localPkNames);
                 }
                 catch (Exception ex)
                 {
@@ -392,7 +401,8 @@ public class SyncService
         string tableName,
         IEnumerable<IProperty> scalarProps,
         T incoming,
-        bool isMySql) where T : class
+        bool isMySql,
+        HashSet<string>? skipCols = null) where T : class
     {
         string Q(string n) => isMySql ? $"`{n}`" : $"\"{n}\"";
 
@@ -403,6 +413,8 @@ public class SyncService
 
         foreach (var prop in scalarProps)
         {
+            if (skipCols != null && skipCols.Contains(prop.Name)) continue;
+
             var clrProp = typeof(T).GetProperty(prop.Name);
             if (clrProp == null) continue;
 

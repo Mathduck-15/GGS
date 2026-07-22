@@ -144,7 +144,7 @@
 
                     <DataGrid.Columns>
                         <!-- Identity -->
-                        <DataGridTemplateColumn Header="Beneficiary ID" Width="130">
+                        <DataGridTemplateColumn Header="Beneficiary ID" Width="190">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock VerticalAlignment="Center" Margin="5,0">
@@ -157,17 +157,6 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-
-                        <DataGridTextColumn Header="Civil Registry ID" Binding="{Binding CivilRegistryId}" Width="140">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="Black"/>
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Margin" Value="5,0"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-
                         <!-- Name columns -->
                         <DataGridTemplateColumn Header="Full Name" Width="200">
                             <DataGridTemplateColumn.CellTemplate>

@@ -166,27 +166,23 @@ public class BudgetAllocationViewModel : ViewModelBase
 
         var officeIds = offices.Select(o => o.Id).ToList();
 
-        var txSpentByOfficeId = new Dictionary<long, decimal>();
-        if (officeIds.Any())
-        {
-            var projectSpent = await _context.TblTransactions
-                .Where(t => t.OfficeId != null && officeIds.Contains(t.OfficeId.Value))
-                .GroupBy(t => t.OfficeId!.Value)
-                .Select(g => new { OfficeId = g.Key, Spent = g.Sum(x => x.Amount) })
-                .ToListAsync();
+        int filterYear = 0;
+        if (int.TryParse(SelectedMasterBudget.FiscalYear, out int fy))
+            filterYear = fy;
+            
+        DateTime yearStart = filterYear > 0 ? new DateTime(filterYear, 1, 1) : DateTime.MinValue;
+        DateTime yearEnd = filterYear > 0 ? new DateTime(filterYear + 1, 1, 1) : DateTime.MaxValue;
 
-            foreach (var item in projectSpent)
-            {
-                txSpentByOfficeId[item.OfficeId] = item.Spent;
-            }
-        }
+        var projectSpentQuery = _context.ProjectDetails
+            .Where(p => p.OfficeCode != null && officeCodes.Contains(p.OfficeCode) && p.Status == "active");
+            
+        if (filterYear > 0)
+            projectSpentQuery = projectSpentQuery.Where(p => p.CreatedAt >= yearStart && p.CreatedAt < yearEnd);
 
-        // 2. Add consolidated transactions directly linked to office code
-        var consolidatedSpent = await _context.ConsolidatedTransactions
-            .Where(c => c.OfficeId != null && officeCodes.Contains(c.OfficeId))
-            .GroupBy(c => c.OfficeId)
-            .Select(g => new { OfficeCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
-            .ToDictionaryAsync(x => x.OfficeCode!, x => x.Spent);
+        var projectSpent = await projectSpentQuery
+            .GroupBy(p => p.OfficeCode!)
+            .Select(g => new { OfficeCode = g.Key, Spent = g.Sum(x => x.Budget ?? 0) })
+            .ToDictionaryAsync(x => x.OfficeCode, x => x.Spent);
 
         // 3. Build the final dictionary mapped by office.Id
         var spentByOffice = new Dictionary<long, decimal>();
@@ -195,8 +191,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             if (string.IsNullOrEmpty(office.OfficeCode)) continue;
 
             decimal totalSpent = 0;
-            if (txSpentByOfficeId.TryGetValue(office.Id, out decimal ts)) totalSpent += ts;
-            if (consolidatedSpent.TryGetValue(office.OfficeCode, out decimal cs)) totalSpent += cs;
+            if (projectSpent.TryGetValue(office.OfficeCode, out decimal ps)) totalSpent += ps;
 
             spentByOffice[office.Id] = totalSpent;
         }
@@ -231,8 +226,20 @@ public class BudgetAllocationViewModel : ViewModelBase
 
         if (office == null) return;
 
-        var txns = await _context.TblTransactions
-            .Where(t => t.OfficeId == office.Id)
+        int filterYear = 0;
+        if (SelectedMasterBudget != null && int.TryParse(SelectedMasterBudget.FiscalYear, out int fy))
+            filterYear = fy;
+            
+        DateTime yearStart = filterYear > 0 ? new DateTime(filterYear, 1, 1) : DateTime.MinValue;
+        DateTime yearEnd = filterYear > 0 ? new DateTime(filterYear + 1, 1, 1) : DateTime.MaxValue;
+
+        var txnsQuery = _context.TblTransactions
+            .Where(t => t.OfficeId == office.Id);
+            
+        if (filterYear > 0)
+            txnsQuery = txnsQuery.Where(t => t.CreatedAt >= yearStart && t.CreatedAt < yearEnd);
+
+        var txns = await txnsQuery
             .OrderByDescending(t => t.CreatedAt)
             .Take(100)
             .ToListAsync();
@@ -240,14 +247,19 @@ public class BudgetAllocationViewModel : ViewModelBase
         foreach (var t in txns) OfficeTransactions.Add(t);
 
         // ── Fetch all released transactions for this office to process in memory ──
-        var allOfficeSpend = await _context.ConsolidatedTransactions
-            .Where(t => t.OfficeId == SelectedOffice.OfficeCode && t.Status == "Released")
+        var allOfficeSpendQuery = _context.ConsolidatedTransactions
+            .Where(t => t.OfficeId == SelectedOffice.OfficeCode && t.Status == "Released");
+            
+        if (filterYear > 0)
+            allOfficeSpendQuery = allOfficeSpendQuery.Where(t => t.CreatedAt >= yearStart && t.CreatedAt < yearEnd);
+            
+        var allOfficeSpend = await allOfficeSpendQuery
             .ToListAsync();
 
         // ── Tier 1: Matched Project Spend (With Name Fallback) ──────────────────
         OfficeProjects.Clear();
         var filteredProjects = await _context.ProjectDetails
-            .Where(p => p.OfficeCode == SelectedOffice.OfficeCode)
+            .Where(p => p.OfficeCode == SelectedOffice.OfficeCode && p.Status == "active")
             .ToListAsync();
 
         var mappedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -260,7 +272,7 @@ public class BudgetAllocationViewModel : ViewModelBase
                     (t.ProjectDetailsId == null && t.ProjectName != null && t.ProjectName.Trim().Equals(project.Name.Trim(), StringComparison.OrdinalIgnoreCase))
                 ).ToList();
 
-            project.Spent = matchedTransactions.Sum(t => t.Amount ?? 0);
+            project.Spent = matchedTransactions.Where(t => t.TransactionType != "Allocation").Sum(t => t.Amount ?? 0);
             OfficeProjects.Add(project);
 
             // Keep track of names we mapped via fallback so we don't double-count them in Tier 2
@@ -281,7 +293,7 @@ public class BudgetAllocationViewModel : ViewModelBase
             {
                 ProjectCode = g.Key.ProjectCode!,
                 ProjectName = g.Key.ProjectName ?? "Unknown Project",
-                SpentAmount = g.Sum(x => x.Amount ?? 0)
+                SpentAmount = g.Where(x => x.TransactionType != "Allocation").Sum(x => x.Amount ?? 0)
             })
             .ToList();
 
@@ -300,7 +312,7 @@ public class BudgetAllocationViewModel : ViewModelBase
         if (unidentifiedStats.Any())
         {
             UnidentifiedCount = unidentifiedStats.Count;
-            UnidentifiedAmount = unidentifiedStats.Sum(t => t.Amount ?? 0);
+            UnidentifiedAmount = unidentifiedStats.Where(t => t.TransactionType != "Allocation").Sum(t => t.Amount ?? 0);
         }
         else
         {

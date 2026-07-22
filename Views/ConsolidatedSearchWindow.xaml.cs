@@ -33,6 +33,8 @@ public partial class ConsolidatedSearchWindow : Window
     private List<string> _recentProjectCodes = new();
     private List<string> _recentOfficeCodes  = new();
     private List<string> _recentBarangays    = new();
+    private List<string> _recentBeneficiaryIds = new();
+    private List<string> _recentFullNames = new();
 
     // Debounce timer — fires ApplyFilter() 300 ms after the user stops typing
     private readonly System.Windows.Threading.DispatcherTimer _debounceTimer;
@@ -124,11 +126,29 @@ public partial class ConsolidatedSearchWindow : Window
                         .Take(10)
                         .ToList()!;
 
+                    var recentBeneficiaryIds = dbContext.ConsolidatedTransactions
+                        .Where(t => !string.IsNullOrEmpty(t.BeneficiaryId))
+                        .OrderByDescending(t => t.CreatedAt)
+                        .Select(t => t.BeneficiaryId)
+                        .Distinct()
+                        .Take(10)
+                        .ToList()!;
+
+                    var recentFullNames = dbContext.ConsolidatedTransactions
+                        .Where(t => !string.IsNullOrEmpty(t.FullName))
+                        .OrderByDescending(t => t.CreatedAt)
+                        .Select(t => t.FullName)
+                        .Distinct()
+                        .Take(10)
+                        .ToList()!;
+
                     Dispatcher.Invoke(() =>
                     {
                         _recentProjectCodes = recentProjects;
                         _recentOfficeCodes  = recentOffices;
                         _recentBarangays    = recentBarangays;
+                        _recentBeneficiaryIds = recentBeneficiaryIds;
+                        _recentFullNames = recentFullNames;
 
                         // If the active mode already has a recent-items panel visible,
                         // re-run SearchMode_Changed so the list reflects the just-loaded data.
@@ -191,14 +211,14 @@ public partial class ConsolidatedSearchWindow : Window
         {
             SearchLabel.Text = "Enter Beneficiary ID:";
             SearchInputPanel.Visibility = Visibility.Visible;
-            HideRecentPanel();
+            ShowRecentPanel("Recent Beneficiary IDs", _recentBeneficiaryIds);
             FocusSearchBox();
         }
         else if (RadioFullName.IsChecked == true)
         {
             SearchLabel.Text = "Enter Full Name:";
             SearchInputPanel.Visibility = Visibility.Visible;
-            HideRecentPanel();
+            ShowRecentPanel("Recent Names", _recentFullNames);
             FocusSearchBox();
         }
 
@@ -214,6 +234,13 @@ public partial class ConsolidatedSearchWindow : Window
             SearchLabel.Text = "Enter Household No:";
             SearchInputPanel.Visibility = Visibility.Visible;
             HideRecentPanel();
+            FocusSearchBox();
+        }
+        else if (RadioOffice.IsChecked == true)
+        {
+            SearchLabel.Text = "Enter Office:";
+            SearchInputPanel.Visibility = Visibility.Visible;
+            ShowRecentPanel("Recent Offices", _recentOfficeCodes);
             FocusSearchBox();
         }
         else // View All
@@ -276,6 +303,17 @@ public partial class ConsolidatedSearchWindow : Window
             SearchMode = "HouseholdNo";
             SearchValue = SearchTextBox.Text.Trim();
         }
+        else if (RadioOffice.IsChecked == true)
+        {
+            if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
+            {
+                MessageBox.Show("Please enter an Office.", "Missing Input",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            SearchMode = "OfficeCode";
+            SearchValue = SearchTextBox.Text.Trim();
+        }
         else
         {
             SearchMode = "ViewAll";
@@ -322,13 +360,14 @@ public partial class ConsolidatedSearchWindow : Window
     {
         // Guard: only run when a searchable radio is checked
         if (RadioFullName == null || RadioBeneficiaryId == null ||
-            RadioBarangay == null || RadioHouseholdNo == null)
+            RadioBarangay == null || RadioHouseholdNo == null || RadioOffice == null)
             return;
 
         bool anySearchMode = RadioFullName.IsChecked == true
                           || RadioBeneficiaryId.IsChecked == true
                           || RadioBarangay.IsChecked == true
-                          || RadioHouseholdNo.IsChecked == true;
+                          || RadioHouseholdNo.IsChecked == true
+                          || RadioOffice.IsChecked == true;
 
         if (!anySearchMode)
         {
@@ -356,6 +395,10 @@ public partial class ConsolidatedSearchWindow : Window
 
         else if (RadioBarangay.IsChecked == true)
             matches = _allBarangays
+                .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
+                .Take(10).ToList();
+        else if (RadioOffice.IsChecked == true)
+            matches = _allOfficeCodes
                 .Where(n => n.Contains(query, System.StringComparison.OrdinalIgnoreCase))
                 .Take(10).ToList();
         else // RadioHouseholdNo

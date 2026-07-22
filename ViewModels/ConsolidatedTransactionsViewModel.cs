@@ -36,6 +36,8 @@ namespace GoodGovernanceApp.ViewModels
         public static async Task<List<ConsolidatedTransactionsViewModel>> GetTransactionsAsync(AppDbContext context)
         {
             var transactions = await context.ConsolidatedTransactions
+                .Where(t => !string.IsNullOrEmpty(t.BeneficiaryId))
+                .OrderByDescending(t => t.CreatedAt)
                 .Select(t => new ConsolidatedTransactionsViewModel
                 {
                     Id = t.Id,

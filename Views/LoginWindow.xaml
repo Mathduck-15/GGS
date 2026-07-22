@@ -70,6 +70,9 @@
                Stretch="Uniform"
                HorizontalAlignment="Center"
                Margin="0 0 0 24">
+                    <Image.Effect>
+                        <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.3" Color="Black" Direction="270"/>
+                    </Image.Effect>
                     <Image.Source>
                         <Binding Path="LogoSource"/>
                     </Image.Source>
@@ -107,8 +110,16 @@
                                  Padding="24" Height="479">
                 <StackPanel>
 
-                    <Border CornerRadius="10" Padding="8" MaxHeight="450" Height="138">
-                        <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform" />
+                    <!-- Clean, Responsive Logo Display -->
+                    <Border CornerRadius="8" MaxHeight="120" MaxWidth="240" HorizontalAlignment="Center" Margin="0,0,0,20" Background="Transparent" ClipToBounds="True">
+                        <!-- We apply shadow to a wrapping container if we want it to tightly fit, 
+                             or we can apply it directly here. Since it's a transparent image potentially, 
+                             a shadow on the image itself looks best. -->
+                        <Image Source="{Binding SystemPhotoSource}" Stretch="Uniform">
+                            <Image.Effect>
+                                <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.15" Color="Black" Direction="270"/>
+                            </Image.Effect>
+                        </Image>
                     </Border>
 
                     <TextBlock Text="Welcome Back"

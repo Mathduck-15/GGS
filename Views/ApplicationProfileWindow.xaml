@@ -37,26 +37,7 @@
                  Foreground="#000000"
                  Margin="0 0 0 16" FontSize="16"/>
 
-        <Grid Grid.Row="3" Margin="0 0 0 16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="Logo Path" 
-                     Text="{Binding LogoAddress}" 
-                     IsReadOnly="True"
-                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                     Foreground="#000000"
-                     Margin="0 0 8 0"/>
-            <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseCommand}" VerticalAlignment="Bottom"/>
-        </Grid>
-
-        <Border Grid.Row="4" BorderBrush="LightGray" BorderThickness="1" CornerRadius="4" Margin="0 0 0 16" Background="WhiteSmoke">
-            <Grid>
-                <TextBlock Text="No Logo Selected" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Gray"/>
-                <Image Source="{Binding LogoPreview}" Stretch="Uniform" Margin="8"/>
-            </Grid>
-        </Border>
+        <!-- Logo upload section removed - image now automatically loaded from Assets/Images -->
 
         <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Save Options" Command="{Binding SaveCommand}" Style="{StaticResource MaterialDesignRaisedButton}"/>

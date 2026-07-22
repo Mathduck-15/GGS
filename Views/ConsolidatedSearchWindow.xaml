@@ -79,6 +79,14 @@
                                      Checked="SearchMode_Changed"
                                      Style="{StaticResource MaterialDesignRadioButton}"/>
 
+                        <RadioButton x:Name="RadioOffice"
+                                     Content="Search by Office"
+                                     GroupName="SearchMode"
+                                     FontSize="13" Foreground="#000000"
+                                     Margin="0 0 0 6"
+                                     Checked="SearchMode_Changed"
+                                     Style="{StaticResource MaterialDesignRadioButton}"/>
+
                         <RadioButton x:Name="RadioViewAll"
                                      Content="View Entire Table"
                                      GroupName="SearchMode"

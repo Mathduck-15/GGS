@@ -684,7 +684,7 @@ public class ReportsViewModel : ViewModelBase
             .ToList();
 
         var spentByCode = await _context.ConsolidatedTransactions
-            .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
+            .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode) && (t.TransactionType == "Expense" || t.TransactionType == "disbursement"))
             .GroupBy(t => t.ProjectCode)
             .Select(g => new { Code = g.Key!, Spent = g.Sum(x => x.Amount ?? 0) })
             .ToListAsync();
@@ -734,7 +734,7 @@ public class ReportsViewModel : ViewModelBase
             .ToList();
 
         var spentByCode = await _context.ConsolidatedTransactions
-            .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
+            .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode) && (t.TransactionType == "Expense" || t.TransactionType == "disbursement"))
             .GroupBy(t => t.ProjectCode)
             .Select(g => new { Code = g.Key!, Spent = g.Sum(x => x.Amount ?? 0) })
             .ToListAsync();

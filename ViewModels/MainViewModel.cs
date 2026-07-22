@@ -492,40 +492,31 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
-            
-            // Ensure table exists first to avoid Table doesn't exist exception
-            string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS systemsprofile (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    PhotoAddress NVARCHAR(500)
-                );";
-            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
-
-            string query = "SELECT PhotoAddress FROM systemsprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            await Task.Run(() =>
             {
-                var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
-                
-                // Resolve relative path if needed
-                if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
-                    path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
-
-                if (!string.IsNullOrWhiteSpace(path) && System.IO.File.Exists(path))
+                var imagesDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images");
+                if (System.IO.Directory.Exists(imagesDir))
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
+                    var file = System.IO.Directory.EnumerateFiles(imagesDir, "*profile*.*").FirstOrDefault();
+                    if (file == null) 
                     {
-                        var bitmap = new BitmapImage();
-                        bitmap.BeginInit();
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.UriSource = new Uri(path, UriKind.Absolute);
-                        bitmap.EndInit();
-                        SystemPhotoSource = bitmap;
-                    });
+                        file = System.IO.Directory.EnumerateFiles(imagesDir, "*system*.*").FirstOrDefault();
+                    }
+
+                    if (file != null)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            var bitmap = new BitmapImage();
+                            bitmap.BeginInit();
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.UriSource = new Uri(file, UriKind.Absolute);
+                            bitmap.EndInit();
+                            SystemPhotoSource = bitmap;
+                        });
+                    }
                 }
-            }
+            });
         }
         catch { }
     }
@@ -535,38 +526,26 @@ public class MainViewModel : ViewModelBase
     {
         try
         {
-            var dbHelper = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Data.DatabaseHelper>();
-            
-            string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS copyrightprofile (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    PhotoAddress NVARCHAR(500)
-                );";
-            await dbHelper.ExecuteNonQueryAsync(createTableQuery);
-
-            string query = "SELECT PhotoAddress FROM copyrightprofile LIMIT 1;";
-            var dataTable = await dbHelper.ExecuteQueryAsync(query);
-
-            if (dataTable.Rows.Count > 0)
+            await Task.Run(() =>
             {
-                var path = dataTable.Rows[0]["PhotoAddress"]?.ToString();
-                
-                if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path))
-                    path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
-
-                if (!string.IsNullOrWhiteSpace(path) && System.IO.File.Exists(path))
+                var imagesDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images");
+                if (System.IO.Directory.Exists(imagesDir))
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
+                    var file = System.IO.Directory.EnumerateFiles(imagesDir, "*copyright*.*").FirstOrDefault();
+                    if (file != null)
                     {
-                        var bitmap = new BitmapImage();
-                        bitmap.BeginInit();
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.UriSource = new Uri(path, UriKind.Absolute);
-                        bitmap.EndInit();
-                        CopyrightPhotoSource = bitmap;
-                    });
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            var bitmap = new BitmapImage();
+                            bitmap.BeginInit();
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.UriSource = new Uri(file, UriKind.Absolute);
+                            bitmap.EndInit();
+                            CopyrightPhotoSource = bitmap;
+                        });
+                    }
                 }
-            }
+            });
         }
         catch { }
     }
@@ -594,28 +573,36 @@ public class MainViewModel : ViewModelBase
             {
                 var row = dataTable.Rows[0];
                 string govName = row["GoveName"]?.ToString() ?? "";
-                string logoUrl = row["LogoAddress"]?.ToString() ?? "";
                 string addr = row["Address"]?.ToString() ?? "";
+                // Note: We ignore LogoAddress from DB now.
+            }
 
-                if (!string.IsNullOrWhiteSpace(logoUrl))
+            // Load logo from Assets/Images instead
+            await Task.Run(() =>
+            {
+                var imagesDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images");
+                if (System.IO.Directory.Exists(imagesDir))
                 {
-                    if (!System.IO.Path.IsPathRooted(logoUrl))
-                        logoUrl = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logoUrl);
+                    var file = System.IO.Directory.EnumerateFiles(imagesDir, "*logo*.*").FirstOrDefault();
+                    if (file == null) 
+                    {
+                        file = System.IO.Directory.EnumerateFiles(imagesDir, "*gov*.*").FirstOrDefault();
+                    }
 
-                    if (System.IO.File.Exists(logoUrl))
+                    if (file != null)
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             var bi = new BitmapImage();
                             bi.BeginInit();
                             bi.CacheOption = BitmapCacheOption.OnLoad;
-                            bi.UriSource = new Uri(logoUrl, UriKind.Absolute);
+                            bi.UriSource = new Uri(file, UriKind.Absolute);
                             bi.EndInit();
                             GovPhotoSource = bi;
                         });
                     }
                 }
-            }
+            });
         }
         catch (Exception ex) // ✅ CHANGE THIS TOO — never silently swallow errors
         {

@@ -142,7 +142,7 @@ public class DepartmentManagementViewModel : ViewModelBase
             if (projectCodes.Any())
             {
                 spentByProject = await _context.ConsolidatedTransactions
-                    .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode))
+                    .Where(t => t.ProjectCode != null && projectCodes.Contains(t.ProjectCode) && (t.TransactionType == "Expense" || t.TransactionType == "disbursement"))
                     .GroupBy(t => t.ProjectCode)
                     .Select(g => new { ProjectCode = g.Key, Spent = g.Sum(x => x.Amount ?? 0) })
                     .ToDictionaryAsync(x => x.ProjectCode!, x => x.Spent);

@@ -24,7 +24,7 @@ public class AddProjectViewModel : ViewModelBase
     private string _selectedOfficeCode = string.Empty;
     private int?   _resolvedYearlyBudgetId;
     private string _voucherCode = string.Empty;
-    public string transaction_type = "Expense";
+
     // ── Public properties ────────────────────────────────────────────────────────
     public string ProjectId
     {
@@ -111,7 +111,8 @@ public class AddProjectViewModel : ViewModelBase
 
     public void SetContext(int? year, string officeCode)
     {
-        SelectedYear = year;
+        _selectedYear = year;
+        OnPropertyChanged(nameof(SelectedYear));
         _ = LoadOfficeCodes().ContinueWith(_ =>
         {
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
@@ -225,17 +226,16 @@ public class AddProjectViewModel : ViewModelBase
         if (_selectedYear == null) return;
 
         const string sql = @"
-            SELECT o.office_code
+            SELECT oa.office_code
             FROM officeallocations oa
-            INNER JOIN tbl_offices o ON oa.office_id = o.id
             INNER JOIN master_budget yb ON oa.YearlyBudgetId = yb.id
             WHERE yb.budget_year = @year
-            ORDER BY o.office_code;";
+            ORDER BY oa.office_code;";
 
         try
         {
             var dt = await _db.ExecuteQueryAsync(sql,
-                new SqliteParameter("@year", _selectedYear.Value));
+                new SqliteParameter("@year", _selectedYear.Value.ToString()));
 
             foreach (DataRow row in dt.Rows)
             {
@@ -258,15 +258,14 @@ public class AddProjectViewModel : ViewModelBase
             const string sql = @"
                 SELECT oa.YearlyBudgetId
                 FROM officeallocations oa
-                INNER JOIN tbl_offices o ON oa.office_id = o.id
                 INNER JOIN master_budget yb ON oa.YearlyBudgetId = yb.id
-                WHERE yb.budget_year = @year AND o.office_code = @code
+                WHERE yb.budget_year = @year AND oa.office_code = @code
                 LIMIT 1;";
 
             try
             {
                 var result = await _db.ExecuteScalarAsync(sql,
-                    new SqliteParameter("@year", _selectedYear!.Value),
+                    new SqliteParameter("@year", _selectedYear!.Value.ToString()),
                     new SqliteParameter("@code", _selectedOfficeCode));
 
                 if (result != null && int.TryParse(result.ToString(), out int id))
@@ -301,7 +300,6 @@ public class AddProjectViewModel : ViewModelBase
             return;
         }
 
-
         decimal? budget = null;
         if (!string.IsNullOrWhiteSpace(TotalBudget) && decimal.TryParse(TotalBudget, out decimal parsed))
             budget = parsed;
@@ -311,12 +309,11 @@ public class AddProjectViewModel : ViewModelBase
             const string resolveSql = @"
             SELECT oa.YearlyBudgetId
             FROM officeallocations oa
-            INNER JOIN tbl_offices o ON oa.office_id = o.id
             INNER JOIN master_budget yb ON oa.YearlyBudgetId = yb.id
-            WHERE yb.budget_year = @year AND o.office_code = @code
+            WHERE yb.budget_year = @year AND oa.office_code = @code
             LIMIT 1;";
             var res = await _db.ExecuteScalarAsync(resolveSql,
-                new SqliteParameter("@year", _selectedYear!.Value),
+                new SqliteParameter("@year", _selectedYear!.Value.ToString()),
                 new SqliteParameter("@code", _selectedOfficeCode));
             if (res != null && int.TryParse(res.ToString(), out int rid))
                 _resolvedYearlyBudgetId = rid;
@@ -324,21 +321,14 @@ public class AddProjectViewModel : ViewModelBase
 
         const string insertSql = @"
         INSERT INTO project_details
-            (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at, voucher_code, SyncId)
+            (project_details_id, project, description, office_code, total_budget, contact_person, yearly_budget_id, create_at, updated_at, voucher_code, SyncId, status)
         VALUES
-            (@pid, @project, @desc, @code, @budget, @contact, @ybid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, @voucher, @syncId1);";
-
-        const string insertSqlTransaction = @"
-        INSERT INTO transactions
-            (project_code, Amount, voucher_code, date, transaction_type, SyncId, updated_at)
-        VALUES
-            (@pid, @budget, @voucher, CURRENT_TIMESTAMP, @transtype, @syncId2, CURRENT_TIMESTAMP);";
+            (@pid, @project, @desc, @code, @budget, @contact, @ybid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, @voucher, @syncId1, 'active');";
 
         // --- INSERT 1: project_details ---
-        int rowsAffected = 0;
         try
         {
-            rowsAffected = await _db.ExecuteNonQueryAsync(insertSql,
+            await _db.ExecuteNonQueryAsync(insertSql,
                 new SqliteParameter("@pid",     ProjectId),
                 new SqliteParameter("@project", ProjectName),
                 new SqliteParameter("@desc",    (object?)Description ?? DBNull.Value),
@@ -353,28 +343,10 @@ public class AddProjectViewModel : ViewModelBase
         {
             MessageBox.Show($"project_details INSERT failed:\n{ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
-            return; // stop here, don't insert transaction
+            return; 
         }
 
-
-        // --- INSERT 2: transactions ---
-        try
-        {
-            await _db.ExecuteNonQueryAsync(insertSqlTransaction,
-                new SqliteParameter("@pid", ProjectId),
-                new SqliteParameter("@budget", (object?)budget ?? DBNull.Value),
-                new SqliteParameter("@voucher", VoucherCode),
-                new SqliteParameter("@transtype", transaction_type),
-                new SqliteParameter("@syncId2", Guid.NewGuid().ToString()));
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"transactions INSERT failed:\n{ex.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            return;
-        }
-
-        // --- INSERT 3: audit_trails ---
+        // --- INSERT 2: audit_trails ---
         try
         {
             var session = App.AppHost!.Services.GetRequiredService<GoodGovernanceApp.Services.SessionService>();
