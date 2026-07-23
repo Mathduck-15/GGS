@@ -60,6 +60,8 @@
   <ItemGroup>
     <Content Include="Assets\Images\*.*" Exclude="Assets\Images\bg.jpg;Assets\Images\ggms.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
   </ItemGroup>
 
